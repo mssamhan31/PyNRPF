@@ -1,0 +1,61 @@
+# File: configs/run.yaml
+
+run:
+  run_tag: "dev"
+  seed: 123
+
+paths:
+  data_dir: "data/raw"
+  local_parquet_filename: "rpf_dataset.parquet"
+  output_dir: "outputs"
+
+zenodo:
+  record_id: ""            # set this (required for auto-download)
+  filename: "rpf_dataset.parquet"
+  access_token: ""         # optional (only for restricted records)
+
+columns:
+  site: "substation_id"
+  timestamp: "timestamp"
+  net_load_mw: "net_load_MW"
+  solar_mw: "solar_MW"
+  net_load_ground_truth: "net_load_ground_truth"
+
+time:
+  interval_minutes: 30
+  timezone: "Australia/Sydney"
+
+split:
+  train_start: "2021-11-01"
+  train_end:   "2023-09-30"
+  test_start:  "2023-10-01"
+  test_end:    "2024-09-30"
+
+deterministic_m7:
+  solar_peak_window_hours: 4
+  reading_peak_search_hours: 2.5
+  min_threshold: 0.3
+  min_threshold_both: 0.1
+
+ml_m8_xgb:
+  day_model:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.9
+    colsample_bytree: 0.9
+    reg_lambda: 1.0
+    random_state: 123
+    threshold: 0.5
+  ts_model:
+    n_estimators: 500
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.9
+    colsample_bytree: 0.9
+    reg_lambda: 1.0
+    random_state: 123
+    threshold: 0.5
+
+evaluation:
+  rounding_decimals: 3
