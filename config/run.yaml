@@ -1,29 +1,32 @@
-# File: configs/run.yaml
-
 run:
-  run_tag: "dev"
+  run_tag: "local_dev"
   seed: 123
 
 paths:
-  data_dir: "data/raw"
-  local_parquet_filename: "rpf_dataset.parquet"
+  dataset_parquet: "data/raw/rpf_dataset.parquet"
+  sha256_file: "data/raw/sha256.txt"
   output_dir: "outputs"
 
 zenodo:
-  record_id: ""            # set this (required for auto-download)
+  record_id: null                      # set to Zenodo record number to enable auto-download
   filename: "rpf_dataset.parquet"
-  access_token: ""         # optional (only for restricted records)
+  access_token: null                   # optional; for restricted records
 
-columns:
-  site: "substation_id"
-  timestamp: "timestamp"
-  net_load_mw: "net_load_MW"
-  solar_mw: "solar_MW"
-  net_load_ground_truth: "net_load_ground_truth"
+data:
+  interval_minutes: 15
+  mwh_factor: 0.25
+  columns:
+    site: "substation_id"
+    ts: "timestamp"
+    net_load: "net_load_MW"
+    solar: "solar_MW"
+    gt: "net_load_ground_truth"
 
-time:
-  interval_minutes: 30
-  timezone: "Australia/Sydney"
+validation:
+  verify_sha256_best_effort: true
+  strip_timezone: true                 # treat timestamps as local-naive; drop any +00:00 offsets without converting
+  enforce_interval_alignment: true     # error+stop
+  enforce_unique_keys: true            # error+stop
 
 split:
   train_start: "2021-11-01"
@@ -31,31 +34,65 @@ split:
   test_start:  "2023-10-01"
   test_end:    "2024-09-30"
 
-deterministic_m7:
-  solar_peak_window_hours: 4
-  reading_peak_search_hours: 2.5
-  min_threshold: 0.3
-  min_threshold_both: 0.1
+# ---------------------------------------------------------------------------
+# m7_threshold -- Deterministic method (DTR)
+# ---------------------------------------------------------------------------
+m7_threshold:
+  daytime_start: "06:00"
+  daytime_end: "18:00"
+  solar_peak_tiebreak_time: "12:30"    # nearest-to-midday tie-break for solar peak
+  peak_window_minutes: 150             # +/- 2.5 h window centred on solar peak
+  min_threshold: 0.05                  # at-least-one minimum must be < 5 % of site MW_max
+  min_threshold_both: 0.25             # both minima must be < 25 % of site MW_max
+  apply_polarity_filter: false
 
-ml_m8_xgb:
-  day_model:
+# ---------------------------------------------------------------------------
+# m8_xgb -- XGBoost method (day + timestamp models)
+# ---------------------------------------------------------------------------
+m8_xgb:
+  # Shared
+  noon_hour_start: 6
+  noon_hour_end: 18
+  holiday_country: "AU"
+  holiday_subdivision: "NSW"
+
+  # XGB1 -- day-level classification
+  xgb1_day:
+    objective: "binary:logistic"
+    eval_metric: "aucpr"
+    tree_method: "hist"
+    eta: 0.1
     n_estimators: 500
     max_depth: 6
-    learning_rate: 0.05
-    subsample: 0.9
-    colsample_bytree: 0.9
-    reg_lambda: 1.0
-    random_state: 123
-    threshold: 0.5
-  ts_model:
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 5
+    seed: 9
+    threshold: 0.585985                # decision boundary (prob >= threshold -> positive)
+
+  # XGB2 -- timestamp-level classification
+  xgb2_timestamp:
+    objective: "binary:logistic"
+    eval_metric: "aucpr"
+    tree_method: "hist"
+    eta: 0.1
     n_estimators: 500
     max_depth: 6
-    learning_rate: 0.05
-    subsample: 0.9
-    colsample_bytree: 0.9
-    reg_lambda: 1.0
-    random_state: 123
-    threshold: 0.5
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 5
+    seed: 9
+    threshold: 0.892234               # decision boundary (prob >= threshold -> positive)
 
+# ---------------------------------------------------------------------------
+# Evaluation
+# ---------------------------------------------------------------------------
 evaluation:
-  rounding_decimals: 3
+  metrics:
+    - precision
+    - recall
+    - f1
+  rounding: 3
+  exclude_winter: false
