@@ -1,6 +1,5 @@
-# Notebook + config + download
+# Notebook + config
 pyyaml>=6,<7
-requests>=2.31,<3
 
 # Data + parquet
 pandas>=2.1,<3

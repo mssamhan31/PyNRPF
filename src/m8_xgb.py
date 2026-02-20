@@ -81,7 +81,9 @@ def run_m8(
 
     m8_cfg = req(cfg, "m8_xgb")
     split = req(cfg, "split")
-    output_dir = Path(cfg.get("paths", {}).get("output_dir", "outputs"))
+    repo_root = Path(__file__).resolve().parents[1]
+    output_dir_cfg = Path(cfg.get("paths", {}).get("output_dir", "outputs"))
+    output_dir = output_dir_cfg if output_dir_cfg.is_absolute() else (repo_root / output_dir_cfg)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     xgb1_cfg = req(m8_cfg, "xgb1_day")

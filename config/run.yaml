@@ -7,11 +7,6 @@ paths:
   sha256_file: "data/raw/sha256.txt"
   output_dir: "outputs"
 
-zenodo:
-  record_id: null                      # set to Zenodo record number to enable auto-download
-  filename: "rpf_dataset.parquet"
-  access_token: null                   # optional; for restricted records
-
 data:
   interval_minutes: 15
   mwh_factor: 0.25

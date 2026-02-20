@@ -128,11 +128,12 @@ def evaluate_interval_level(
     col_ts: str,
     col_net: str,
     col_gt: str,
+    pred_day_col: str,
     pred_flag_col: str,
     split_cfg: Dict[str, str],
     daytime_start_hour: int = 6,
     daytime_end_hour: int = 18,
-    rpf_days_only: bool = False,
+    tp_days_only: bool = False,
     rounding: int = 3,
 ) -> Dict[str, Dict[str, Any]]:
     """Interval-level evaluation for a single method.
@@ -140,12 +141,12 @@ def evaluate_interval_level(
     Filters to daytime intervals (``daytime_start_hour`` <= hour <
     ``daytime_end_hour``).
 
-    If ``rpf_days_only=True``, further restricts to (site, date) groups
-    where the ground truth has at least one negative interval — this
-    answers "on true RPF days, how well does the algorithm classify
-    individual intervals?"
+    Restricts to (site, date) groups where the method's day-level
+    prediction is positive. If ``tp_days_only=True``, further restricts
+    to true-positive day groups where both predicted day and true day are
+    positive.
     """
-    work = df[[col_site, "date", col_ts, col_net, col_gt, pred_flag_col]].copy()
+    work = df[[col_site, "date", col_ts, col_net, col_gt, pred_day_col, pred_flag_col]].copy()
 
     # Daytime filter
     hour = work[col_ts].dt.hour
@@ -168,15 +169,21 @@ def evaluate_interval_level(
     n_excl = int(work["_has_neg"].fillna(False).sum())
     work = work.loc[~work["_has_neg"].fillna(False)].copy()
 
-    # RPF-days-only filter
-    if rpf_days_only:
-        day_gt = (
-            work.groupby([col_site, "date"])[col_gt]
-            .apply(lambda s: (s < 0).any())
-            .reset_index(name="_is_rpf_day")
+    # Day-level filter: predicted-positive days only; optional TP-only
+    day_info = (
+        df.groupby([col_site, "date"]).agg(
+            _pred_day=(pred_day_col, "first"),
+            _gt_min=(col_gt, "min"),
         )
-        work = work.merge(day_gt, on=[col_site, "date"], how="left")
-        work = work.loc[work["_is_rpf_day"].fillna(False)].copy()
+        .reset_index()
+    )
+    day_info["_pred_day"] = day_info["_pred_day"].fillna(False).astype(bool)
+    day_info["_gt_day"] = day_info["_gt_min"] < 0
+    work = work.merge(day_info[[col_site, "date", "_pred_day", "_gt_day"]],
+                      on=[col_site, "date"], how="left")
+    work = work.loc[work["_pred_day"].fillna(False)].copy()
+    if tp_days_only:
+        work = work.loc[work["_gt_day"].fillna(False)].copy()
 
     # Ground truth at interval level
     y_true = (work[col_gt] < 0).values
@@ -190,7 +197,7 @@ def evaluate_interval_level(
     train_m = compute_metrics(y_true[train_mask], y_pred[train_mask], rounding)
     test_m = compute_metrics(y_true[test_mask], y_pred[test_mask], rounding)
 
-    suffix = " (RPF days only)" if rpf_days_only else " (all days)"
+    suffix = " (TP days only)" if tp_days_only else " (all predicted-positive days)"
     print(f"\n  Interval-level ({pred_flag_col}){suffix}")
     _print_metrics("TRAIN", train_m)
     _print_metrics("TEST ", test_m)
@@ -225,17 +232,19 @@ def evaluate_method(
     )
     interval_all = evaluate_interval_level(
         df, col_site, col_ts, col_net, col_gt,
-        pred_flag_col, split_cfg, rpf_days_only=False, rounding=rounding,
+        pred_day_col, pred_flag_col, split_cfg,
+        tp_days_only=False, rounding=rounding,
     )
-    interval_rpf = evaluate_interval_level(
+    interval_tp = evaluate_interval_level(
         df, col_site, col_ts, col_net, col_gt,
-        pred_flag_col, split_cfg, rpf_days_only=True, rounding=rounding,
+        pred_day_col, pred_flag_col, split_cfg,
+        tp_days_only=True, rounding=rounding,
     )
 
     return {
         "day": day,
-        "interval_all": interval_all,
-        "interval_rpf_days_only": interval_rpf,
+        "interval_all_days": interval_all,
+        "interval_tp_days_only": interval_tp,
     }
 
 
