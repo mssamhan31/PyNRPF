@@ -1,7 +1,6 @@
 databricks_assets
 planning
 .venv
-data/raw
 __pycache__/
 *.pyc
 *.pyo
