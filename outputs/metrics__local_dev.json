@@ -1,7 +1,7 @@
 {
   "run_tag": "local_dev",
-  "generated_at_utc": "2026-02-19T05:08:19.623041+00:00",
-  "dataset": "C:\\Users\\T89937\\Documents\\PyNRPF\\data\\raw\\rpf_dataset.parquet",
+  "generated_at_utc": "2026-02-20T05:03:55.702529+00:00",
+  "dataset": "C:\\Users\\z5404477\\Documents\\PyNRPF\\data\\raw\\rpf_dataset.parquet",
   "split": {
     "train_start": "2021-11-01",
     "train_end": "2023-09-30",
@@ -13,7 +13,12 @@
     "n_sites": 10,
     "n_train_rows": 666432,
     "n_test_rows": 344832,
-    "n_day_rows": 10643
+    "n_day_rows": 10643,
+    "null_substation_id": 0,
+    "null_timestamp": 0,
+    "null_net_load_MW": 3000,
+    "null_solar_MW": 1040,
+    "null_net_load_ground_truth": 3000
   },
   "m7_threshold": {
     "day": {
@@ -39,48 +44,48 @@
       },
       "excluded_days": 0
     },
-    "interval_all": {
+    "interval_all_days": {
       "train": {
         "tp": 21076,
         "fp": 5056,
-        "fn": 6597,
-        "tn": 300151,
+        "fn": 6282,
+        "tn": 78514,
         "precision": 0.807,
-        "recall": 0.762,
-        "f1": 0.783,
-        "support": 27673
+        "recall": 0.77,
+        "f1": 0.788,
+        "support": 27358
       },
       "test": {
         "tp": 15723,
         "fp": 2914,
-        "fn": 4579,
-        "tn": 148096,
+        "fn": 4037,
+        "tn": 44670,
         "precision": 0.844,
-        "recall": 0.774,
-        "f1": 0.808,
-        "support": 20302
+        "recall": 0.796,
+        "f1": 0.819,
+        "support": 19760
       }
     },
-    "interval_rpf_days_only": {
+    "interval_tp_days_only": {
       "train": {
         "tp": 21076,
         "fp": 4005,
-        "fn": 6597,
-        "tn": 68834,
+        "fn": 6282,
+        "tn": 67229,
         "precision": 0.84,
-        "recall": 0.762,
-        "f1": 0.799,
-        "support": 27673
+        "recall": 0.77,
+        "f1": 0.804,
+        "support": 27358
       },
       "test": {
         "tp": 15723,
         "fp": 2367,
-        "fn": 4579,
-        "tn": 41075,
+        "fn": 4037,
+        "tn": 39265,
         "precision": 0.869,
-        "recall": 0.774,
-        "f1": 0.819,
-        "support": 20302
+        "recall": 0.796,
+        "f1": 0.831,
+        "support": 19760
       }
     }
   },
@@ -108,12 +113,12 @@
       },
       "excluded_days": 0
     },
-    "interval_all": {
+    "interval_all_days": {
       "train": {
         "tp": 23203,
         "fp": 781,
         "fn": 4470,
-        "tn": 304426,
+        "tn": 72106,
         "precision": 0.967,
         "recall": 0.838,
         "f1": 0.898,
@@ -122,20 +127,20 @@
       "test": {
         "tp": 15980,
         "fp": 1348,
-        "fn": 4322,
-        "tn": 149662,
+        "fn": 4095,
+        "tn": 42609,
         "precision": 0.922,
-        "recall": 0.787,
-        "f1": 0.849,
-        "support": 20302
+        "recall": 0.796,
+        "f1": 0.854,
+        "support": 20075
       }
     },
-    "interval_rpf_days_only": {
+    "interval_tp_days_only": {
       "train": {
         "tp": 23203,
         "fp": 781,
         "fn": 4470,
-        "tn": 72058,
+        "tn": 72106,
         "precision": 0.967,
         "recall": 0.838,
         "f1": 0.898,
@@ -144,12 +149,12 @@
       "test": {
         "tp": 15980,
         "fp": 1235,
-        "fn": 4322,
-        "tn": 42207,
+        "fn": 4095,
+        "tn": 39746,
         "precision": 0.928,
-        "recall": 0.787,
-        "f1": 0.852,
-        "support": 20302
+        "recall": 0.796,
+        "f1": 0.857,
+        "support": 20075
       }
     }
   }

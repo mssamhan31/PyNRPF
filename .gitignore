@@ -1,7 +1,9 @@
 databricks_assets
 planning
 .venv
+.venv*
 __pycache__/
 *.pyc
 *.pyo
 .venv/
+.vscode
