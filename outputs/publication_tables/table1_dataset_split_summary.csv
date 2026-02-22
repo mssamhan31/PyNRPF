@@ -1,0 +1,5 @@
+split,level,n_total,n_need_correction,pct_need_correction
+train,day,6986,2095,29.989
+train,interval,666432,27678,4.153
+test,day,3657,1328,36.314
+test,interval,344832,20302,5.888
