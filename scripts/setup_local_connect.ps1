@@ -1,6 +1,6 @@
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$WorkspaceHost,
+    [string]$WorkspaceHost = "",
+    [string]$ConfigPath = "config/databricks_connect.yaml",
     [string]$Profile = "dbx",
     [string]$DatabricksConnectVersion = "16.4.*",
     [string]$ClusterId = "0802-073102-ie1bry9e"
@@ -13,6 +13,48 @@ $venvDir = Join-Path $repoRoot ".venv"
 $venvPython = Join-Path $venvDir "Scripts\python.exe"
 $cliPath = Join-Path $repoRoot ".tools\databricks-cli\databricks.exe"
 $cliInstallScript = Join-Path $PSScriptRoot "install_databricks_cli.ps1"
+
+function Get-WorkspaceHostFromYaml {
+    param([string]$YamlPath)
+
+    if (-not (Test-Path $YamlPath)) {
+        return ""
+    }
+
+    foreach ($line in (Get-Content $YamlPath)) {
+        if ($line -match '^\s*workspace_host\s*:\s*["'']?([^"'']+)["'']?\s*$') {
+            return $matches[1].Trim()
+        }
+    }
+    return ""
+}
+
+if ([string]::IsNullOrWhiteSpace($WorkspaceHost)) {
+    $candidatePaths = @()
+    if ([System.IO.Path]::IsPathRooted($ConfigPath)) {
+        $candidatePaths += $ConfigPath
+    } else {
+        $candidatePaths += (Join-Path $repoRoot $ConfigPath)
+    }
+    $candidatePaths += (Join-Path $repoRoot "config\databricks_connect.example.yaml")
+
+    foreach ($path in $candidatePaths) {
+        $foundHost = Get-WorkspaceHostFromYaml -YamlPath $path
+        if (-not [string]::IsNullOrWhiteSpace($foundHost)) {
+            $WorkspaceHost = $foundHost
+            Write-Host "Using WorkspaceHost from config: $WorkspaceHost"
+            break
+        }
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($WorkspaceHost)) {
+    throw "Workspace host not provided. Set local_connect.workspace_host in config or pass -WorkspaceHost."
+}
+
+if ($WorkspaceHost -match "<your-workspace-host>") {
+    throw "Workspace host is still a placeholder. Update local_connect.workspace_host in config."
+}
 
 if (-not (Test-Path $venvPython)) {
     Write-Host "Creating virtual environment at $venvDir"
@@ -31,6 +73,14 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to install requirements.txt (exit code $LASTEXITCODE)."
 }
+
+# Databricks Connect cannot coexist with pyspark packages in the same environment.
+Write-Host "Removing incompatible Spark packages (if present): pyspark, pyspark-connect, pyspark-client"
+& $venvPython -m pip uninstall -y pyspark pyspark-connect pyspark-client
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to uninstall conflicting pyspark packages (exit code $LASTEXITCODE)."
+}
+
 & $venvPython -m pip install "databricks-connect==$DatabricksConnectVersion"
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to install databricks-connect==$DatabricksConnectVersion."

@@ -25,12 +25,17 @@ def load_config(path: str | Path) -> dict[str, Any]:
 
 def apply_connect_env(cfg: dict[str, Any]) -> None:
     local = cfg.get("local_connect") or {}
+    workspace_host = str(
+        local.get("workspace_host", cfg.get("workspace_host", ""))
+    ).strip()
     profile = str(local.get("profile", "dbx")).strip()
     cli_path = Path(str(local.get("cli_path", ".tools/databricks-cli/databricks.exe")))
 
     if not cli_path.is_absolute():
         cli_path = (_repo_root() / cli_path).resolve()
 
+    if workspace_host:
+        os.environ.setdefault("DATABRICKS_HOST", workspace_host)
     os.environ.setdefault("DATABRICKS_CONFIG_PROFILE", profile)
     os.environ.setdefault("DATABRICKS_CLI_PATH", str(cli_path))
 

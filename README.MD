@@ -34,7 +34,6 @@ Copy-Item config/databricks_connect.example.yaml config/databricks_connect.yaml
 
 # 2. One-time setup (venv + dependencies + Databricks CLI + OAuth + smoke test)
 .\scripts\setup_local_connect.ps1 `
-  -WorkspaceHost "https://<your-workspace-host>" `
   -Profile "dbx" `
   -ClusterId "<your-cluster-id>"
 
@@ -45,6 +44,8 @@ Copy-Item config/databricks_connect.example.yaml config/databricks_connect.yaml
 ```
 
 Notes:
+- Set `local_connect.workspace_host` in `config/databricks_connect.yaml` (for example `https://adb-3216286095751193.13.azuredatabricks.net/`).
+- `setup_local_connect.ps1` reads `workspace_host` from config; you can still override with `-WorkspaceHost`.
 - `setup_local_connect.ps1` installs `databricks-connect` with default version `16.4.*`.
 - If your cluster runtime is different, pass `-DatabricksConnectVersion "<major.minor>.*"` to setup.
 
