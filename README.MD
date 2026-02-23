@@ -24,6 +24,30 @@ pip install -r requirements.txt
 
 The notebook runs end-to-end: it loads config, validates and reads the local parquet, runs `m7_threshold` and `m8_xgb`, evaluates both, and writes artifacts to `outputs/`.
 
+## Optional: VS Code + Databricks Connect hello check
+
+This repository now includes a minimal Databricks Connect setup so you can validate cluster connectivity from VS Code without changing the existing PyNRPF pipeline structure.
+
+```powershell
+# 1. Create local connect config
+Copy-Item config/databricks_connect.example.yaml config/databricks_connect.yaml
+
+# 2. One-time setup (venv + dependencies + Databricks CLI + OAuth + smoke test)
+.\scripts\setup_local_connect.ps1 `
+  -WorkspaceHost "https://<your-workspace-host>" `
+  -Profile "dbx" `
+  -ClusterId "<your-cluster-id>"
+
+# 3. Run hello check through Databricks Connect
+.\scripts\run_local_connect.ps1 `
+  -ConfigPath "config/databricks_connect.yaml" `
+  -Profile "dbx"
+```
+
+Notes:
+- `setup_local_connect.ps1` installs `databricks-connect` with default version `16.4.*`.
+- If your cluster runtime is different, pass `-DatabricksConnectVersion "<major.minor>.*"` to setup.
+
 ## Configuration
 
 All runtime settings are in `config/run.yaml`:

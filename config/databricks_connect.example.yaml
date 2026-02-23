@@ -1,0 +1,9 @@
+app_name: "pynrpf_hello"
+greeting: "Hello from PyNRPF via Databricks Connect"
+
+local_connect:
+  profile: "dbx"
+  cli_path: ".tools/databricks-cli/databricks.exe"
+  compute_mode: "cluster"
+  cluster_id: "0802-073102-ie1bry9e"
+  serverless_compute_id: "auto"
