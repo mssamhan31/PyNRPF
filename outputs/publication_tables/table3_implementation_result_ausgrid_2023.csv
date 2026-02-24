@@ -1,5 +1,0 @@
-site_name,year,min_demand_MW_before,min_demand_MW_after,min_demand_MW_correction,ts_min_before,ts_min_after
-network,2023,1481.0,1447.0,34.0,,
-Site_A,2023,0.0,-8.21,8.21,25/10/2023 13:00,21/11/2023 14:15
-Site_B,2023,0.0,-6.41,6.41,17/05/2023 8:15,5/10/2023 12:30
-Site_C,2023,0.0,-5.24,5.24,30/11/2023 9:30,6/03/2023 13:45
