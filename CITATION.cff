@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "PyNRPF: Detecting and rectifying wrong reverse power flow readings"
+message: "If you use this software, please cite it."
+type: software
+authors:
+  - family-names: "Samhan"
+    given-names: "M. Syahman"
+    affiliation: "School of Photovoltaic and Renewable Energy Engineering, University of New South Wales, Sydney, Australia"
+    email: "m.samhan@unsw.edu.au"
+  - family-names: "Bruce"
+    given-names: "Anna"
+    affiliation: "School of Photovoltaic and Renewable Energy Engineering, University of New South Wales, Sydney, Australia"
+    email: "a.bruce@unsw.edu.au"
+  - family-names: "Yildiz"
+    given-names: "Baran"
+    affiliation: "School of Photovoltaic and Renewable Energy Engineering, University of New South Wales, Sydney, Australia"
+    email: "baran.yildiz@unsw.edu.au"
+version: "0.1.0"
+date-released: "2026-02-25"
+license: "MIT"
+repository-code: "https://github.com/mssamhan31/PyNRPF"
