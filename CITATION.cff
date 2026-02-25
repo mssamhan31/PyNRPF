@@ -15,7 +15,7 @@ authors:
     given-names: "Baran"
     affiliation: "School of Photovoltaic and Renewable Energy Engineering, University of New South Wales, Sydney, Australia"
     email: "baran.yildiz@unsw.edu.au"
-version: "0.1.1"
+version: "0.1.2"
 date-released: "2026-02-25"
 license: "MIT"
 repository-code: "https://github.com/mssamhan31/PyNRPF"

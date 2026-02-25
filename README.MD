@@ -1,4 +1,4 @@
-# PyNRPF v0.1.0
+# PyNRPF v0.1.2
 
 PyNRPF reproduces reverse power flow (RPF) detection and correction results using:
 - `m7_dtr` (deterministic threshold rule; config key `m7_threshold`)
@@ -8,6 +8,12 @@ The repository publishes three artifact groups:
 - core metrics and models
 - publication figures
 - publication tables
+
+## Contributors
+
+- M. Syahman Samhan (contact: m.samhan@unsw.edu.au)
+- Anna Bruce
+- Baran Yildiz
 
 ## Quick Start (Windows)
 
