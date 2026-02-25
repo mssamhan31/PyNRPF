@@ -121,20 +121,11 @@ Default split:
 - train: 2021-11-01 to 2023-09-30
 - test: 2023-10-01 to 2024-09-30
 
-## Optional: Databricks Connect Smoke Check
-
-```powershell
-Copy-Item config/databricks_connect.example.yaml config/databricks_connect.yaml
-.\scripts\setup_local_connect.ps1 -Profile "dbx" -ClusterId "<your-cluster-id>"
-.\scripts\run_local_connect.ps1 -ConfigPath "config/databricks_connect.yaml" -Profile "dbx"
-```
-
 ## Repository Layout
 
 ```text
 config/run.yaml
 notebooks/
-  00_hello_databricks_connect_notebook.ipynb
   01_reproduce_key_numbers.ipynb
   02_publication_figures.ipynb
   03_publication_tables.ipynb
