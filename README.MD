@@ -1,4 +1,5 @@
 # PyNRPF v0.1.2
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18764944.svg)](https://doi.org/10.5281/zenodo.18764944)
 
 PyNRPF reproduces reverse power flow (RPF) detection and correction results using:
 - `m7_dtr` (deterministic threshold rule; config key `m7_threshold`)

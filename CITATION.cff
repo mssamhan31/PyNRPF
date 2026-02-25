@@ -17,5 +17,6 @@ authors:
     email: "baran.yildiz@unsw.edu.au"
 version: "0.1.2"
 date-released: "2026-02-25"
+doi: "10.5281/zenodo.18764944"
 license: "MIT"
 repository-code: "https://github.com/mssamhan31/PyNRPF"
