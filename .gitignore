@@ -9,3 +9,8 @@ __pycache__/
 .vscode
 .tools/
 config/databricks_connect.yaml
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

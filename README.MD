@@ -128,6 +128,28 @@ Default split:
 - train: 2021-11-01 to 2023-09-30
 - test: 2023-10-01 to 2024-09-30
 
+## Implementation Package (v0.2.0)
+
+The repository now includes an implementation package API (`pynrpf`) for
+inference on unknown datasets (separate from paper reproduction notebooks).
+The canonical package import path is `pynrpf`.
+
+- Package config template: `config/pynrpf_inference.yaml`
+- Input type: pandas DataFrame or Spark DataFrame
+- No file-path input required by API
+- Compatibility note: `src.*` modules are kept only for local notebook compatibility
+  in this repository and are not part of the installable package API.
+
+Minimal example:
+
+```python
+from pynrpf import run_inference
+
+result = run_inference(df, "config/pynrpf_inference.yaml")
+corrected_df = result["data"]
+summary = result["summary"]
+```
+
 ## Repository Layout
 
 ```text
