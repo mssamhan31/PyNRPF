@@ -1,0 +1,49 @@
+name: publication_archive_smoke
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  notebook-chain:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r publication/1_conference_paper/requirements.txt
+          python -m pip install jupyter nbconvert
+
+      - name: Execute notebook 01
+        working-directory: publication/1_conference_paper
+        run: |
+          python -m jupyter nbconvert --to notebook --execute notebooks/01_reproduce_key_numbers.ipynb --output 01_reproduce_key_numbers.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
+
+      - name: Execute notebook 02
+        working-directory: publication/1_conference_paper
+        run: |
+          python -m jupyter nbconvert --to notebook --execute notebooks/02_publication_figures.ipynb --output 02_publication_figures.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
+
+      - name: Execute notebook 03
+        working-directory: publication/1_conference_paper
+        run: |
+          python -m jupyter nbconvert --to notebook --execute notebooks/03_publication_tables.ipynb --output 03_publication_tables.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
+
+      - name: Upload archive outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-1-conference-paper-outputs
+          path: |
+            publication/1_conference_paper/outputs/**
+            publication/1_conference_paper/notebooks/*.executed.ipynb

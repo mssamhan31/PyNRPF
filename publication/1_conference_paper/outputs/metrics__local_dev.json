@@ -1,0 +1,161 @@
+{
+  "run_tag": "local_dev",
+  "generated_at_utc": "2026-03-03T06:07:59.705116+00:00",
+  "dataset": "C:\\Users\\z5404477\\Documents\\PyNRPF\\publication\\1_conference_paper\\dataset\\raw\\rpf_dataset.parquet",
+  "split": {
+    "train_start": "2021-11-01",
+    "train_end": "2023-09-30",
+    "test_start": "2023-10-01",
+    "test_end": "2024-09-30"
+  },
+  "data_summary": {
+    "n_rows": 1011264,
+    "n_sites": 10,
+    "n_train_rows": 666432,
+    "n_test_rows": 344832,
+    "n_day_rows": 10643,
+    "null_substation_id": 0,
+    "null_timestamp": 0,
+    "null_net_load_MW": 3000,
+    "null_solar_MW": 1040,
+    "null_net_load_ground_truth": 3000
+  },
+  "m7_threshold": {
+    "day": {
+      "train": {
+        "tp": 2054,
+        "fp": 257,
+        "fn": 41,
+        "tn": 4634,
+        "precision": 0.889,
+        "recall": 0.98,
+        "f1": 0.932,
+        "support": 2095
+      },
+      "test": {
+        "tp": 1279,
+        "fp": 124,
+        "fn": 49,
+        "tn": 2205,
+        "precision": 0.912,
+        "recall": 0.963,
+        "f1": 0.937,
+        "support": 1328
+      },
+      "excluded_days": 0
+    },
+    "interval_all_days": {
+      "train": {
+        "tp": 21076,
+        "fp": 5056,
+        "fn": 6282,
+        "tn": 78514,
+        "precision": 0.807,
+        "recall": 0.77,
+        "f1": 0.788,
+        "support": 27358
+      },
+      "test": {
+        "tp": 15723,
+        "fp": 2914,
+        "fn": 4037,
+        "tn": 44670,
+        "precision": 0.844,
+        "recall": 0.796,
+        "f1": 0.819,
+        "support": 19760
+      }
+    },
+    "interval_tp_days_only": {
+      "train": {
+        "tp": 21076,
+        "fp": 4005,
+        "fn": 6282,
+        "tn": 67229,
+        "precision": 0.84,
+        "recall": 0.77,
+        "f1": 0.804,
+        "support": 27358
+      },
+      "test": {
+        "tp": 15723,
+        "fp": 2367,
+        "fn": 4037,
+        "tn": 39265,
+        "precision": 0.869,
+        "recall": 0.796,
+        "f1": 0.831,
+        "support": 19760
+      }
+    }
+  },
+  "m8_xgb": {
+    "day": {
+      "train": {
+        "tp": 2095,
+        "fp": 0,
+        "fn": 0,
+        "tn": 4891,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 2095
+      },
+      "test": {
+        "tp": 1272,
+        "fp": 62,
+        "fn": 56,
+        "tn": 2267,
+        "precision": 0.954,
+        "recall": 0.958,
+        "f1": 0.956,
+        "support": 1328
+      },
+      "excluded_days": 0
+    },
+    "interval_all_days": {
+      "train": {
+        "tp": 23203,
+        "fp": 781,
+        "fn": 4470,
+        "tn": 72106,
+        "precision": 0.967,
+        "recall": 0.838,
+        "f1": 0.898,
+        "support": 27673
+      },
+      "test": {
+        "tp": 15980,
+        "fp": 1348,
+        "fn": 4095,
+        "tn": 42609,
+        "precision": 0.922,
+        "recall": 0.796,
+        "f1": 0.854,
+        "support": 20075
+      }
+    },
+    "interval_tp_days_only": {
+      "train": {
+        "tp": 23203,
+        "fp": 781,
+        "fn": 4470,
+        "tn": 72106,
+        "precision": 0.967,
+        "recall": 0.838,
+        "f1": 0.898,
+        "support": 27673
+      },
+      "test": {
+        "tp": 15980,
+        "fp": 1235,
+        "fn": 4095,
+        "tn": 39746,
+        "precision": 0.928,
+        "recall": 0.796,
+        "f1": 0.857,
+        "support": 20075
+      }
+    }
+  }
+}

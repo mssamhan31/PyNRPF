@@ -1,0 +1,5 @@
+Level,Split,N Total,N Need Correction,Pct Need Correction
+day,train,6986,2095,29.989
+day,test,3657,1328,36.314
+interval,train,666432,27678,4.153
+interval,test,344832,20302,5.888
