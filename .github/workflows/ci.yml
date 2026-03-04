@@ -7,6 +7,26 @@ on:
   pull_request:
 
 jobs:
+  setuptools-compat-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install pinned build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools==69.5.1 wheel build
+
+      - name: Build package with setuptools 69 compatibility
+        run: python -m build --sdist --wheel --no-isolation
+
   package-checks:
     runs-on: ubuntu-latest
     strategy:
