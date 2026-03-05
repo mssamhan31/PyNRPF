@@ -56,11 +56,6 @@ model:
       seed: 9
       threshold: 0.892234
 
-  # Optional labels for train_model if labels argument is not passed.
-  training_labels:
-    day: "label_day"
-    interval: "label_interval"
-
 artifacts:
   # Required for m8_xgb inference.
   # Supports local paths, dbfs:/..., file://..., and http(s)://...

@@ -155,11 +155,18 @@ def _adapt_legacy(cfg: dict[str, Any]) -> dict[str, Any]:
     return adapted
 
 
+def _extract_inference_block(raw: dict[str, Any]) -> dict[str, Any]:
+    payload = raw.get("pynrpf_inference")
+    if isinstance(payload, dict):
+        return deepcopy(payload)
+    return raw
+
+
 def load_config(config: ConfigInput) -> dict[str, Any]:
     if isinstance(config, Mapping):
-        raw = dict(config)
+        raw = _extract_inference_block(dict(config))
     elif isinstance(config, (str, Path)):
-        raw = _load_yaml(Path(config))
+        raw = _extract_inference_block(_load_yaml(Path(config)))
     else:
         raise TypeError("Config must be a mapping, file path string, or pathlib.Path.")
 

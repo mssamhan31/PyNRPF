@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Optional
+from copy import deepcopy
+from typing import Any, Dict
 
-from .artifacts import save_artifact_bundle
+from .artifacts import save_versioned_artifact_bundle
 from .config import ConfigInput, load_config
 from .monitoring import build_operational_summary
 from .registry import get_model
+from .training_config import load_training_config
 from .validation import from_pandas_output, to_pandas_input, validate_dataframe
 
 
@@ -28,33 +30,51 @@ def run_inference(data: Any, config: ConfigInput) -> Dict[str, Any]:
     }
 
 
-def train_model(
-    data: Any,
-    config: ConfigInput,
-    labels: Optional[Mapping[str, str]] = None,
-    save_to: Optional[str] = None,
-) -> Dict[str, Any]:
-    cfg = load_config(config)
+def train_m8_xgb(data: Any, config: ConfigInput) -> Dict[str, Any]:
+    inference_cfg = load_config(config)
+    training_cfg = load_training_config(config)
+
     _, pandas_df, _ = to_pandas_input(data)
-    cleaned_df, _ = validate_dataframe(pandas_df, cfg)
+    cleaned_df, _ = validate_dataframe(pandas_df, inference_cfg)
 
-    model_name = cfg["model"]["selected_model"]
-    plugin = get_model(model_name)
+    cfg = deepcopy(inference_cfg)
+    cfg["model"]["selected_model"] = "m8_xgb"
+    cfg["training"] = deepcopy(training_cfg)
 
-    label_map = dict(labels) if labels is not None else {}
-    if not label_map:
-        from_cfg = cfg.get("model", {}).get("training_labels", {})
-        if isinstance(from_cfg, dict):
-            label_map = dict(from_cfg)
+    m8_cfg = cfg.get("model", {}).setdefault("m8_xgb", {})
+    xgb1_cfg = m8_cfg.setdefault("xgb1_day", {})
+    xgb2_cfg = m8_cfg.setdefault("xgb2_timestamp", {})
+    thresholds = training_cfg["thresholds"]
+    xgb1_cfg["threshold"] = float(thresholds["xgb1_day"])
+    xgb2_cfg["threshold"] = float(thresholds["xgb2_timestamp"])
+    seed = int(training_cfg["random_seed"])
+    xgb1_cfg["seed"] = seed
+    xgb2_cfg["seed"] = seed
 
+    plugin = get_model("m8_xgb")
+    label_map = dict(training_cfg["labels"])
     bundle = plugin.train(cleaned_df, cfg, cfg["columns"], labels=label_map)
 
-    saved_path = None
-    if save_to:
-        saved_path = save_artifact_bundle(bundle, save_to)
+    training_meta = bundle.get("training_metadata", {})
+    manifest = {
+        "bundle_schema": bundle.get("bundle_schema"),
+        "model_name": bundle.get("model_name"),
+        "created_at_utc": bundle.get("created_at_utc"),
+        "training_metadata": training_meta,
+    }
+    artifact_result = save_versioned_artifact_bundle(
+        bundle=bundle,
+        base_location=training_cfg["output"]["base_uri"],
+        model_name="m8_xgb",
+        manifest=manifest,
+    )
 
     return {
         "bundle": bundle,
-        "saved_path": saved_path,
-        "model": model_name,
+        "bundle_schema": bundle.get("bundle_schema"),
+        "model": "m8_xgb",
+        "artifact_dir_uri": artifact_result["artifact_dir_uri"],
+        "artifact_uri": artifact_result["artifact_uri"],
+        "manifest_uri": artifact_result["manifest_uri"],
+        "validation_metrics": training_meta.get("validation_metrics", {}),
     }

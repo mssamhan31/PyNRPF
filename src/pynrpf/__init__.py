@@ -1,6 +1,6 @@
 """PyNRPF implementation package API."""
 
-from .api import run_inference, train_model
+from .api import run_inference, train_m8_xgb
 from .artifacts import load_artifact_bundle, save_artifact_bundle
 from .config import load_config
 from .registry import list_models
@@ -11,7 +11,7 @@ __all__ = [
     "list_models",
     "run_inference",
     "save_artifact_bundle",
-    "train_model",
+    "train_m8_xgb",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

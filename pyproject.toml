@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pynrpf"
-version = "0.2.0"
+version = "0.3.0"
 description = "PyNRPF implementation package for reverse power flow detection and correction."
 readme = "README.MD"
 requires-python = ">=3.10"

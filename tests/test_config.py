@@ -25,3 +25,25 @@ def test_load_config_adapts_legacy_run_yaml_shape() -> None:
     assert cfg["runtime"]["interval_minutes"] == 15
     assert cfg["model"]["m7_threshold"]["min_threshold"] == 0.1
     assert cfg["model"]["m8_xgb"]["xgb2_timestamp"]["threshold"] == 0.7
+
+
+def test_load_config_extracts_pynrpf_inference_block() -> None:
+    full_cfg = {
+        "pipeline_schema_version": "1.0.0",
+        "tables": {"inputs": {"ignored": "value"}},
+        "pynrpf_inference": {
+            "columns": {
+                "site": "display_excel_name",
+                "timestamp": "TS",
+                "net_load": "MW",
+                "solar": "Solar_MW",
+            },
+            "runtime": {"interval_minutes": 15, "strict_validation": True},
+            "model": {"selected_model": "m7_dtr"},
+        },
+    }
+    cfg = load_config(full_cfg)
+
+    assert cfg["columns"]["site"] == "display_excel_name"
+    assert cfg["columns"]["timestamp"] == "TS"
+    assert cfg["model"]["selected_model"] == "m7_dtr"

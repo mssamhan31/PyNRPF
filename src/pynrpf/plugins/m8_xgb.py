@@ -71,6 +71,36 @@ def _bundle_section(
     return model, feat_cols, threshold
 
 
+def _date_window_mask(values: pd.Series, start_date: str, end_date: str) -> pd.Series:
+    dates = pd.to_datetime(values).dt.normalize()
+    start = pd.Timestamp(start_date)
+    end = pd.Timestamp(end_date)
+    return (dates >= start) & (dates <= end)
+
+
+def _binary_metrics(y_true: np.ndarray, prob: np.ndarray, threshold: float) -> dict[str, Any]:
+    pred = (prob >= threshold).astype(np.uint8)
+    tp = int(((pred == 1) & (y_true == 1)).sum())
+    fp = int(((pred == 1) & (y_true == 0)).sum())
+    fn = int(((pred == 0) & (y_true == 1)).sum())
+    tn = int(((pred == 0) & (y_true == 0)).sum())
+    precision = tp / (tp + fp) if (tp + fp) else 0.0
+    recall = tp / (tp + fn) if (tp + fn) else 0.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    return {
+        "rows": int(len(y_true)),
+        "positives": int(y_true.sum()),
+        "threshold": float(threshold),
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "tn": tn,
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1": float(f1),
+    }
+
+
 class M8XGBPlugin(BaseModelPlugin):
     name = "m8_xgb"
 
@@ -201,6 +231,24 @@ class M8XGBPlugin(BaseModelPlugin):
                 f"day={day_label_col}, interval={interval_label_col}"
             )
 
+        training_cfg = cfg.get("training", {})
+        if not isinstance(training_cfg, dict):
+            raise TypeError("Training settings must be a mapping at cfg['training'].")
+        split_cfg = training_cfg.get("split", {})
+        if not isinstance(split_cfg, dict):
+            raise TypeError(
+                "Training split settings must be a mapping at cfg['training']['split']."
+            )
+        train_start = str(split_cfg.get("train_start", "")).strip()
+        train_end = str(split_cfg.get("train_end", "")).strip()
+        validation_start = str(split_cfg.get("validation_start", "")).strip()
+        validation_end = str(split_cfg.get("validation_end", "")).strip()
+        if not (train_start and train_end and validation_start and validation_end):
+            raise ValueError(
+                "Training split dates are required: train_start, train_end, "
+                "validation_start, validation_end."
+            )
+
         site_col = columns["site"]
         ts_col = columns["timestamp"]
         net_col = columns["net_load"]
@@ -210,7 +258,15 @@ class M8XGBPlugin(BaseModelPlugin):
         m8_cfg = model_cfg.get("m8_xgb", {})
         xgb1_cfg = m8_cfg.get("xgb1_day", {})
         xgb2_cfg = m8_cfg.get("xgb2_timestamp", {})
-        feature_cfg = _feature_cfg(df, ts_col, m8_cfg)
+        feature_cfg = {
+            "m8_xgb": m8_cfg,
+            "split": {
+                "train_start": train_start,
+                "test_end": validation_end,
+            },
+        }
+        thr1 = float(xgb1_cfg.get("threshold", 0.5))
+        thr2 = float(xgb2_cfg.get("threshold", 0.5))
 
         # Stage 1 training labels (day).
         day_work = df.copy()
@@ -226,10 +282,24 @@ class M8XGBPlugin(BaseModelPlugin):
             solar_col,
             "_pynrpf_gt_day",
         )
-        X1 = day_df[feat_cols1].to_numpy(dtype=np.float32)
-        y1 = day_df[label_col1].to_numpy(dtype=np.uint8)
+        day_dates = pd.to_datetime(day_df["date"])
+        is_train_day = _date_window_mask(day_dates, train_start, train_end)
+        is_validation_day = _date_window_mask(day_dates, validation_start, validation_end)
+        if not is_train_day.any():
+            raise ValueError("No day-level rows found in training split window for m8_xgb.")
+        if not is_validation_day.any():
+            raise ValueError("No day-level rows found in validation split window for m8_xgb.")
+
+        day_train = day_df.loc[is_train_day]
+        day_val = day_df.loc[is_validation_day]
+        X1 = day_train[feat_cols1].to_numpy(dtype=np.float32)
+        y1 = day_train[label_col1].to_numpy(dtype=np.uint8)
         clf1 = _make_clf(xgb1_cfg)
         clf1.fit(X1, y1)
+        X1_val = day_val[feat_cols1].to_numpy(dtype=np.float32)
+        y1_val = day_val[label_col1].to_numpy(dtype=np.uint8)
+        prob1_val = clf1.predict_proba(X1_val)[:, 1]
+        val_metrics_day = _binary_metrics(y1_val, prob1_val, thr1)
 
         # Stage 2 training labels (interval).
         interval_work = df.copy()
@@ -253,23 +323,57 @@ class M8XGBPlugin(BaseModelPlugin):
                 "No interval training rows available for m8_xgb stage-2 model. "
                 "Check labels and daytime coverage."
             )
-        X2 = ts_df[feat_cols2].to_numpy(dtype=np.float32)
-        y2 = ts_df[label_col2].to_numpy(dtype=np.uint8)
+        ts_dates = pd.to_datetime(ts_df["date"])
+        is_train_ts = _date_window_mask(ts_dates, train_start, train_end)
+        is_validation_ts = _date_window_mask(ts_dates, validation_start, validation_end)
+        if not is_train_ts.any():
+            raise ValueError("No interval rows found in training split window for m8_xgb.")
+        if not is_validation_ts.any():
+            raise ValueError("No interval rows found in validation split window for m8_xgb.")
+
+        ts_train = ts_df.loc[is_train_ts]
+        ts_val = ts_df.loc[is_validation_ts]
+        X2 = ts_train[feat_cols2].to_numpy(dtype=np.float32)
+        y2 = ts_train[label_col2].to_numpy(dtype=np.uint8)
         clf2 = _make_clf(xgb2_cfg)
         clf2.fit(X2, y2)
+        X2_val = ts_val[feat_cols2].to_numpy(dtype=np.float32)
+        y2_val = ts_val[label_col2].to_numpy(dtype=np.uint8)
+        prob2_val = clf2.predict_proba(X2_val)[:, 1]
+        val_metrics_interval = _binary_metrics(y2_val, prob2_val, thr2)
 
         return {
-            "bundle_schema": "pynrpf.m8_xgb.bundle.v1",
+            "bundle_schema": "pynrpf.m8_xgb.bundle.v2",
             "model_name": self.name,
             "created_at_utc": datetime.now(timezone.utc).isoformat(),
             "xgb1_day": {
                 "model": clf1,
                 "feature_columns": feat_cols1,
-                "threshold": float(xgb1_cfg.get("threshold", 0.5)),
+                "threshold": thr1,
             },
             "xgb2_timestamp": {
                 "model": clf2,
                 "feature_columns": feat_cols2,
-                "threshold": float(xgb2_cfg.get("threshold", 0.5)),
+                "threshold": thr2,
+            },
+            "training_metadata": {
+                "feature_pipeline": str(
+                    training_cfg.get("features", {}).get("pipeline", "legacy_v1")
+                ),
+                "labels": {
+                    "day": day_label_col,
+                    "interval": interval_label_col,
+                },
+                "split": {
+                    "train_start": train_start,
+                    "train_end": train_end,
+                    "validation_start": validation_start,
+                    "validation_end": validation_end,
+                },
+                "random_seed": int(training_cfg.get("random_seed", xgb1_cfg.get("seed", 9))),
+                "validation_metrics": {
+                    "xgb1_day": val_metrics_day,
+                    "xgb2_timestamp": val_metrics_interval,
+                },
             },
         }

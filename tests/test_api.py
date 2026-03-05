@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import pynrpf
 from pynrpf.api import run_inference
 
 
@@ -75,3 +76,39 @@ def test_run_inference_m8_requires_artifact_uri() -> None:
         assert "m8_pretrained_bundle_uri" in str(exc)
         return
     raise AssertionError("Expected ValueError when m8_pretrained_bundle_uri is not provided.")
+
+
+def test_run_inference_accepts_full_pipeline_mapping() -> None:
+    df = _sample_df()
+    cfg = {
+        "pipeline_schema_version": "1.0.0",
+        "tables": {"inputs": {"ignored": "value"}},
+        "pynrpf_inference": {
+            "columns": {
+                "site": "substation_id",
+                "timestamp": "timestamp",
+                "net_load": "net_load_MW",
+                "solar": "solar_MW",
+            },
+            "runtime": {"interval_minutes": 15, "strict_validation": True},
+            "model": {
+                "selected_model": "m7_dtr",
+                "m7_threshold": {
+                    "solar_peak_tiebreak_time": "12:30",
+                    "peak_window_minutes": 150,
+                    "min_threshold": 0.05,
+                    "min_threshold_both": 0.25,
+                },
+            },
+        },
+    }
+
+    out = run_inference(df, cfg)
+    assert out["model"] == "m7_dtr"
+    assert "pynrpf_corrected_net_load" in out["data"].columns
+
+
+def test_public_api_exports_train_m8_only() -> None:
+    assert hasattr(pynrpf, "train_m8_xgb")
+    assert "train_m8_xgb" in pynrpf.__all__
+    assert "train_model" not in pynrpf.__all__
