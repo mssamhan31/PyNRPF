@@ -8,7 +8,7 @@ version = "0.3.0"
 description = "PyNRPF implementation package for reverse power flow detection and correction."
 readme = "README.MD"
 requires-python = ">=3.10"
-license = "MIT"
+license = { file = "LICENSE" }
 authors = [
   { name = "M. Syahman Samhan", email = "m.samhan@unsw.edu.au" }
 ]
