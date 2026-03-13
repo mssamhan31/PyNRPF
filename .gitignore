@@ -10,6 +10,7 @@ __pycache__/
 .venv/
 .vscode
 .tools/
+/outputs/
 config/databricks_connect.yaml
 build/
 dist/

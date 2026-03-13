@@ -32,8 +32,8 @@ Notes:
 Tracked artifacts include:
 
 - `data/raw/rpf_dataset.parquet`
-- `outputs/*.json`, `outputs/*.yaml`, `outputs/*.pkl`
-- publication figure/table exports under `outputs/publication_figures` and `outputs/publication_tables`
+- `publication/1_conference_paper/outputs/*.json`, `publication/1_conference_paper/outputs/*.yaml`
+- publication figure/table exports under `publication/1_conference_paper/outputs/publication_figures` and `publication/1_conference_paper/outputs/publication_tables`
 
 Status: repository intentionally versions dataset and generated outputs.
 
