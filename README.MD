@@ -104,6 +104,9 @@ Output:
 - `summary`: row counts and monitoring stats.
 - `model`: resolved model id.
 - `input_type`: `"pandas"` or `"spark"`.
+- `m7_dtr` note: strict day flags remain threshold-based, while interval
+  corrections and corrected net load use a relaxed, threshold-free minima span,
+  so day and interval flags may diverge.
 
 Common errors:
 - Missing required columns.
