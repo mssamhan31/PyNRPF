@@ -78,6 +78,28 @@ def test_run_inference_m8_requires_artifact_uri() -> None:
     raise AssertionError("Expected ValueError when m8_pretrained_bundle_uri is not provided.")
 
 
+def test_run_inference_m8_requires_strict_validation_true() -> None:
+    df = _sample_df()
+    cfg = {
+        "columns": {
+            "site": "substation_id",
+            "timestamp": "timestamp",
+            "net_load": "net_load_MW",
+            "solar": "solar_MW",
+        },
+        "runtime": {"interval_minutes": 15, "strict_validation": False},
+        "model": {"selected_model": "m8_xgb"},
+        "artifacts": {"m8_pretrained_bundle_uri": "ignored-for-strictness-check"},
+    }
+
+    try:
+        run_inference(df, cfg)
+    except ValueError as exc:
+        assert "strict_validation=true" in str(exc)
+        return
+    raise AssertionError("Expected ValueError when m8_xgb inference disables strict validation.")
+
+
 def test_run_inference_accepts_full_pipeline_mapping() -> None:
     df = _sample_df()
     cfg = {

@@ -11,12 +11,24 @@ from .training_config import load_training_config
 from .validation import from_pandas_output, to_pandas_input, validate_dataframe
 
 
+def _require_strict_validation_for_m8(cfg: dict[str, Any], operation: str) -> None:
+    strict = bool(cfg.get("runtime", {}).get("strict_validation", True))
+    if not strict:
+        raise ValueError(
+            f"m8_xgb {operation} requires runtime.strict_validation=true "
+            "to prevent duplicate timestamp expansion."
+        )
+
+
 def run_inference(data: Any, config: ConfigInput) -> Dict[str, Any]:
     cfg = load_config(config)
+    model_name = cfg["model"]["selected_model"]
+    if model_name == "m8_xgb":
+        _require_strict_validation_for_m8(cfg, "inference")
+
     input_kind, pandas_df, spark_session = to_pandas_input(data)
     cleaned_df, dq_summary = validate_dataframe(pandas_df, cfg)
 
-    model_name = cfg["model"]["selected_model"]
     plugin = get_model(model_name)
     result_df = plugin.run_inference(cleaned_df, cfg, cfg["columns"])
 
@@ -33,6 +45,7 @@ def run_inference(data: Any, config: ConfigInput) -> Dict[str, Any]:
 def train_m8_xgb(data: Any, config: ConfigInput) -> Dict[str, Any]:
     inference_cfg = load_config(config)
     training_cfg = load_training_config(config)
+    _require_strict_validation_for_m8(inference_cfg, "training")
 
     _, pandas_df, _ = to_pandas_input(data)
     cleaned_df, _ = validate_dataframe(pandas_df, inference_cfg)

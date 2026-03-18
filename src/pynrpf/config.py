@@ -63,6 +63,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
                 "scale_pos_weight": 5,
                 "seed": 9,
                 "threshold": 0.892234,
+                "score_all_days_for_review": False,
             },
         },
     },

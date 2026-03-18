@@ -54,3 +54,9 @@ def test_uri_resolution_supports_dbfs_and_volumes_aliases() -> None:
     assert dbfs_path.endswith("/dbfs/mnt/models/m8/bundle.pkl")
     assert dbfs_volume_alias.endswith("/Volumes/cat/sch/vol/bundle.pkl")
     assert volume_path.endswith("/Volumes/cat/sch/vol/bundle.pkl")
+
+
+def test_uri_resolution_supports_file_scheme(tmp_path: Path) -> None:
+    target = (tmp_path / "bundle.pkl").resolve()
+    resolved = _to_local_path(target.as_uri()).resolve()
+    assert resolved == target

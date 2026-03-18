@@ -14,7 +14,10 @@ def test_load_config_adapts_legacy_run_yaml_shape() -> None:
         },
         "validation": {"enforce_interval_alignment": True},
         "m7_threshold": {"min_threshold": 0.1, "min_threshold_both": 0.2},
-        "m8_xgb": {"xgb1_day": {"threshold": 0.6}, "xgb2_timestamp": {"threshold": 0.7}},
+        "m8_xgb": {
+            "xgb1_day": {"threshold": 0.6},
+            "xgb2_timestamp": {"threshold": 0.7, "score_all_days_for_review": True},
+        },
     }
 
     cfg = load_config(legacy)
@@ -25,6 +28,7 @@ def test_load_config_adapts_legacy_run_yaml_shape() -> None:
     assert cfg["runtime"]["interval_minutes"] == 15
     assert cfg["model"]["m7_threshold"]["min_threshold"] == 0.1
     assert cfg["model"]["m8_xgb"]["xgb2_timestamp"]["threshold"] == 0.7
+    assert cfg["model"]["m8_xgb"]["xgb2_timestamp"]["score_all_days_for_review"] is True
 
 
 def test_load_config_extracts_pynrpf_inference_block() -> None:

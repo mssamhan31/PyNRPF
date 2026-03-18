@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 from pynrpf.api import run_inference, train_m8_xgb
+from pynrpf.plugins.m8_xgb import _align_features
+from pynrpf._legacy.features import build_xgb1_features
 
 
 def _sample_training_df() -> pd.DataFrame:
@@ -109,3 +111,58 @@ def test_train_m8_xgb_requires_day_and_interval_labels(tmp_path: Path) -> None:
         assert "label_interval" in str(exc)
         return
     raise AssertionError("Expected KeyError when required training label columns are missing.")
+
+
+def test_m8_feature_alignment_uses_zero_for_missing_training_columns() -> None:
+    def _site_frame(site: str) -> pd.DataFrame:
+        ts = pd.date_range("2024-01-01", periods=96, freq="15min")
+        x = np.linspace(0, 2 * np.pi, len(ts), endpoint=False)
+        return pd.DataFrame(
+            {
+                "substation_id": site,
+                "timestamp": ts,
+                "net_load_MW": 4.0 + np.sin(x),
+                "solar_MW": np.maximum(0, np.sin((ts.hour.values - 6) / 12 * np.pi)),
+                "gt": 1.0,
+            }
+        )
+
+    cfg = {"m8_xgb": {}, "split": {"train_start": "2024-01-01", "test_end": "2024-01-01"}}
+    full_df = pd.concat([_site_frame("A"), _site_frame("B")], ignore_index=True)
+    subset_df = full_df[full_df["substation_id"] == "A"].copy()
+
+    full_day, feature_columns, _ = build_xgb1_features(
+        full_df,
+        cfg,
+        "substation_id",
+        "timestamp",
+        "net_load_MW",
+        "solar_MW",
+        "gt",
+    )
+    subset_day, _, _ = build_xgb1_features(
+        subset_df,
+        cfg,
+        "substation_id",
+        "timestamp",
+        "net_load_MW",
+        "solar_MW",
+        "gt",
+    )
+
+    aligned = _align_features(subset_day, feature_columns)
+    assert "is_B" in aligned.columns
+    assert float(aligned.iloc[0]["is_B"]) == 0.0
+
+
+def test_train_m8_xgb_requires_strict_validation_true(tmp_path: Path) -> None:
+    df = _sample_training_df()
+    cfg = _pipeline_cfg(tmp_path / "artifacts")
+    cfg["pynrpf_inference"]["runtime"]["strict_validation"] = False
+
+    try:
+        train_m8_xgb(df, cfg)
+    except ValueError as exc:
+        assert "strict_validation=true" in str(exc)
+        return
+    raise AssertionError("Expected ValueError when m8_xgb training disables strict validation.")

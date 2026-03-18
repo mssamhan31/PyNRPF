@@ -248,7 +248,7 @@ def build_xgb2_features(
     df: pd.DataFrame,
     cfg: Dict[str, Any],
     day_features_df: pd.DataFrame,
-    xgb1_positive_keys: pd.DataFrame,
+    candidate_keys: pd.DataFrame,
     col_site: str,
     col_ts: str,
     col_net: str,
@@ -265,9 +265,9 @@ def build_xgb2_features(
         Full run config.
     day_features_df : pd.DataFrame
         Output of ``build_xgb1_features`` (day-level wide table).
-    xgb1_positive_keys : pd.DataFrame
-        DataFrame with columns (col_site, date) for XGB1-predicted-positive
-        site-days.
+    candidate_keys : pd.DataFrame
+        DataFrame with columns (col_site, date) for the site-days that should
+        be scored by the stage-2 interval model.
     col_site, col_ts, col_net, col_solar, col_gt : str
         Column names.
 
@@ -354,9 +354,9 @@ def build_xgb2_features(
     # --- Label ---
     daytime[label_col2] = (daytime[col_gt] < 0).astype(int)
 
-    # --- Restrict to XGB1-positive days ---
+    # --- Restrict to the requested candidate site-days ---
     daytime = daytime.merge(
-        xgb1_positive_keys[[col_site, "date"]],
+        candidate_keys[[col_site, "date"]],
         on=[col_site, "date"],
         how="inner",
     )

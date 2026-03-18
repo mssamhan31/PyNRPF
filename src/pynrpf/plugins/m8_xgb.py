@@ -33,7 +33,9 @@ def _align_features(df: pd.DataFrame, feature_columns: list[str]) -> pd.DataFram
     aligned = df.copy()
     missing = [c for c in feature_columns if c not in aligned.columns]
     for col in missing:
-        aligned[col] = np.nan
+        # Missing columns here come from training-time feature space that is absent
+        # from the current batch, such as site one-hot columns for unseen sites.
+        aligned[col] = 0.0
     return aligned[feature_columns]
 
 
@@ -128,6 +130,7 @@ class M8XGBPlugin(BaseModelPlugin):
         m8_cfg = model_cfg.get("m8_xgb", {})
         xgb1_cfg = m8_cfg.get("xgb1_day", {})
         xgb2_cfg = m8_cfg.get("xgb2_timestamp", {})
+        score_all_days_for_review = bool(xgb2_cfg.get("score_all_days_for_review", False))
 
         bundle = self._load_bundle(cfg)
         clf1, feat_cols1, thr1 = _bundle_section(
@@ -155,16 +158,19 @@ class M8XGBPlugin(BaseModelPlugin):
         day_df["m8_prob_day"] = prob_day
         day_df["m8_rpf_day"] = (prob_day >= thr1).astype(bool)
 
-        pos_keys = day_df.loc[day_df["m8_rpf_day"], [site_col, "date"]].copy()
+        if score_all_days_for_review:
+            candidate_keys = day_df[[site_col, "date"]].copy()
+        else:
+            candidate_keys = day_df.loc[day_df["m8_rpf_day"], [site_col, "date"]].copy()
         ts_results: pd.DataFrame
-        if pos_keys.empty:
+        if candidate_keys.empty:
             ts_results = pd.DataFrame(columns=[site_col, ts_col, "m8_prob_ts", "m8_rpf_flag"])
         else:
             ts_df, _, _ = build_xgb2_features(
                 work,
                 feature_cfg,
                 day_df,
-                pos_keys,
+                candidate_keys,
                 site_col,
                 ts_col,
                 net_col,

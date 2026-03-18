@@ -30,7 +30,12 @@ def _to_local_path(location: Location) -> Path:
         # Windows drive letter path (e.g. C:\path\file.pkl).
         return Path(loc)
     if parsed.scheme == "file":
-        return Path(parsed.path)
+        file_path = parsed.path
+        if len(file_path) >= 3 and file_path[0] == "/" and file_path[2] == ":":
+            file_path = file_path[1:]
+        if parsed.netloc and parsed.netloc not in {"", "localhost"}:
+            file_path = f"//{parsed.netloc}{file_path}"
+        return Path(file_path)
     if parsed.scheme and parsed.scheme not in {"", "file"}:
         raise ValueError(f"Unsupported local path scheme: {parsed.scheme}")
     return Path(loc)
