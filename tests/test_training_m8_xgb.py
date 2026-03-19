@@ -5,9 +5,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from pynrpf._legacy.features import build_xgb1_features
 from pynrpf.api import run_inference, train_m8_xgb
 from pynrpf.plugins.m8_xgb import _align_features
-from pynrpf._legacy.features import build_xgb1_features
 
 
 def _sample_training_df() -> pd.DataFrame:
