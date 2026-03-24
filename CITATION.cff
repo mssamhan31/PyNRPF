@@ -16,5 +16,7 @@ authors:
     affiliation: "School of Photovoltaic and Renewable Energy Engineering, University of New South Wales, Sydney, Australia"
     email: "baran.yildiz@unsw.edu.au"
 version: "0.3.0"
+date-released: "2026-03-24"
+doi: "10.5281/zenodo.19211355"
 license: "MIT"
 repository-code: "https://github.com/mssamhan31/PyNRPF"
