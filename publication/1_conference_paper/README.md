@@ -18,6 +18,8 @@ publication/1_conference_paper/
     02_publication_figures.executed.ipynb
     03_publication_tables.ipynb
     03_publication_tables.executed.ipynb
+    04_hyperparameter_search.ipynb
+    04_hyperparameter_search.executed.ipynb
   models/
     xgb1_day.pkl
     xgb2_timestamp.pkl
@@ -48,6 +50,12 @@ Execute notebooks in order:
 .\.venv\Scripts\python -m jupyter nbconvert --to notebook --execute notebooks/01_reproduce_key_numbers.ipynb --output 01_reproduce_key_numbers.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
 .\.venv\Scripts\python -m jupyter nbconvert --to notebook --execute notebooks/02_publication_figures.ipynb --output 02_publication_figures.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
 .\.venv\Scripts\python -m jupyter nbconvert --to notebook --execute notebooks/03_publication_tables.ipynb --output 03_publication_tables.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
+.\.venv\Scripts\python -m jupyter nbconvert --to notebook --execute notebooks/04_hyperparameter_search.ipynb --output 04_hyperparameter_search.executed.ipynb --output-dir notebooks --ExecutePreprocessor.timeout=7200
 ```
 
 Outputs are written under `publication/1_conference_paper/outputs`.
+
+Additional outputs introduced by notebook 04:
+
+- `outputs/publication_tables/m7_dtr_hyperparameter_sweep.csv`
+- `outputs/publication_tables/m8_xgb_random_search.csv`

@@ -1,5 +1,5 @@
 # PyNRPF
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18764944.svg)](https://doi.org/10.5281/zenodo.18764944)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19211355.svg)](https://doi.org/10.5281/zenodo.19211355)
 
 PyNRPF provides an implementation package (`pynrpf`) for reverse power flow
 inference and `m8_xgb` training workflows.

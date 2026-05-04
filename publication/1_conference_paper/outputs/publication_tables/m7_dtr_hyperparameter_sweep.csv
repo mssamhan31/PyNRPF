@@ -1,0 +1,10 @@
+sweep_name,solar_peak_window_hours,min_threshold,min_threshold_both,day_precision,day_recall,day_f1,interval_tp_precision,interval_tp_recall,interval_tp_f1
+solar_peak_window_hours,1.5,0.05,0.25,0.915,0.943,0.929,0.865,0.823,0.843
+solar_peak_window_hours,2.5,0.05,0.25,0.912,0.963,0.937,0.869,0.796,0.831
+solar_peak_window_hours,3.5,0.05,0.25,0.911,0.965,0.937,0.871,0.774,0.82
+min_threshold,2.5,0.01,0.25,0.965,0.535,0.689,0.855,0.769,0.81
+min_threshold,2.5,0.025,0.25,0.942,0.852,0.894,0.871,0.793,0.83
+min_threshold,2.5,0.04,0.25,0.923,0.943,0.933,0.869,0.794,0.83
+min_threshold_both,2.5,0.05,0.15,0.925,0.951,0.938,0.872,0.795,0.832
+min_threshold_both,2.5,0.05,0.25,0.912,0.963,0.937,0.869,0.796,0.831
+min_threshold_both,2.5,0.05,0.35,0.908,0.965,0.936,0.868,0.796,0.83
