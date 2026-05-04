@@ -22,6 +22,9 @@ evaluation:
   daytime_start_hour: 6
   daytime_end_hour: 18
   exclude_negative_raw_mw_days: true
+  interval_prediction_day_scope: "predicted_positive_days"
+  interval_metric_scope: "tp_days_only"
+  interval_metric_level_name: "interval_tp_days_only"
   rounding: 6
   metrics:
     - precision
@@ -51,7 +54,7 @@ execution:
   # run full XGBoost training and write full metrics/prediction CSV outputs.
   run_full_experiment: false
   smoke_create_output_dirs: true
-  overwrite_outputs: false
+  overwrite_outputs: true
 
 resume:
   skip_completed: true

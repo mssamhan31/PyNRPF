@@ -172,14 +172,35 @@ def _m8_has_incomplete_tasks(
     )
 
 
+def _clear_expected_task_outputs(
+    out_dir: Path,
+    cfg: dict[str, Any],
+    task_specs: list[dict[str, str]],
+) -> None:
+    if not _overwrite_enabled(cfg):
+        return
+    for spec in task_specs:
+        for path in task_paths(out_dir, cfg, spec["fold_id"], spec["method"]).values():
+            if path.exists():
+                path.unlink()
+
+
 def _run_control_details(cfg: dict[str, Any]) -> dict[str, Any]:
     methods = enabled_methods(cfg)
+    ev = cfg.get("evaluation", {})
     return {
         "active_methods": methods,
         "m8_enabled": "m8_xgb" in methods,
         "m7_enabled": "m7_dtr" in methods,
         "resume_skip_completed": _resume_enabled(cfg),
         "overwrite_outputs": _overwrite_enabled(cfg),
+        "interval_prediction_day_scope": ev.get(
+            "interval_prediction_day_scope", "predicted_positive_days"
+        ),
+        "interval_metric_scope": ev.get("interval_metric_scope", "tp_days_only"),
+        "interval_metric_level_name": ev.get(
+            "interval_metric_level_name", "interval_tp_days_only"
+        ),
     }
 
 
@@ -464,12 +485,7 @@ def predict_m8(
     day_df["prob_day"] = sec1["model"].predict_proba(X_day)[:, 1]
     day_df["pred_day"] = day_df["prob_day"] >= sec1["threshold"]
 
-    score_all = bool(cfg["m8_xgb"]["xgb2_timestamp"].get("score_all_days_for_review", False))
-    candidate_keys = (
-        day_df[[cols["site"], "date"]]
-        if score_all
-        else day_df.loc[day_df["pred_day"], [cols["site"], "date"]]
-    ).copy()
+    candidate_keys = day_df.loc[day_df["pred_day"], [cols["site"], "date"]].copy()
 
     if candidate_keys.empty:
         ts_results = pd.DataFrame(
@@ -510,7 +526,10 @@ def predict_m8(
     result["pred_day"] = result["pred_day"].fillna(False).astype(bool)
 
     result = result.merge(ts_results, on=[cols["site"], cols["timestamp"]], how="left")
-    result["pred_interval"] = result["pred_interval"].fillna(False).astype(bool)
+    result["pred_interval"] = (
+        result["pred_interval"].fillna(False).infer_objects(copy=False).astype(bool)
+    )
+    result.loc[~result["pred_day"], "pred_interval"] = False
     result["corrected_net_load_MW"] = np.where(
         result["pred_interval"], -result[cols["net_load"]], result[cols["net_load"]]
     )
@@ -530,10 +549,13 @@ def predict_m7(eval_df: pd.DataFrame, cfg: dict[str, Any], article_root: Path) -
         cols["solar"],
     )
     out["pred_day"] = out["m7_rpf_day"].fillna(False).astype(bool)
-    out["pred_interval"] = out["m7_rpf_flag"].fillna(False).astype(bool)
+    out["pred_interval"] = out["m7_rpf_flag"].fillna(False).astype(bool) & out["pred_day"]
     out["prob_day"] = np.nan
     out["prob_interval"] = np.nan
-    out["corrected_net_load_MW"] = out["net_load_MW_m7"]
+    out["corrected_net_load_MW"] = np.where(
+        out["pred_interval"], -out[cols["net_load"]], out[cols["net_load"]]
+    )
+    out.loc[out[cols["net_load"]].isna(), "corrected_net_load_MW"] = np.nan
     return out
 
 
@@ -564,7 +586,13 @@ def evaluate_prediction_rows(
     day_df = day_df.loc[~(day_df["net_min"] < 0)].copy()
     day_metrics = _binary_classification_metrics(day_df["label_day"], day_df["pred_day"])
 
+    tp_days = day_df.loc[
+        day_df[cols["label_day"]].astype(bool) & day_df["pred_day"].astype(bool),
+        [cols["site"], cols["date"]],
+    ].copy()
+
     interval_df = work.merge(keep_days, on=[cols["site"], cols["date"]], how="inner")
+    interval_df = interval_df.merge(tp_days, on=[cols["site"], cols["date"]], how="inner")
     hours = interval_df[cols["timestamp"]].dt.hour
     ev = cfg["evaluation"]
     interval_df = interval_df.loc[
@@ -576,7 +604,8 @@ def evaluate_prediction_rows(
     )
 
     rows = []
-    for level, metrics in [("day", day_metrics), ("interval_daytime", interval_metrics)]:
+    interval_level_name = ev.get("interval_metric_level_name", "interval_tp_days_only")
+    for level, metrics in [("day", day_metrics), (interval_level_name, interval_metrics)]:
         rows.append(
             {
                 "experiment_id": experiment_id,
@@ -831,6 +860,7 @@ def run_time_split_experiment(
 
     out_dir = experiment_output_dir(article_root, cfg, experiment_id)
     ensure_output_dirs(out_dir, cfg)
+    _clear_expected_task_outputs(out_dir, cfg, expected_tasks)
     train_df = df.loc[train_mask].copy()
     test_df = df.loc[test_mask].copy()
     m8_model = None
@@ -902,6 +932,7 @@ def run_station_split_experiment(
 
     out_dir = experiment_output_dir(article_root, cfg, experiment_id)
     ensure_output_dirs(out_dir, cfg)
+    _clear_expected_task_outputs(out_dir, cfg, expected_tasks)
 
     for station in folds:
         train_df = df.loc[df[cols["site"]] != station].copy()
@@ -974,6 +1005,7 @@ def run_transfer_experiment(
 
     out_dir = experiment_output_dir(article_root, cfg, experiment_id)
     ensure_output_dirs(out_dir, cfg)
+    _clear_expected_task_outputs(out_dir, cfg, expected_tasks)
     synthetic_train = synthetic.loc[syn_train_mask].copy()
     actual_test = actual.loc[actual_test_mask].copy()
     m8_model = None

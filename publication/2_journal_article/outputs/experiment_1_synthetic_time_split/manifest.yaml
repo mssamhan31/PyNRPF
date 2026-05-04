@@ -1,5 +1,5 @@
 status: smoke_only
-created_at_utc: '2026-05-04T05:57:07.437128+00:00'
+created_at_utc: '2026-05-04T06:33:14.778521+00:00'
 notebook: 01a_synthetic_time_split.ipynb
 config_path: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\config\experiment_config.yaml
 experiment_id: experiment_1_synthetic_time_split
@@ -10,7 +10,10 @@ run_control:
   m8_enabled: true
   m7_enabled: true
   resume_skip_completed: true
-  overwrite_outputs: false
+  overwrite_outputs: true
+  interval_prediction_day_scope: predicted_positive_days
+  interval_metric_scope: tp_days_only
+  interval_metric_level_name: interval_tp_days_only
 output_structure:
   predictions_dir: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\outputs\experiment_1_synthetic_time_split\predictions
   metrics_dir: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\outputs\experiment_1_synthetic_time_split\metrics
@@ -22,7 +25,10 @@ details:
   m8_enabled: true
   m7_enabled: true
   resume_skip_completed: true
-  overwrite_outputs: false
+  overwrite_outputs: true
+  interval_prediction_day_scope: predicted_positive_days
+  interval_metric_scope: tp_days_only
+  interval_metric_level_name: interval_tp_days_only
   dataset_summary:
     dataset: synthetic
     n_rows: 1011264
