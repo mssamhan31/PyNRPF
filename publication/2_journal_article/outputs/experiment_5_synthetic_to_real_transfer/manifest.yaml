@@ -1,0 +1,60 @@
+status: smoke_only
+created_at_utc: '2026-05-04T05:57:16.348503+00:00'
+notebook: 01e_synthetic_to_real_transfer.ipynb
+config_path: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\config\experiment_config.yaml
+experiment_id: experiment_5_synthetic_to_real_transfer
+run_control:
+  active_methods:
+  - m8_xgb
+  - m7_dtr
+  m8_enabled: true
+  m7_enabled: true
+  resume_skip_completed: true
+  overwrite_outputs: false
+output_structure:
+  predictions_dir: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\outputs\experiment_5_synthetic_to_real_transfer\predictions
+  metrics_dir: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\outputs\experiment_5_synthetic_to_real_transfer\metrics
+  status_dir: C:\Users\T89937\Documents\samhan_git_folders\PyNRPF\publication\2_journal_article\outputs\experiment_5_synthetic_to_real_transfer\status
+details:
+  active_methods:
+  - m8_xgb
+  - m7_dtr
+  m8_enabled: true
+  m7_enabled: true
+  resume_skip_completed: true
+  overwrite_outputs: false
+  synthetic_summary:
+    dataset: synthetic
+    n_rows: 1011264
+    n_stations: 10
+    min_timestamp: '2021-11-01 00:15:00'
+    max_timestamp: '2024-09-30 00:00:00'
+    n_dates: 1065
+    null_timestamp: 0
+    null_net_load_MW: 3000
+    null_solar_MW: 1040
+    positive_label_interval: 47980
+    positive_label_day_site_days: 3423
+  actual_summary:
+    dataset: actual
+    n_rows: 815320
+    n_stations: 8
+    min_timestamp: '2021-11-01 00:15:00'
+    max_timestamp: '2024-09-30 23:45:00'
+    n_dates: 1065
+    null_timestamp: 0
+    null_net_load_MW: 13083
+    null_solar_MW: 836
+    positive_label_interval: 19617
+    positive_label_day_site_days: 1092
+  synthetic_train_rows: 666432
+  actual_test_rows: 280800
+  expected_tasks:
+  - fold_id: transfer_actual_test
+    method: m8_xgb
+    dataset: actual
+    partition: test
+  - fold_id: transfer_actual_test
+    method: m7_dtr
+    dataset: actual
+    partition: test

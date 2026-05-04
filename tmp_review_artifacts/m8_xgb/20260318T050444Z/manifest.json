@@ -1,0 +1,45 @@
+{
+  "bundle_schema": "pynrpf.m8_xgb.bundle.v2",
+  "created_at_utc": "2026-03-18T05:04:44.258902+00:00",
+  "model_name": "m8_xgb",
+  "training_metadata": {
+    "feature_pipeline": "legacy_v1",
+    "labels": {
+      "day": "label_day",
+      "interval": "label_interval"
+    },
+    "random_seed": 11,
+    "split": {
+      "train_end": "2024-01-02",
+      "train_start": "2024-01-01",
+      "validation_end": "2024-01-04",
+      "validation_start": "2024-01-03"
+    },
+    "validation_metrics": {
+      "xgb1_day": {
+        "f1": 0.6666666666666666,
+        "fn": 0,
+        "fp": 1,
+        "positives": 1,
+        "precision": 0.5,
+        "recall": 1.0,
+        "rows": 2,
+        "threshold": 0.55,
+        "tn": 0,
+        "tp": 1
+      },
+      "xgb2_timestamp": {
+        "f1": 0.47058823529411764,
+        "fn": 0,
+        "fp": 36,
+        "positives": 16,
+        "precision": 0.3076923076923077,
+        "recall": 1.0,
+        "rows": 52,
+        "threshold": 0.6,
+        "tn": 0,
+        "tp": 16
+      }
+    }
+  }
+}

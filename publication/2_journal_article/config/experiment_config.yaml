@@ -1,0 +1,111 @@
+paths:
+  actual_dataset_csv: "dataset/processed/actual_pynrpf_dataset.csv"
+  synthetic_dataset_csv: "dataset/processed/synthetic_pynrpf_dataset.csv"
+  output_base_dir: "outputs"
+
+columns:
+  site: "substation_id"
+  date: "date"
+  timestamp: "timestamp"
+  net_load: "net_load_MW"
+  solar: "solar_MW"
+  label_interval: "label_interval"
+  label_day: "label_day"
+
+split:
+  train_start: "2021-11-01"
+  train_end: "2023-09-30"
+  test_start: "2023-10-01"
+  test_end: "2024-09-30"
+
+evaluation:
+  daytime_start_hour: 6
+  daytime_end_hour: 18
+  exclude_negative_raw_mw_days: true
+  rounding: 6
+  metrics:
+    - precision
+    - recall
+    - f1
+    - tp
+    - fp
+    - fn
+    - tn
+    - support
+
+station_split:
+  leave_one_station_out: true
+  exclude_zero_positive_folds: true
+  synthetic_excluded_stations:
+    - "syn_A"
+    - "syn_D"
+    - "syn_H"
+
+methods:
+  enabled:
+    - "m8_xgb"
+    - "m7_dtr"
+
+execution:
+  # Keep false for notebook creation and smoke testing. Set true when ready to
+  # run full XGBoost training and write full metrics/prediction CSV outputs.
+  run_full_experiment: false
+  smoke_create_output_dirs: true
+  overwrite_outputs: false
+
+resume:
+  skip_completed: true
+
+outputs:
+  experiments:
+    experiment_1_synthetic_time_split: "experiment_1_synthetic_time_split"
+    experiment_2_synthetic_station_split: "experiment_2_synthetic_station_split"
+    experiment_3_actual_time_split: "experiment_3_actual_time_split"
+    experiment_4_actual_station_split: "experiment_4_actual_station_split"
+    experiment_5_synthetic_to_real_transfer: "experiment_5_synthetic_to_real_transfer"
+  metrics_summary_csv: "metrics_summary.csv"
+  fold_metrics_csv: "fold_metrics.csv"
+  manifest_yaml: "manifest.yaml"
+  predictions_dir: "predictions"
+  metrics_dir: "metrics"
+  status_dir: "status"
+
+m7_threshold:
+  solar_peak_tiebreak_time: "12:30"
+  peak_window_minutes: 150
+  min_threshold: 0.05
+  min_threshold_both: 0.25
+  apply_polarity_filter: false
+
+m8_xgb:
+  noon_hour_start: 6
+  noon_hour_end: 18
+  holiday_country: "AU"
+  holiday_subdivision: "NSW"
+  xgb1_day:
+    objective: "binary:logistic"
+    eval_metric: "aucpr"
+    tree_method: "hist"
+    eta: 0.1
+    n_estimators: 500
+    max_depth: 6
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 5
+    seed: 9
+    threshold: 0.585985
+  xgb2_timestamp:
+    objective: "binary:logistic"
+    eval_metric: "aucpr"
+    tree_method: "hist"
+    eta: 0.1
+    n_estimators: 500
+    max_depth: 6
+    min_child_weight: 3
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 5
+    seed: 9
+    threshold: 0.892234
+    score_all_days_for_review: false
