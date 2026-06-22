@@ -1,6 +1,9 @@
+schema_version: "journal_alpha_beta_gamma_v1"
+
 paths:
-  actual_dataset_csv: "dataset/processed/actual_pynrpf_dataset.csv"
-  synthetic_dataset_csv: "dataset/processed/synthetic_pynrpf_dataset.csv"
+  alpha_dataset_csv: "dataset/processed/synthetic_pynrpf_dataset.csv"
+  beta_dataset_csv: "dataset/processed/actual_pynrpf_dataset.csv"
+  beta_reviewed_dataset_csv: "dataset/oracle_data_creation/outputs/actual_pynrpf_dataset_reflagged.csv"
   output_base_dir: "outputs"
 
 columns:
@@ -12,103 +15,96 @@ columns:
   label_interval: "label_interval"
   label_day: "label_day"
 
-split:
+datasets:
+  alpha_name: "Alpha"
+  beta_name: "Beta"
+  gamma_name: "Gamma"
+  use_reviewed_beta: false
+  gamma_selection_policy: "highest_data_error_rmse"
+
+windows:
   train_start: "2021-11-01"
   train_end: "2023-09-30"
   test_start: "2023-10-01"
   test_end: "2024-09-30"
-
-evaluation:
-  daytime_start_hour: 6
-  daytime_end_hour: 18
-  exclude_negative_raw_mw_days: true
-  interval_prediction_day_scope: "predicted_positive_days"
-  interval_metric_scope: "tp_days_only"
-  interval_metric_level_name: "interval_tp_days_only"
-  rounding: 6
-  metrics:
-    - precision
-    - recall
-    - f1
-    - tp
-    - fp
-    - fn
-    - tn
-    - support
-
-station_split:
-  leave_one_station_out: true
-  exclude_zero_positive_folds: true
-  synthetic_excluded_stations:
-    - "syn_A"
-    - "syn_D"
-    - "syn_H"
-
-methods:
-  enabled:
-    - "m8_xgb"
-    - "m7_dtr"
-
-execution:
-  # Keep false for notebook creation and smoke testing. Set true when ready to
-  # run full XGBoost training and write full metrics/prediction CSV outputs.
-  run_full_experiment: false
-  smoke_create_output_dirs: true
-  overwrite_outputs: true
-
-resume:
-  skip_completed: true
+  beta_start: "2023-10-01"
+  beta_end: "2024-09-30"
+  gamma_forecast_test_start: "2024-09-01"
+  gamma_forecast_test_end: "2024-09-30"
 
 outputs:
-  experiments:
-    experiment_1_synthetic_time_split: "experiment_1_synthetic_time_split"
-    experiment_2_synthetic_station_split: "experiment_2_synthetic_station_split"
-    experiment_3_actual_time_split: "experiment_3_actual_time_split"
-    experiment_4_actual_station_split: "experiment_4_actual_station_split"
-    experiment_5_synthetic_to_real_transfer: "experiment_5_synthetic_to_real_transfer"
-  metrics_summary_csv: "metrics_summary.csv"
-  fold_metrics_csv: "fold_metrics.csv"
-  manifest_yaml: "manifest.yaml"
-  predictions_dir: "predictions"
+  intermediate_dir: "intermediate"
   metrics_dir: "metrics"
-  status_dir: "status"
+  tables_dir: "tables"
+  figures_dir: "figures"
+  manifests_dir: "manifests"
 
-m7_threshold:
-  solar_peak_tiebreak_time: "12:30"
-  peak_window_minutes: 150
-  min_threshold: 0.05
-  min_threshold_both: 0.25
-  apply_polarity_filter: false
+execution:
+  run_full_correction_validation: false
+  run_full_forecast: false
+  overwrite_outputs: true
+  random_seed: 9
 
-m8_xgb:
-  noon_hour_start: 6
-  noon_hour_end: 18
-  holiday_country: "AU"
-  holiday_subdivision: "NSW"
-  xgb1_day:
-    objective: "binary:logistic"
-    eval_metric: "aucpr"
+correction:
+  methods:
+    - "m8_xgb"
+    - "m7_dtr"
+  alpha_top_n_loso_sites: 3
+  interval_daytime_start_hour: 6
+  interval_daytime_end_hour: 18
+  m7_threshold:
+    solar_peak_tiebreak_time: "12:30"
+    peak_window_minutes: 150
+    min_threshold: 0.05
+    min_threshold_both: 0.25
+    apply_polarity_filter: false
+  m8_xgb:
+    noon_hour_start: 6
+    noon_hour_end: 18
+    holiday_country: "AU"
+    holiday_subdivision: "NSW"
+    xgb1_day:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.585985
+    xgb2_timestamp:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.892234
+      score_all_days_for_review: false
+
+forecast:
+  horizon_days: 7
+  lookback_days: 14
+  roll_frequency: "15min"
+  models:
+    - "seasonal_naive"
+    - "linear_regression"
+    - "xgboost"
+  xgboost:
+    objective: "reg:squarederror"
     tree_method: "hist"
-    eta: 0.1
-    n_estimators: 500
-    max_depth: 6
-    min_child_weight: 3
+    eta: 0.05
+    n_estimators: 300
+    max_depth: 4
     subsample: 0.8
     colsample_bytree: 0.8
-    scale_pos_weight: 5
     seed: 9
-    threshold: 0.585985
-  xgb2_timestamp:
-    objective: "binary:logistic"
-    eval_metric: "aucpr"
-    tree_method: "hist"
-    eta: 0.1
-    n_estimators: 500
-    max_depth: 6
-    min_child_weight: 3
-    subsample: 0.8
-    colsample_bytree: 0.8
-    scale_pos_weight: 5
-    seed: 9
-    threshold: 0.892234
-    score_all_days_for_review: false

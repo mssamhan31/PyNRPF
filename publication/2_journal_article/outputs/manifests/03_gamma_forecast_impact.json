@@ -1,0 +1,7 @@
+{
+  "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
+  "created_at_utc": "2026-06-22T06:48:18.352809+00:00",
+  "gamma_site": "act_B",
+  "notebook": "03_gamma_forecast_impact.ipynb",
+  "status": "smoke_only"
+}

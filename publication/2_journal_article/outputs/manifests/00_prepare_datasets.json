@@ -1,0 +1,12 @@
+{
+  "alpha_loso_sites": [
+    "syn_F",
+    "syn_E",
+    "syn_G"
+  ],
+  "beta_uses_reviewed_oracle": false,
+  "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
+  "created_at_utc": "2026-06-22T06:47:39.223121+00:00",
+  "gamma_site": "act_B",
+  "notebook": "00_prepare_datasets.ipynb"
+}

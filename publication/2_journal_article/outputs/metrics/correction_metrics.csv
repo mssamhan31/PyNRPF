@@ -1,0 +1,17 @@
+dataset,fold_id,method,level,support,positive_support,tp,fp,fn,tn,precision,recall,f1,status
+Alpha,alpha_holdout_syn_F,m8_xgb,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_F,m8_xgb,interval_daytime,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_F,m7_dtr,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_F,m7_dtr,interval_daytime,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_E,m8_xgb,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_E,m8_xgb,interval_daytime,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_E,m7_dtr,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_E,m7_dtr,interval_daytime,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_G,m8_xgb,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_G,m8_xgb,interval_daytime,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_G,m7_dtr,day,,,,,,,,,,planned_smoke_only
+Alpha,alpha_holdout_syn_G,m7_dtr,interval_daytime,,,,,,,,,,planned_smoke_only
+Beta,beta_transfer,m8_xgb,day,,,,,,,,,,planned_smoke_only
+Beta,beta_transfer,m8_xgb,interval_daytime,,,,,,,,,,planned_smoke_only
+Beta,beta_transfer,m7_dtr,day,,,,,,,,,,planned_smoke_only
+Beta,beta_transfer,m7_dtr,interval_daytime,,,,,,,,,,planned_smoke_only
