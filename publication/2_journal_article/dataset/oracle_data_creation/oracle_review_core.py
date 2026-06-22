@@ -194,6 +194,40 @@ def time_options_for_day(day_df: pd.DataFrame) -> list[str]:
     return sorted(day_df["_time_hhmm"].dropna().astype(str).unique().tolist())
 
 
+def default_review_window(day_df: pd.DataFrame) -> tuple[str, str]:
+    spans = flag_spans(day_df)
+    if spans:
+        start, end = spans[0]
+        return start.strftime("%H:%M"), end.strftime("%H:%M")
+
+    options = time_options_for_day(day_df)
+    if not options:
+        raise ValueError("Cannot choose review defaults for an empty site-day.")
+    preferred_start = "10:00" if "10:00" in options else options[len(options) // 3]
+    preferred_end = "14:00" if "14:00" in options else options[(2 * len(options)) // 3]
+    return preferred_start, preferred_end
+
+
+def review_control_defaults(
+    day_df: pd.DataFrame,
+    annotation_row: pd.Series | dict[str, object] | None,
+) -> tuple[str, str, str]:
+    default_start, default_end = default_review_window(day_df)
+    if annotation_row is None:
+        return ACTION_ACCEPT_OLD, default_start, default_end
+
+    action = str(annotation_row["review_action"]).strip().lower()
+    if action not in REVIEW_ACTIONS:
+        raise ValueError(f"Unknown review_action: {action!r}.")
+    if action == ACTION_MANUAL_WINDOW:
+        return (
+            action,
+            str(annotation_row["rpf_start_time"]).strip(),
+            str(annotation_row["rpf_end_time"]).strip(),
+        )
+    return action, default_start, default_end
+
+
 def validate_window_for_day(
     day_df: pd.DataFrame, start_time: str, end_time: str
 ) -> tuple[str, str]:
@@ -348,6 +382,29 @@ def clear_annotation(annotations: pd.DataFrame, substation_id: str, date: str) -
     return _sort_annotations(work.loc[keep].copy())
 
 
+def apply_annotation_batch(
+    annotations: pd.DataFrame,
+    updates: Iterable[dict[str, object]],
+) -> pd.DataFrame:
+    work = read_annotations_from_dataframe(annotations)
+    for update in updates:
+        substation_id = str(update["substation_id"]).strip()
+        date = str(update["date"]).strip()
+        if bool(update.get("clear", False)):
+            work = clear_annotation(work, substation_id, date)
+            continue
+
+        work = upsert_annotation(
+            work,
+            substation_id,
+            date,
+            str(update["review_action"]),
+            str(update.get("rpf_start_time", "")),
+            str(update.get("rpf_end_time", "")),
+        )
+    return read_annotations_from_dataframe(work)
+
+
 def annotation_key_set(annotations: pd.DataFrame) -> set[tuple[str, str]]:
     work = read_annotations_from_dataframe(annotations)
     return set(zip(work["substation_id"], work["date"], strict=True))
@@ -450,7 +507,7 @@ def flag_spans(
 def corrected_net_load(df: pd.DataFrame, flag_column: str = "label_interval") -> pd.Series:
     flags = coerce_bool(df[flag_column])
     values = np.where(flags, -df["net_load_MW"], df["net_load_MW"])
-    result = pd.Series(values, index=df.index, name="old_label_corrected_net_load_MW")
+    result = pd.Series(values, index=df.index, name=f"{flag_column}_corrected_net_load_MW")
     result.loc[df["net_load_MW"].isna()] = np.nan
     return result
 
@@ -462,9 +519,13 @@ def _validate_annotation_keys(scoped_df: pd.DataFrame, annotations: pd.DataFrame
         raise ValueError(f"Annotations outside the review dataset were found: {unknown[:5]}")
 
 
-def apply_annotations(scoped_df: pd.DataFrame, annotations: pd.DataFrame) -> pd.DataFrame:
+def with_reviewed_preview_labels(
+    scoped_df: pd.DataFrame,
+    annotations: pd.DataFrame,
+) -> pd.DataFrame:
     out = scoped_df.copy()
     out["label_interval"] = coerce_bool(out["label_interval"])
+    out["new_label_interval"] = out["label_interval"].copy()
     anns = read_annotations_from_dataframe(annotations)
     _validate_annotation_keys(out, anns)
 
@@ -475,14 +536,43 @@ def apply_annotations(scoped_df: pd.DataFrame, annotations: pd.DataFrame) -> pd.
         if row.review_action == ACTION_ACCEPT_OLD:
             continue
 
-        out.loc[day_mask, "label_interval"] = False
+        out.loc[day_mask, "new_label_interval"] = False
 
         if row.review_action == ACTION_MANUAL_WINDOW:
             start, end = validate_window_for_day(day_df, row.rpf_start_time, row.rpf_end_time)
             window_mask = day_mask & out["_time_hhmm"].between(start, end)
-            out.loc[window_mask, "label_interval"] = True
+            out.loc[window_mask, "new_label_interval"] = True
 
-    out["label_day"] = out.groupby(["substation_id", "date"])["label_interval"].transform("any")
+    out["new_label_day"] = out.groupby(["substation_id", "date"])[
+        "new_label_interval"
+    ].transform("any")
+    return out
+
+
+def review_preview_summary(preview_df: pd.DataFrame) -> pd.DataFrame:
+    if "new_label_interval" not in preview_df.columns:
+        raise ValueError("review_preview_summary expects a new_label_interval column.")
+
+    work = preview_df.copy()
+    work["_old_label_interval"] = coerce_bool(work["label_interval"])
+    work["_new_label_interval"] = coerce_bool(work["new_label_interval"])
+    work["_changed_from_old"] = work["_old_label_interval"] != work["_new_label_interval"]
+
+    return (
+        work.groupby(["substation_id", "date"], as_index=False)
+        .agg(
+            new_label_day=("_new_label_interval", "any"),
+            new_positive_intervals=("_new_label_interval", "sum"),
+            changed_from_old=("_changed_from_old", "any"),
+        )
+        .reset_index(drop=True)
+    )
+
+
+def apply_annotations(scoped_df: pd.DataFrame, annotations: pd.DataFrame) -> pd.DataFrame:
+    out = with_reviewed_preview_labels(scoped_df, annotations)
+    out["label_interval"] = out["new_label_interval"]
+    out["label_day"] = out["new_label_day"]
     return out[EXPECTED_COLUMNS].copy()
 
 

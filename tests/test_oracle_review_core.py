@@ -142,6 +142,202 @@ def test_accept_old_review_action_preserves_old_interval_shape() -> None:
     assert day["label_day"].tolist() == [True, True, True, True]
 
 
+def test_review_control_defaults_use_old_flags_for_unreviewed_day() -> None:
+    source = _sample_source()
+    day = source[(source["substation_id"] == "act_D") & (source["date"] == "2023-10-01")]
+
+    action, start, end = core.review_control_defaults(day, None)
+
+    assert action == core.ACTION_ACCEPT_OLD
+    assert start == "00:45"
+    assert end == "00:45"
+
+
+def test_review_control_defaults_keep_existing_manual_window() -> None:
+    source = _sample_source()
+    day = source[(source["substation_id"] == "act_D") & (source["date"] == "2023-10-01")]
+    annotation = pd.Series(
+        {
+            "substation_id": "act_D",
+            "date": "2023-10-01",
+            "review_action": core.ACTION_MANUAL_WINDOW,
+            "rpf_start_time": "00:30",
+            "rpf_end_time": "01:00",
+        }
+    )
+
+    action, start, end = core.review_control_defaults(day, annotation)
+
+    assert action == core.ACTION_MANUAL_WINDOW
+    assert start == "00:30"
+    assert end == "01:00"
+
+
+def test_reviewed_preview_labels_apply_actions_without_changing_old_labels() -> None:
+    source = _sample_source()
+    annotations = pd.DataFrame(
+        [
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_MANUAL_WINDOW,
+                "rpf_start_time": "00:30",
+                "rpf_end_time": "01:00",
+            },
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-02",
+                "review_action": core.ACTION_NO_RPF,
+                "rpf_start_time": "",
+                "rpf_end_time": "",
+            },
+            {
+                "substation_id": "act_A",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_ACCEPT_OLD,
+                "rpf_start_time": "",
+                "rpf_end_time": "",
+            },
+        ],
+        columns=core.ANNOTATION_COLUMNS,
+    )
+
+    preview = core.with_reviewed_preview_labels(source, annotations)
+
+    manual = preview[(preview["substation_id"] == "act_D") & (preview["date"] == "2023-10-01")]
+    no_rpf = preview[(preview["substation_id"] == "act_D") & (preview["date"] == "2023-10-02")]
+    accept_old = preview[
+        (preview["substation_id"] == "act_A") & (preview["date"] == "2023-10-01")
+    ]
+    unreviewed = preview[
+        (preview["substation_id"] == "act_A") & (preview["date"] == "2023-10-02")
+    ]
+
+    assert manual["label_interval"].tolist() == [False, False, True, False]
+    assert manual["new_label_interval"].tolist() == [False, True, True, True]
+    assert no_rpf["new_label_interval"].tolist() == [False, False, False, False]
+    assert no_rpf["new_label_day"].tolist() == [False, False, False, False]
+    assert accept_old["new_label_interval"].tolist() == [False, False, True, False]
+    assert unreviewed["new_label_interval"].tolist() == [False, False, True, False]
+
+
+def test_review_preview_summary_detects_changed_days() -> None:
+    source = _sample_source()
+    annotations = pd.DataFrame(
+        [
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_MANUAL_WINDOW,
+                "rpf_start_time": "00:30",
+                "rpf_end_time": "01:00",
+            },
+            {
+                "substation_id": "act_A",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_ACCEPT_OLD,
+                "rpf_start_time": "",
+                "rpf_end_time": "",
+            },
+        ],
+        columns=core.ANNOTATION_COLUMNS,
+    )
+
+    preview = core.with_reviewed_preview_labels(source, annotations)
+    summary = core.review_preview_summary(preview)
+
+    changed = summary[
+        (summary["substation_id"] == "act_D") & (summary["date"] == "2023-10-01")
+    ].iloc[0]
+    unchanged = summary[
+        (summary["substation_id"] == "act_A") & (summary["date"] == "2023-10-01")
+    ].iloc[0]
+
+    assert bool(changed["new_label_day"]) is True
+    assert int(changed["new_positive_intervals"]) == 3
+    assert bool(changed["changed_from_old"]) is True
+    assert bool(unchanged["changed_from_old"]) is False
+
+
+def test_upsert_annotation_replaces_existing_site_day() -> None:
+    annotations = core.empty_annotations()
+
+    first = core.upsert_annotation(
+        annotations,
+        "act_D",
+        "2023-10-01",
+        core.ACTION_MANUAL_WINDOW,
+        "00:30",
+        "01:00",
+    )
+    second = core.upsert_annotation(first, "act_D", "2023-10-01", core.ACTION_NO_RPF)
+
+    assert len(second) == 1
+    assert second.iloc[0]["review_action"] == core.ACTION_NO_RPF
+    assert second.iloc[0]["rpf_start_time"] == ""
+    assert second.iloc[0]["rpf_end_time"] == ""
+
+
+def test_apply_annotation_batch_upserts_and_clears_multiple_days() -> None:
+    annotations = pd.DataFrame(
+        [
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_ACCEPT_OLD,
+                "rpf_start_time": "",
+                "rpf_end_time": "",
+            },
+            {
+                "substation_id": "act_A",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_NO_RPF,
+                "rpf_start_time": "",
+                "rpf_end_time": "",
+            },
+        ],
+        columns=core.ANNOTATION_COLUMNS,
+    )
+
+    updated = core.apply_annotation_batch(
+        annotations,
+        [
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_MANUAL_WINDOW,
+                "rpf_start_time": "00:30",
+                "rpf_end_time": "01:00",
+            },
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-02",
+                "review_action": core.ACTION_NO_RPF,
+            },
+            {
+                "substation_id": "act_A",
+                "date": "2023-10-01",
+                "clear": True,
+            },
+        ],
+    )
+
+    assert len(updated) == 2
+    assert set(zip(updated["substation_id"], updated["date"])) == {
+        ("act_D", "2023-10-01"),
+        ("act_D", "2023-10-02"),
+    }
+    manual = updated[updated["date"] == "2023-10-01"].iloc[0]
+    no_rpf = updated[updated["date"] == "2023-10-02"].iloc[0]
+
+    assert manual["review_action"] == core.ACTION_MANUAL_WINDOW
+    assert manual["rpf_start_time"] == "00:30"
+    assert manual["rpf_end_time"] == "01:00"
+    assert no_rpf["review_action"] == core.ACTION_NO_RPF
+    assert no_rpf["rpf_start_time"] == ""
+    assert no_rpf["rpf_end_time"] == ""
+
+
 def test_legacy_annotations_migrate_to_review_actions() -> None:
     legacy = pd.DataFrame(
         [

@@ -10,13 +10,28 @@ from plotly.subplots import make_subplots
 
 APP_DIR = Path(__file__).resolve().parent
 CORE_PATH = APP_DIR / "oracle_review_core.py"
+REQUIRED_CORE_NAMES = [
+    "ACTION_ACCEPT_OLD",
+    "ACTION_MANUAL_WINDOW",
+    "ACTION_NO_RPF",
+    "default_review_window",
+    "review_control_defaults",
+    "apply_annotation_batch",
+    "with_reviewed_preview_labels",
+    "review_preview_summary",
+]
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
 stale_core = sys.modules.get("oracle_review_core")
 if stale_core is not None:
     stale_path = Path(getattr(stale_core, "__file__", "")).resolve()
-    if stale_path != CORE_PATH.resolve() or not hasattr(stale_core, "ACTION_ACCEPT_OLD"):
+    missing_core_names = [
+        required_name
+        for required_name in REQUIRED_CORE_NAMES
+        if not hasattr(stale_core, required_name)
+    ]
+    if stale_path != CORE_PATH.resolve() or missing_core_names:
         del sys.modules["oracle_review_core"]
 
 import oracle_review_core as core
@@ -24,7 +39,7 @@ import oracle_review_core as core
 loaded_core_path = Path(getattr(core, "__file__", "")).resolve()
 if loaded_core_path != CORE_PATH.resolve():
     raise RuntimeError(f"Loaded oracle_review_core from {loaded_core_path}, expected {CORE_PATH}.")
-for required_name in ["ACTION_ACCEPT_OLD", "ACTION_MANUAL_WINDOW", "ACTION_NO_RPF"]:
+for required_name in REQUIRED_CORE_NAMES:
     if not hasattr(core, required_name):
         raise RuntimeError(
             f"Loaded stale oracle_review_core from {loaded_core_path}; missing {required_name}."
@@ -38,6 +53,15 @@ ACTION_LABELS = {
     core.ACTION_ACCEPT_OLD: "Accept old labels",
     core.ACTION_MANUAL_WINDOW: "Manual RPF window",
     core.ACTION_NO_RPF: "No RPF",
+}
+FLAG_VIEW_OPTIONS = ["Original flags", "Reviewed flags"]
+FLAG_VIEW_COLUMNS = {
+    "Original flags": "label_interval",
+    "Reviewed flags": "new_label_interval",
+}
+FLAG_VIEW_TRACE_LABELS = {
+    "Original flags": "Original",
+    "Reviewed flags": "Reviewed",
 }
 
 
@@ -71,6 +95,9 @@ def save_annotations(
     next_selection: tuple[str, str] | None = None,
 ) -> None:
     core.write_annotations(df, core.default_annotation_path())
+    st.session_state["annotation_save_version"] = (
+        st.session_state.get("annotation_save_version", 0) + 1
+    )
     if next_selection is not None:
         select_site_date(*next_selection)
     st.session_state["flash"] = message
@@ -173,8 +200,10 @@ def move_by_week(week_queue: pd.DataFrame, direction: int, unreviewed_only: bool
     st.rerun()
 
 
-def build_daily_figure(day_df: pd.DataFrame, title: str) -> go.Figure:
-    corrected = core.corrected_net_load(day_df)
+def build_daily_figure(day_df: pd.DataFrame, title: str, flag_view: str) -> go.Figure:
+    flag_column = FLAG_VIEW_COLUMNS[flag_view]
+    trace_label = FLAG_VIEW_TRACE_LABELS[flag_view]
+    corrected = core.corrected_net_load(day_df, flag_column=flag_column)
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
@@ -192,7 +221,7 @@ def build_daily_figure(day_df: pd.DataFrame, title: str) -> go.Figure:
             x=day_df["_timestamp_dt"],
             y=corrected,
             mode="lines",
-            name="Old-flag corrected net load",
+            name=f"{trace_label}-flag corrected net load",
             line={"color": "#dc2626", "width": 2, "dash": "dash"},
         ),
         secondary_y=False,
@@ -207,7 +236,7 @@ def build_daily_figure(day_df: pd.DataFrame, title: str) -> go.Figure:
         ),
         secondary_y=True,
     )
-    for start, end in core.flag_spans(day_df):
+    for start, end in core.flag_spans(day_df, flag_column=flag_column):
         fig.add_vrect(x0=start, x1=end, fillcolor="#f59e0b", opacity=0.18, line_width=0)
     fig.add_hline(y=0, line_dash="dot", line_color="#111827", opacity=0.75)
     fig.update_layout(
@@ -222,7 +251,15 @@ def build_daily_figure(day_df: pd.DataFrame, title: str) -> go.Figure:
     return fig
 
 
-def build_weekly_figure(week_df: pd.DataFrame, selected_date: str, title: str) -> go.Figure:
+def build_weekly_figure(
+    week_df: pd.DataFrame,
+    selected_date: str,
+    title: str,
+    flag_view: str,
+) -> go.Figure:
+    flag_column = FLAG_VIEW_COLUMNS[flag_view]
+    trace_label = FLAG_VIEW_TRACE_LABELS[flag_view]
+    corrected = core.corrected_net_load(week_df, flag_column=flag_column)
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(
@@ -237,6 +274,16 @@ def build_weekly_figure(week_df: pd.DataFrame, selected_date: str, title: str) -
     fig.add_trace(
         go.Scatter(
             x=week_df["_timestamp_dt"],
+            y=corrected,
+            mode="lines",
+            name=f"{trace_label}-flag corrected net load",
+            line={"color": "#dc2626", "width": 1.5, "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=week_df["_timestamp_dt"],
             y=week_df["solar_MW"],
             mode="lines",
             name="Solar generation",
@@ -244,7 +291,7 @@ def build_weekly_figure(week_df: pd.DataFrame, selected_date: str, title: str) -
         ),
         secondary_y=True,
     )
-    for start, end in core.flag_spans(week_df):
+    for start, end in core.flag_spans(week_df, flag_column=flag_column):
         fig.add_vrect(x0=start, x1=end, fillcolor="#f59e0b", opacity=0.16, line_width=0)
 
     for day in sorted(week_df["date"].unique()):
@@ -281,18 +328,6 @@ def existing_annotation(
     return row.iloc[0]
 
 
-def old_flag_defaults(day_df: pd.DataFrame) -> tuple[str, str]:
-    spans = core.flag_spans(day_df)
-    if spans:
-        start, end = spans[0]
-        return start.strftime("%H:%M"), end.strftime("%H:%M")
-
-    options = core.time_options_for_day(day_df)
-    preferred_start = "10:00" if "10:00" in options else options[len(options) // 3]
-    preferred_end = "14:00" if "14:00" in options else options[(2 * len(options)) // 3]
-    return preferred_start, preferred_end
-
-
 def annotation_status_text(row: pd.Series | None) -> str:
     if row is None:
         return "unreviewed"
@@ -302,6 +337,28 @@ def annotation_status_text(row: pd.Series | None) -> str:
     return ACTION_LABELS[action].lower()
 
 
+def review_save_message(was_reviewed: bool, site: str, date: str) -> str:
+    verb = "Updated" if was_reviewed else "Saved"
+    return f"{verb} review for {site} {date}."
+
+
+def save_daily_review(
+    annotations: pd.DataFrame,
+    site: str,
+    date: str,
+    action: str,
+    start: str,
+    end: str,
+    was_reviewed: bool,
+) -> None:
+    try:
+        updated = core.upsert_annotation(annotations, site, date, action, start, end)
+    except ValueError as exc:
+        st.error(f"Could not save {site} {date}: {exc}")
+        return
+    save_annotations(updated, review_save_message(was_reviewed, site, date))
+
+
 def render_annotation_controls(
     day_df: pd.DataFrame,
     annotations: pd.DataFrame,
@@ -309,19 +366,16 @@ def render_annotation_controls(
     date: str,
 ) -> None:
     row = existing_annotation(annotations, site, date)
+    was_reviewed = row is not None
+    action_default, start_default, end_default = core.review_control_defaults(day_df, row)
     if row is None:
         st.warning("Manual review status: unreviewed")
-        action_default = core.ACTION_ACCEPT_OLD
-        start_default, end_default = old_flag_defaults(day_df)
     else:
         st.success(f"Manual review status: {annotation_status_text(row)}")
-        action_default = row["review_action"]
-        if action_default == core.ACTION_MANUAL_WINDOW:
-            start_default = row["rpf_start_time"]
-            end_default = row["rpf_end_time"]
-        else:
-            start_default, end_default = old_flag_defaults(day_df)
 
+    widget_prefix = (
+        f"{site}_{date}_{st.session_state.get('annotation_save_version', 0)}"
+    )
     action_options = [
         core.ACTION_ACCEPT_OLD,
         core.ACTION_MANUAL_WINDOW,
@@ -333,6 +387,7 @@ def render_annotation_controls(
         format_func=lambda value: ACTION_LABELS[value],
         horizontal=True,
         index=action_options.index(action_default),
+        key=f"review_action_{widget_prefix}",
     )
 
     options = core.time_options_for_day(day_df)
@@ -340,23 +395,30 @@ def render_annotation_controls(
         left, right = st.columns(2)
         start_index = options.index(start_default) if start_default in options else 0
         end_index = options.index(end_default) if end_default in options else len(options) - 1
-        start = left.selectbox("RPF start time", options, index=start_index)
-        end = right.selectbox("RPF end time", options, index=end_index)
+        start = left.selectbox(
+            "RPF start time",
+            options,
+            index=start_index,
+            key=f"rpf_start_{widget_prefix}",
+        )
+        end = right.selectbox(
+            "RPF end time",
+            options,
+            index=end_index,
+            key=f"rpf_end_{widget_prefix}",
+        )
     else:
         start = ""
         end = ""
 
     action_cols = st.columns([1, 1, 1, 1, 3])
-    if action_cols[0].button("Save day", type="primary"):
-        updated = core.upsert_annotation(annotations, site, date, action, start, end)
-        save_annotations(updated, f"Saved review for {site} {date}.")
-    if action_cols[1].button("Accept old"):
-        updated = core.upsert_annotation(annotations, site, date, core.ACTION_ACCEPT_OLD)
-        save_annotations(updated, f"Accepted old labels for {site} {date}.")
-    if action_cols[2].button("No RPF"):
-        updated = core.upsert_annotation(annotations, site, date, core.ACTION_NO_RPF)
-        save_annotations(updated, f"Marked no RPF for {site} {date}.")
-    if action_cols[3].button("Clear"):
+    if action_cols[0].button("Save day", type="primary", key=f"save_day_{widget_prefix}"):
+        save_daily_review(annotations, site, date, action, start, end, was_reviewed)
+    if action_cols[1].button("Accept old", key=f"accept_old_{widget_prefix}"):
+        save_daily_review(annotations, site, date, core.ACTION_ACCEPT_OLD, "", "", was_reviewed)
+    if action_cols[2].button("No RPF", key=f"no_rpf_{widget_prefix}"):
+        save_daily_review(annotations, site, date, core.ACTION_NO_RPF, "", "", was_reviewed)
+    if action_cols[3].button("Clear", key=f"clear_day_{widget_prefix}"):
         updated = core.clear_annotation(annotations, site, date)
         save_annotations(updated, f"Cleared review for {site} {date}.")
 
@@ -371,6 +433,19 @@ def upsert_week_action(
     for date in week_dates:
         updated = core.upsert_annotation(updated, site, date, action)
     return updated
+
+
+def week_save_message(annotations: pd.DataFrame, site: str, week_dates: list[str]) -> str:
+    reviewed_dates = set(
+        annotations.loc[annotations["substation_id"] == site, "date"].astype(str).tolist()
+    )
+    existing_count = sum(date in reviewed_dates for date in week_dates)
+    if existing_count:
+        return (
+            f"Updated {existing_count} existing review(s) and saved "
+            f"{len(week_dates)} day(s) for {site}."
+        )
+    return f"Saved {len(week_dates)} review(s) for {site}."
 
 
 def clear_week_action(
@@ -396,27 +471,127 @@ def render_weekly_controls(
 
     if cols[0].button("Accept old week", type="primary"):
         updated = upsert_week_action(annotations, site, week_dates, core.ACTION_ACCEPT_OLD)
-        save_annotations(updated, f"Accepted old labels for {site} week {week_start}.")
+        save_annotations(updated, week_save_message(annotations, site, week_dates))
     if cols[1].button("Accept + next"):
         updated = upsert_week_action(annotations, site, week_dates, core.ACTION_ACCEPT_OLD)
         save_annotations(
             updated,
-            f"Accepted old labels for {site} week {week_start}.",
+            week_save_message(annotations, site, week_dates),
             next_selection=next_selection,
         )
     if cols[2].button("No RPF week"):
         updated = upsert_week_action(annotations, site, week_dates, core.ACTION_NO_RPF)
-        save_annotations(updated, f"Marked no RPF for {site} week {week_start}.")
+        save_annotations(updated, week_save_message(annotations, site, week_dates))
     if cols[3].button("No RPF + next"):
         updated = upsert_week_action(annotations, site, week_dates, core.ACTION_NO_RPF)
         save_annotations(
             updated,
-            f"Marked no RPF for {site} week {week_start}.",
+            week_save_message(annotations, site, week_dates),
             next_selection=next_selection,
         )
     if cols[4].button("Clear week"):
         updated = clear_week_action(annotations, site, week_dates)
         save_annotations(updated, f"Cleared reviews for {site} week {week_start}.")
+
+
+def render_weekly_daily_editor(
+    week_df: pd.DataFrame,
+    annotations: pd.DataFrame,
+    site: str,
+    week_dates: list[str],
+) -> None:
+    st.markdown("#### Daily review")
+    st.caption(
+        "Edit the week freely; the app only saves and refreshes after "
+        "Save all 7 days. Start/end are used only for Manual RPF window rows."
+    )
+
+    action_options = [
+        core.ACTION_ACCEPT_OLD,
+        core.ACTION_MANUAL_WINDOW,
+        core.ACTION_NO_RPF,
+    ]
+    save_version = st.session_state.get("annotation_save_version", 0)
+    form_key = f"weekly_daily_form_{site}_{week_dates[0]}_{save_version}"
+
+    with st.form(form_key, clear_on_submit=False):
+        header = st.columns([1.1, 2.0, 2.0, 1.25, 1.25, 0.9])
+        for column, label in zip(
+            header,
+            ["Date", "Current review", "Action", "Start", "End", "Clear"],
+            strict=True,
+        ):
+            column.markdown(f"**{label}**")
+
+        updates: list[dict[str, object]] = []
+        for row_date in week_dates:
+            day_df = week_df[week_df["date"] == row_date].copy()
+            annotation_row = existing_annotation(annotations, site, row_date)
+            action_default, start_default, end_default = core.review_control_defaults(
+                day_df,
+                annotation_row,
+            )
+            options = core.time_options_for_day(day_df)
+            start_index = options.index(start_default) if start_default in options else 0
+            end_index = options.index(end_default) if end_default in options else len(options) - 1
+            widget_prefix = f"weekly_{site}_{row_date}_{save_version}"
+
+            cols = st.columns([1.1, 2.0, 2.0, 1.25, 1.25, 0.9])
+            cols[0].write(row_date)
+            cols[1].caption(annotation_status_text(annotation_row))
+            action = cols[2].selectbox(
+                f"Action for {row_date}",
+                action_options,
+                format_func=lambda value: ACTION_LABELS[value],
+                index=action_options.index(action_default),
+                key=f"weekly_action_{widget_prefix}",
+                label_visibility="collapsed",
+            )
+            start = cols[3].selectbox(
+                f"RPF start for {row_date}",
+                options,
+                index=start_index,
+                key=f"weekly_start_{widget_prefix}",
+                label_visibility="collapsed",
+            )
+            end = cols[4].selectbox(
+                f"RPF end for {row_date}",
+                options,
+                index=end_index,
+                key=f"weekly_end_{widget_prefix}",
+                label_visibility="collapsed",
+            )
+            clear = cols[5].checkbox(
+                f"Clear {row_date}",
+                value=False,
+                key=f"weekly_clear_{widget_prefix}",
+                label_visibility="collapsed",
+            )
+            is_manual = action == core.ACTION_MANUAL_WINDOW
+            updates.append(
+                {
+                    "substation_id": site,
+                    "date": row_date,
+                    "review_action": action,
+                    "rpf_start_time": start if is_manual else "",
+                    "rpf_end_time": end if is_manual else "",
+                    "clear": clear,
+                }
+            )
+
+        submitted = st.form_submit_button(
+            "Save all 7 days",
+            type="primary",
+            use_container_width=True,
+        )
+
+    if submitted:
+        try:
+            updated = core.apply_annotation_batch(annotations, updates)
+        except ValueError as exc:
+            st.error(f"Could not save weekly daily reviews: {exc}")
+            return
+        save_annotations(updated, f"Saved daily reviews for {site} week {week_dates[0]}.")
 
 
 def render_sidebar(queue: pd.DataFrame, week_queue: pd.DataFrame) -> None:
@@ -490,6 +665,7 @@ def render_progress(queue: pd.DataFrame, week_queue: pd.DataFrame) -> None:
 def weekly_status_table(
     queue: pd.DataFrame,
     annotations: pd.DataFrame,
+    preview_summary: pd.DataFrame,
     site: str,
     week_dates: list[str],
 ) -> pd.DataFrame:
@@ -497,11 +673,17 @@ def weekly_status_table(
     action_by_date = {}
     for _, row in annotations[annotations["substation_id"] == site].iterrows():
         action_by_date[row["date"]] = annotation_status_text(row)
-    rows["manual_status"] = rows["date"].map(action_by_date).fillna("unreviewed")
+    rows["review_status"] = rows["date"].map(action_by_date).fillna("unreviewed")
+
+    rows = rows.merge(preview_summary, on=["substation_id", "date"], how="left")
+    rows["new_label_day"] = rows["new_label_day"].fillna(rows["old_label_day"]).astype(bool)
+    rows["changed_from_old"] = rows["changed_from_old"].fillna(False).astype(bool)
     return rows[
         [
             "date",
-            "manual_status",
+            "review_status",
+            "new_label_day",
+            "changed_from_old",
             "old_label_day",
             "old_positive_intervals",
             "positive_net_load_daytime_intervals",
@@ -514,6 +696,8 @@ def main() -> None:
     input_path = core.default_input_path()
     df = load_review_dataframe(str(input_path))
     annotations = load_annotations()
+    preview_df = core.with_reviewed_preview_labels(df, annotations)
+    preview_summary = core.review_preview_summary(preview_df)
     queue = core.build_review_queue(df, annotations)
     week_queue = core.build_week_queue(queue)
     initialize_selection(queue)
@@ -530,11 +714,19 @@ def main() -> None:
     week_dates = queue[
         (queue["substation_id"] == site) & (queue["week_start"] == week_start)
     ]["date"].tolist()
-    day_df = df[(df["substation_id"] == site) & (df["date"] == date)].copy()
-    week_df = df[(df["substation_id"] == site) & (df["date"].isin(week_dates))].copy()
+    day_df = preview_df[(preview_df["substation_id"] == site) & (preview_df["date"] == date)].copy()
+    week_df = preview_df[
+        (preview_df["substation_id"] == site) & (preview_df["date"].isin(week_dates))
+    ].copy()
 
     st.title("Oracle RPF Review")
     render_progress(queue, week_queue)
+    flag_view = st.radio(
+        "Flag view",
+        FLAG_VIEW_OPTIONS,
+        horizontal=True,
+        key="flag_view",
+    )
 
     tab_weekly, tab_daily, tab_queue = st.tabs(["Weekly review", "Daily override", "Queue"])
     with tab_weekly:
@@ -543,12 +735,14 @@ def main() -> None:
                 week_df,
                 date,
                 f"{site} week {week_row['first_date']} to {week_row['last_date']}",
+                flag_view,
             ),
             width="stretch",
         )
         render_weekly_controls(annotations, week_queue, site, week_start, week_dates)
+        render_weekly_daily_editor(week_df, annotations, site, week_dates)
         st.dataframe(
-            weekly_status_table(queue, annotations, site, week_dates),
+            weekly_status_table(queue, annotations, preview_summary, site, week_dates),
             width="stretch",
             hide_index=True,
         )
@@ -563,7 +757,7 @@ def main() -> None:
 
     with tab_daily:
         st.plotly_chart(
-            build_daily_figure(day_df, f"{site} on {date}"),
+            build_daily_figure(day_df, f"{site} on {date}", flag_view),
             width="stretch",
         )
         render_annotation_controls(day_df, annotations, site, date)
