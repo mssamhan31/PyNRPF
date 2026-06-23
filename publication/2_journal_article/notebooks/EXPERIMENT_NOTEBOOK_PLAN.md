@@ -1,10 +1,13 @@
-# Journal Article Notebook Experiment Plan
+# Journal Article Notebook Experiment Plan v2
 
 ## Summary
 
-This notebook workflow implements the Alpha/Beta/Gamma experiment design for the
-journal article on reverse-power-flow sign errors. It replaces the previous
-time-split/station-split notebook set with a clearer sequence:
+This notebook workflow implements the paper-facing Alpha/Beta/Gamma experiment
+design using the v2 final dataset layer. The notebooks read Parquet inputs from
+`dataset/final/`, write audit-friendly intermediate outputs into
+notebook-specific folders, and keep final tables/figures deliberately compact.
+
+The notebook sequence is:
 
 1. `00_prepare_datasets.ipynb`
 2. `01_characterisation.ipynb`
@@ -12,116 +15,139 @@ time-split/station-split notebook set with a clearer sequence:
 4. `03_gamma_forecast_impact.ipynb`
 5. `04_publication_tables_figures.ipynb`
 
-The notebooks use shared helpers in `_experiment_helpers.py` so that notebooks
-remain readable while validation, metrics, training, forecasting, and plotting
-logic stay testable.
+Shared logic lives in `_experiment_helpers.py` so the notebooks can remain
+readable experiment narratives with numbered markdown sections and short,
+commented code cells.
 
 ## Dataset Definitions
 
-- **Dataset Alpha**: `dataset/processed/synthetic_pynrpf_dataset.csv`.
-  This is the simulated sign-error dataset from correctly signed substations.
-- **Dataset Beta**: for now,
-  `dataset/processed/actual_pynrpf_dataset.csv` filtered to
-  `2023-10-01` through `2024-09-30`. Later, set
-  `datasets.use_reviewed_beta: true` to use the completed manual-review oracle.
-- **Dataset Gamma**: selected automatically from Beta. The primary ranking is
-  raw-vs-reference data-error RMSE, then RPF days, then RPF intervals. Current
-  labels select `act_B`.
+- **Dataset Alpha**: `dataset/final/dataset_alpha.parquet`, copied from the
+  processed synthetic Parquet and kept at the full Alpha date range.
+- **Dataset Beta**: `dataset/final/dataset_beta.parquet`, copied from the
+  processed actual Parquet and filtered to `2023-10-01` through `2024-09-30`.
+  This is provisional until the manual oracle review output replaces it.
+- **Dataset Gamma**: `dataset/final/dataset_gamma.parquet`, a one-site extract
+  from Beta selected by Gamma candidate ranking. The current automatic ranking
+  uses raw-vs-reference data-error RMSE and selects `act_B` on current labels.
 
-## Notebook Outputs
+All final datasets preserve the original seven-column schema:
+`substation_id,date,timestamp,net_load_MW,solar_MW,label_interval,label_day`.
 
-All notebooks write beneath `publication/2_journal_article/outputs/`:
+## Output Convention
 
-- `intermediate/`: reusable per-notebook CSVs.
-- `metrics/`: correction and forecasting metrics.
-- `tables/`: paper table exports.
-- `figures/`: publication figures.
-- `manifests/`: run metadata and config snapshots.
+Every notebook writes into its own subfolders:
+
+```text
+outputs/intermediate/<notebook_slug>/
+outputs/metrics/<notebook_slug>/
+outputs/tables/<notebook_slug>/
+outputs/figures/<notebook_slug>/
+outputs/manifests/<notebook_slug>.json
+```
+
+Intermediate outputs can be detailed. Final tables and figures should be the
+small set most likely to appear in the paper or directly support paper choices.
 
 ## Notebook Roles
 
 ### 00 Prepare Datasets
 
-- Load and validate Alpha and Beta.
-- Filter Beta to the one-year study period.
-- Compute dataset summaries.
-- Rank Alpha sites by RPF days and select top-3 LOSO folds.
-- Rank Beta sites for Gamma and select Gamma.
-- Write:
-  - `intermediate/dataset_summary.csv`
-  - `intermediate/alpha_site_rankings.csv`
-  - `intermediate/beta_gamma_site_rankings.csv`
-  - `manifests/00_prepare_datasets.json`
+Purpose: create and validate final Alpha, Beta, and Gamma datasets.
+
+Key outputs:
+
+- `dataset/final/dataset_alpha.parquet`
+- `dataset/final/dataset_beta.parquet`
+- `dataset/final/dataset_gamma.parquet`
+- `dataset/final/dataset_final_summary.csv`
+- `dataset/final/gamma_selection_summary.csv`
+- `dataset/final/sha256.txt`
+- `outputs/intermediate/00_prepare_datasets/01_dataset_summary.csv`
+- `outputs/intermediate/00_prepare_datasets/02_alpha_site_rankings.csv`
+- `outputs/intermediate/00_prepare_datasets/03_beta_gamma_site_rankings.csv`
+- `outputs/intermediate/00_prepare_datasets/04_final_dataset_validation.csv`
+
+No final paper-facing figures or tables are required from this notebook.
 
 ### 01 Characterisation
 
-- Characterise Alpha observed negative/RPF-labelled intervals and Beta sign
-  errors.
-- Summarise site, month, season, hour, weekday/weekend, event duration, and
-  magnitude patterns.
-- Write:
-  - `intermediate/rpf_occurrence_by_site.csv`
-  - `intermediate/rpf_temporal_summary.csv`
-  - `intermediate/rpf_event_summary.csv`
-  - `figures/site_rpf_day_counts.png`
-  - `figures/month_hour_heatmap_alpha.png`
-  - `figures/month_hour_heatmap_beta.png`
-  - `figures/event_duration_distribution.png`
+Purpose: characterise RPF/sign-error occurrence in Alpha and Beta only.
+
+Key outputs:
+
+- `outputs/intermediate/01_characterisation/01_rpf_occurrence_by_dataset.csv`
+- `outputs/intermediate/01_characterisation/02_rpf_occurrence_by_site.csv`
+- `outputs/intermediate/01_characterisation/03_rpf_temporal_summary.csv`
+- `outputs/intermediate/01_characterisation/04_rpf_event_summary.csv`
+- `outputs/tables/01_characterisation/table01_rpf_occurrence_summary_alpha_beta.csv`
+- `outputs/tables/01_characterisation/table02_rpf_event_summary_alpha_beta.csv`
+- `outputs/figures/01_characterisation/fig01_site_rpf_day_counts_alpha_beta.png`
+- `outputs/figures/01_characterisation/fig02_month_hour_heatmap_alpha_beta.png`
+- `outputs/figures/01_characterisation/fig03_event_duration_distribution_alpha_beta.png`
+
+Gamma-specific final artefacts are intentionally left to notebook 03.
 
 ### 02 Correction Validation
 
-- Evaluate `m8_xgb` as the main trainable method.
-- Evaluate `m7_dtr` as the deterministic benchmark.
-- Alpha validation: top-3 leave-one-station-out spatiotemporal folds.
-- Beta validation: train `m8_xgb` on Alpha training data and test on Beta.
-- Metrics:
-  - Day-level precision, recall, F1, TP, FP, FN, TN.
-  - Interval-level metrics over all daytime rows, 06:00-18:00.
-- Write:
-  - `metrics/correction_metrics.csv`
-  - `metrics/correction_confusion_matrices.csv`
-  - `intermediate/correction_predictions_*.csv`
-  - `figures/correction_confusion_matrices.png`
-  - `manifests/02_correction_validation.json`
+Purpose: evaluate `m8_xgb` as the main correction model and `m7_dtr` as the
+deterministic benchmark.
+
+Key outputs:
+
+- `outputs/intermediate/02_correction_validation/01_correction_validation_plan.csv`
+- `outputs/intermediate/02_correction_validation/*_correction_predictions_*.csv`
+- `outputs/metrics/02_correction_validation/01_correction_metrics.csv`
+- `outputs/metrics/02_correction_validation/02_correction_confusion_matrices.csv`
+- `outputs/tables/02_correction_validation/table01_correction_metrics_summary.csv`
+- `outputs/tables/02_correction_validation/table02_beta_transfer_key_metrics.csv`
+- `outputs/figures/02_correction_validation/fig01_correction_confusion_matrices.png`
+- `outputs/figures/02_correction_validation/fig02_correction_precision_recall_f1.png`
+
+The config keeps full model training disabled by default so the notebook can be
+opened and inspected before running expensive work.
 
 ### 03 Gamma Forecast Impact
 
-- Select Gamma from Beta automatically.
-- Compare raw uncorrected, `m8_xgb` corrected, and reference-labelled net load.
-- Include a data-error-only benchmark where the forecast perfectly predicts raw
-  data and is evaluated against reference.
-- Forecast task: exactly 7 days ahead, one target point per 15-minute timestamp.
-- Test targets: all 15-minute timestamps in September 2024.
-- Features: 14-day observed lookback ending at target minus 7 days, plus
-  calendar features; no future solar.
-- Models: seasonal naive, linear regression, XGBoost.
-- Write:
-  - `intermediate/gamma_forecast_examples_train.csv`
-  - `intermediate/gamma_forecast_examples_test.csv`
-  - `intermediate/gamma_forecasts.csv`
-  - `metrics/gamma_forecast_metrics.csv`
-  - `metrics/gamma_data_error_benchmark.csv`
-  - `figures/gamma_series_raw_corrected_reference.png`
-  - `figures/gamma_forecast_rmse.png`
-  - `figures/gamma_forecast_residuals.png`
+Purpose: quantify how a one-site Gamma RPF case affects 7-day-ahead point
+forecasting.
+
+Key outputs:
+
+- `outputs/intermediate/03_gamma_forecast_impact/01_gamma_series.csv`
+- `outputs/intermediate/03_gamma_forecast_impact/*_gamma_forecast_examples_*.csv`
+- `outputs/intermediate/03_gamma_forecast_impact/*_gamma_forecasts.csv`
+- `outputs/metrics/03_gamma_forecast_impact/01_gamma_data_error_benchmark.csv`
+- `outputs/metrics/03_gamma_forecast_impact/02_gamma_forecast_metrics.csv`
+- `outputs/tables/03_gamma_forecast_impact/table01_forecast_impact.csv`
+- `outputs/tables/03_gamma_forecast_impact/table02_gamma_data_error_benchmark.csv`
+- `outputs/figures/03_gamma_forecast_impact/fig01_gamma_series_raw_corrected_reference.png`
+- `outputs/figures/03_gamma_forecast_impact/fig02_gamma_forecast_rmse.png`
+- `outputs/figures/03_gamma_forecast_impact/fig03_gamma_forecast_residuals.png`
+
+Smoke mode always produces the data-error-only benchmark. Full mode trains the
+forecast models and constructs the `m8_xgb`-corrected Gamma series.
 
 ### 04 Publication Tables Figures
 
-- Read intermediate and metric CSVs.
-- Produce final publication-facing table and figure files.
-- Write:
-  - `tables/table1_dataset_summary.csv`
-  - `tables/table2_characterisation_summary.csv`
-  - `tables/table3_correction_metrics.csv`
-  - `tables/table4_forecast_impact.csv`
-  - final paper figures in `figures/`.
+Purpose: consolidate upstream notebook outputs into a small paper-facing table
+set and inventories of available figures.
+
+Key outputs:
+
+- `outputs/tables/04_publication_tables_figures/table01_dataset_summary.csv`
+- `outputs/tables/04_publication_tables_figures/table02_characterisation_summary.csv`
+- `outputs/tables/04_publication_tables_figures/table03_correction_metrics.csv`
+- `outputs/tables/04_publication_tables_figures/table04_forecast_impact.csv`
+- matching `.md` and `.tex` exports for the four final tables
+- `outputs/intermediate/04_publication_tables_figures/01_table_inventory.csv`
+- `outputs/intermediate/04_publication_tables_figures/02_figure_inventory.csv`
+- `outputs/intermediate/04_publication_tables_figures/03_missing_upstream_outputs.csv`
 
 ## Execution Notes
 
-- `execution.run_full_correction_validation` defaults to `false` so notebooks can
-  smoke-run quickly.
-- `execution.run_full_forecast` defaults to `false`; the data-error-only Gamma
-  benchmark still runs in smoke mode.
-- Full `m8_xgb` training should be enabled only after dataset labels are final.
-- PyNNLF is intentionally excluded because this workflow needs custom raw,
-  corrected, and reference data-condition comparisons.
+- `execution.run_full_correction_validation` defaults to `false`.
+- `execution.run_full_forecast` defaults to `false`.
+- Full training should be enabled only after the final oracle-reviewed Beta is
+  ready.
+- PyNNLF remains excluded because this workflow needs custom raw, corrected, and
+  reference data-condition comparisons.

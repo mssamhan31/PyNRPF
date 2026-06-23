@@ -20,8 +20,8 @@ seven-column format.
   - `no_rpf` clears all interval flags for that site-day.
 
 - Create a Streamlit review app:
-  - Load `actual_pynrpf_dataset.csv` with cached pandas loading.
-  - Treat CSV timestamps as dataset wall-clock time; do not convert `+00:00` to
+  - Load `actual_pynrpf_dataset.parquet` with cached pandas loading.
+  - Treat source timestamps as dataset wall-clock time; do not convert `+00:00` to
     Sydney time.
   - Weekly review is the default app view for fast review.
   - Daily view shows raw `net_load_MW`, old-label corrected net load,

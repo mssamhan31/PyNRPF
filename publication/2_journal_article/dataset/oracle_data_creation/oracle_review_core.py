@@ -70,7 +70,7 @@ def article_root() -> Path:
 
 
 def default_input_path() -> Path:
-    return article_root() / "dataset" / "processed" / "actual_pynrpf_dataset.csv"
+    return article_root() / "dataset" / "processed" / "actual_pynrpf_dataset.parquet"
 
 
 def default_annotation_path() -> Path:
@@ -138,7 +138,11 @@ def prepare_source_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def load_source_dataset(path: Path | str | None = None) -> pd.DataFrame:
     input_path = Path(path) if path is not None else default_input_path()
-    return prepare_source_dataframe(pd.read_csv(input_path))
+    if input_path.suffix.lower() == ".parquet":
+        return prepare_source_dataframe(pd.read_parquet(input_path))
+    if input_path.suffix.lower() == ".csv":
+        return prepare_source_dataframe(pd.read_csv(input_path))
+    raise ValueError(f"Unsupported source dataset format: {input_path}")
 
 
 def filter_review_scope(df: pd.DataFrame) -> pd.DataFrame:

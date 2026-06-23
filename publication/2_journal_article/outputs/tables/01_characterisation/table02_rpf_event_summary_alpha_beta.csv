@@ -1,0 +1,3 @@
+dataset,n_events,duration_minutes_mean,duration_minutes_median,duration_minutes_max,min_reference_net_load_MW_min,max_raw_net_load_MW_max
+Alpha,5876,122.48127978216473,60.0,540,-7.075031,7.075031
+Beta,574,277.10801393728224,285.0,480,-8.245311,8.245311

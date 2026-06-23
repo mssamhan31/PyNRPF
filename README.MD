@@ -12,11 +12,20 @@ inference and `m8_xgb` training workflows.
 
 ## Install
 
+For the full repository environment, including tests, journal notebooks, and the
+oracle review Streamlit app:
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install --upgrade pip
-pip install -e .[dev]
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+For package-only usage, install just the runtime package:
+
+```powershell
+python -m pip install -e .
 ```
 
 ## User Journey

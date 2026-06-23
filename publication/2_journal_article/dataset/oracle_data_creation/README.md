@@ -15,7 +15,7 @@ streamlit run review_app.py
 The app reads the immutable source dataset from:
 
 ```text
-../processed/actual_pynrpf_dataset.csv
+../processed/actual_pynrpf_dataset.parquet
 ```
 
 Manual decisions are stored in:

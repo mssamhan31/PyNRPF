@@ -1,10 +1,14 @@
-schema_version: "journal_alpha_beta_gamma_v1"
+schema_version: "journal_v2"
 
 paths:
-  alpha_dataset_csv: "dataset/processed/synthetic_pynrpf_dataset.csv"
-  beta_dataset_csv: "dataset/processed/actual_pynrpf_dataset.csv"
-  beta_reviewed_dataset_csv: "dataset/oracle_data_creation/outputs/actual_pynrpf_dataset_reflagged.csv"
+  alpha_dataset_path: "dataset/final/dataset_alpha.parquet"
+  beta_dataset_path: "dataset/final/dataset_beta.parquet"
+  gamma_dataset_path: "dataset/final/dataset_gamma.parquet"
   output_base_dir: "outputs"
+
+source_paths:
+  alpha_processed_path: "dataset/processed/synthetic_pynrpf_dataset.parquet"
+  beta_processed_path: "dataset/processed/actual_pynrpf_dataset.parquet"
 
 columns:
   site: "substation_id"
@@ -19,8 +23,12 @@ datasets:
   alpha_name: "Alpha"
   beta_name: "Beta"
   gamma_name: "Gamma"
-  use_reviewed_beta: false
-  gamma_selection_policy: "highest_data_error_rmse"
+  beta_review_status: "provisional_current_labels"
+
+gamma:
+  selection_mode: "auto"
+  ranking_metric: "data_error_rmse_MW"
+  manual_site: null
 
 windows:
   train_start: "2021-11-01"

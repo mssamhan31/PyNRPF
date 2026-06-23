@@ -17,9 +17,15 @@ def test_config_paths_and_schema_resolve() -> None:
     cfg = helpers.load_config(ARTICLE_ROOT)
     paths = helpers.article_paths(ARTICLE_ROOT, cfg)
 
-    assert cfg["schema_version"] == "journal_alpha_beta_gamma_v1"
-    assert (ARTICLE_ROOT / cfg["paths"]["alpha_dataset_csv"]).exists()
-    assert (ARTICLE_ROOT / cfg["paths"]["beta_dataset_csv"]).exists()
+    assert cfg["schema_version"] == "journal_v2"
+    assert (ARTICLE_ROOT / cfg["paths"]["alpha_dataset_path"]).exists()
+    assert (ARTICLE_ROOT / cfg["paths"]["beta_dataset_path"]).exists()
+    assert (ARTICLE_ROOT / cfg["paths"]["gamma_dataset_path"]).exists()
+    assert cfg["paths"]["alpha_dataset_path"].endswith(".parquet")
+    assert cfg["paths"]["beta_dataset_path"].endswith(".parquet")
+    assert cfg["paths"]["gamma_dataset_path"].endswith(".parquet")
+    assert not any(key.endswith("_csv") for key in cfg["paths"])
+    assert paths.final.name == "final"
     assert paths.intermediate.name == "intermediate"
     assert paths.metrics.name == "metrics"
 
@@ -28,11 +34,17 @@ def test_real_data_rankings_match_current_labels() -> None:
     cfg = helpers.load_config(ARTICLE_ROOT)
     alpha = helpers.load_dataset(ARTICLE_ROOT, cfg, "alpha")
     beta = helpers.load_dataset(ARTICLE_ROOT, cfg, "beta")
+    gamma = helpers.load_dataset(ARTICLE_ROOT, cfg, "gamma")
 
     assert helpers.alpha_loso_sites(alpha, cfg) == ["syn_F", "syn_E", "syn_G"]
-    assert helpers.select_gamma_site(beta) == "act_B"
+    assert helpers.select_gamma_site(beta, cfg) == "act_B"
     assert beta["date"].min() == "2023-10-01"
     assert beta["date"].max() == "2024-09-30"
+    assert len(beta) == 280_800
+    assert beta[["substation_id", "date"]].drop_duplicates().shape[0] == 2_928
+    assert gamma["substation_id"].nunique() == 1
+    assert gamma["substation_id"].iloc[0] == "act_B"
+    assert len(gamma) == 35_136
 
 
 def test_binary_metrics_and_daytime_interval_scope() -> None:
