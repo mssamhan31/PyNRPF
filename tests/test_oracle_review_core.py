@@ -173,6 +173,74 @@ def test_review_control_defaults_keep_existing_manual_window() -> None:
     assert end == "01:00"
 
 
+def test_infer_weekly_review_update_converts_changed_times_to_manual_window() -> None:
+    update = {
+        "substation_id": "act_D",
+        "date": "2023-10-01",
+        "review_action": core.ACTION_ACCEPT_OLD,
+        "rpf_start_time": "00:30",
+        "rpf_end_time": "01:00",
+        "clear": False,
+    }
+
+    inferred = core.infer_weekly_review_update(update, "00:45", "00:45")
+
+    assert inferred["review_action"] == core.ACTION_MANUAL_WINDOW
+    assert inferred["rpf_start_time"] == "00:30"
+    assert inferred["rpf_end_time"] == "01:00"
+
+
+def test_infer_weekly_review_update_keeps_unchanged_accept_old_and_no_rpf() -> None:
+    accept_old = {
+        "substation_id": "act_D",
+        "date": "2023-10-01",
+        "review_action": core.ACTION_ACCEPT_OLD,
+        "rpf_start_time": "00:45",
+        "rpf_end_time": "00:45",
+        "clear": False,
+    }
+    no_rpf = {
+        **accept_old,
+        "review_action": core.ACTION_NO_RPF,
+        "rpf_start_time": "00:30",
+        "rpf_end_time": "01:00",
+    }
+    clear = {**accept_old, "clear": True, "rpf_start_time": "00:30"}
+
+    inferred_accept = core.infer_weekly_review_update(accept_old, "00:45", "00:45")
+    inferred_no_rpf = core.infer_weekly_review_update(no_rpf, "00:45", "00:45")
+    inferred_clear = core.infer_weekly_review_update(clear, "00:45", "00:45")
+
+    assert inferred_accept["review_action"] == core.ACTION_ACCEPT_OLD
+    assert inferred_accept["rpf_start_time"] == ""
+    assert inferred_accept["rpf_end_time"] == ""
+    assert inferred_no_rpf["review_action"] == core.ACTION_NO_RPF
+    assert inferred_no_rpf["rpf_start_time"] == ""
+    assert inferred_no_rpf["rpf_end_time"] == ""
+    assert inferred_clear["clear"] is True
+    assert inferred_clear["rpf_start_time"] == "00:30"
+
+
+def test_next_week_selection_moves_within_and_across_sites() -> None:
+    week_queue = pd.DataFrame(
+        [
+            {"substation_id": "act_D", "week_start": "2023-10-01", "first_date": "2023-10-01"},
+            {"substation_id": "act_D", "week_start": "2023-10-08", "first_date": "2023-10-08"},
+            {"substation_id": "act_A", "week_start": "2023-10-01", "first_date": "2023-10-01"},
+        ]
+    )
+
+    assert core.next_week_selection(week_queue, "act_D", "2023-10-01") == (
+        "act_D",
+        "2023-10-08",
+    )
+    assert core.next_week_selection(week_queue, "act_D", "2023-10-08") == (
+        "act_A",
+        "2023-10-01",
+    )
+    assert core.next_week_selection(week_queue, "act_A", "2023-10-01") is None
+
+
 def test_reviewed_preview_labels_apply_actions_without_changing_old_labels() -> None:
     source = _sample_source()
     annotations = pd.DataFrame(

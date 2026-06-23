@@ -232,6 +232,34 @@ def review_control_defaults(
     return action, default_start, default_end
 
 
+def infer_weekly_review_update(
+    update: dict[str, object],
+    default_start: str,
+    default_end: str,
+) -> dict[str, object]:
+    normalized = dict(update)
+    if bool(normalized.get("clear", False)):
+        return normalized
+
+    action = str(normalized["review_action"]).strip().lower()
+    if action not in REVIEW_ACTIONS:
+        raise ValueError(f"Unknown review_action: {action!r}.")
+    if action == ACTION_NO_RPF:
+        normalized["rpf_start_time"] = ""
+        normalized["rpf_end_time"] = ""
+        return normalized
+
+    start = str(normalized.get("rpf_start_time", "")).strip()
+    end = str(normalized.get("rpf_end_time", "")).strip()
+    changed_window = (start, end) != (str(default_start).strip(), str(default_end).strip())
+    if changed_window:
+        normalized["review_action"] = ACTION_MANUAL_WINDOW
+    elif action != ACTION_MANUAL_WINDOW:
+        normalized["rpf_start_time"] = ""
+        normalized["rpf_end_time"] = ""
+    return normalized
+
+
 def validate_window_for_day(
     day_df: pd.DataFrame, start_time: str, end_time: str
 ) -> tuple[str, str]:
@@ -482,6 +510,31 @@ def build_week_queue(daily_queue: pd.DataFrame) -> pd.DataFrame:
     week_queue = week_queue.sort_values(["site_order", "week_start"]).reset_index(drop=True)
     week_queue.insert(0, "week_queue_rank", np.arange(1, len(week_queue) + 1))
     return week_queue.drop(columns=["site_order"])
+
+
+def next_week_selection(
+    week_queue: pd.DataFrame,
+    substation_id: str,
+    week_start: str,
+) -> tuple[str, str] | None:
+    if week_queue.empty:
+        return None
+    matches = week_queue[
+        (week_queue["substation_id"] == substation_id)
+        & (week_queue["week_start"] == week_start)
+    ]
+    if matches.empty:
+        row = week_queue.iloc[0]
+        return str(row["substation_id"]), str(row["first_date"])
+
+    pos = week_queue.index.get_loc(matches.index[0])
+    if not isinstance(pos, int):
+        pos = int(pos[0])
+    next_pos = pos + 1
+    if next_pos >= len(week_queue):
+        return None
+    row = week_queue.iloc[next_pos]
+    return str(row["substation_id"]), str(row["first_date"])
 
 
 def flag_spans(

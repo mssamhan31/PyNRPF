@@ -19,6 +19,8 @@ REQUIRED_CORE_NAMES = [
     "apply_annotation_batch",
     "with_reviewed_preview_labels",
     "review_preview_summary",
+    "infer_weekly_review_update",
+    "next_week_selection",
 ]
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
@@ -466,7 +468,7 @@ def render_weekly_controls(
     week_start: str,
     week_dates: list[str],
 ) -> None:
-    next_selection = week_selection(week_queue, site, week_start, 1)
+    next_selection = core.next_week_selection(week_queue, site, week_start)
     cols = st.columns([1, 1, 1, 1, 1])
 
     if cols[0].button("Accept old week", type="primary"):
@@ -497,13 +499,16 @@ def render_weekly_controls(
 def render_weekly_daily_editor(
     week_df: pd.DataFrame,
     annotations: pd.DataFrame,
+    week_queue: pd.DataFrame,
     site: str,
+    week_start: str,
     week_dates: list[str],
 ) -> None:
     st.markdown("#### Daily review")
     st.caption(
-        "Edit the week freely; the app only saves and refreshes after "
-        "Save all 7 days. Start/end are used only for Manual RPF window rows."
+        "Edit the week freely; the app only saves and refreshes after submit. "
+        "If start/end differ from the visible defaults, that row is saved as a "
+        "manual RPF window."
     )
 
     action_options = [
@@ -567,20 +572,22 @@ def render_weekly_daily_editor(
                 key=f"weekly_clear_{widget_prefix}",
                 label_visibility="collapsed",
             )
-            is_manual = action == core.ACTION_MANUAL_WINDOW
-            updates.append(
+            update = core.infer_weekly_review_update(
                 {
                     "substation_id": site,
                     "date": row_date,
                     "review_action": action,
-                    "rpf_start_time": start if is_manual else "",
-                    "rpf_end_time": end if is_manual else "",
+                    "rpf_start_time": start,
+                    "rpf_end_time": end,
                     "clear": clear,
-                }
+                },
+                start_default,
+                end_default,
             )
+            updates.append(update)
 
         submitted = st.form_submit_button(
-            "Save all 7 days",
+            "Save all 7 days and move to next week",
             type="primary",
             use_container_width=True,
         )
@@ -591,7 +598,11 @@ def render_weekly_daily_editor(
         except ValueError as exc:
             st.error(f"Could not save weekly daily reviews: {exc}")
             return
-        save_annotations(updated, f"Saved daily reviews for {site} week {week_dates[0]}.")
+        save_annotations(
+            updated,
+            f"Saved daily reviews for {site} week {week_dates[0]}.",
+            next_selection=core.next_week_selection(week_queue, site, week_start),
+        )
 
 
 def render_sidebar(queue: pd.DataFrame, week_queue: pd.DataFrame) -> None:
@@ -740,7 +751,7 @@ def main() -> None:
             width="stretch",
         )
         render_weekly_controls(annotations, week_queue, site, week_start, week_dates)
-        render_weekly_daily_editor(week_df, annotations, site, week_dates)
+        render_weekly_daily_editor(week_df, annotations, week_queue, site, week_start, week_dates)
         st.dataframe(
             weekly_status_table(queue, annotations, preview_summary, site, week_dates),
             width="stretch",
