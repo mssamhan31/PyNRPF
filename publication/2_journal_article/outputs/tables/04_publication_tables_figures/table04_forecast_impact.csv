@@ -1,0 +1,13 @@
+data_condition,data_condition_label,model,model_label,n_targets,rmse_MW,mae_MW,is_placeholder,status
+m8_xgb_corrected,m8_xgb-corrected data,linear_regression,Linear regression,2880,2.2713146985231147,1.3110033702094304,True,placeholder_smoke_only
+m8_xgb_corrected,m8_xgb-corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.4766384777622158,0.2024974683588317,False,complete
+m8_xgb_corrected,m8_xgb-corrected data,seasonal_naive,Seasonal naive,2880,4.11318318707007,2.379757133124347,True,placeholder_smoke_only
+m8_xgb_corrected,m8_xgb-corrected data,xgboost,XGBoost,2880,1.736920381470183,1.0027482445212967,True,placeholder_smoke_only
+raw_uncorrected,Uncorrected data,linear_regression,Linear regression,2880,5.207170894029424,3.062931200025253,True,placeholder_smoke_only
+raw_uncorrected,Uncorrected data,perfect_model_baseline,Perfect-model baseline,2880,4.766384777622158,2.024974683588317,False,complete
+raw_uncorrected,Uncorrected data,seasonal_naive,Seasonal naive,2880,5.3383509509368166,3.1439538138413883,True,placeholder_smoke_only
+raw_uncorrected,Uncorrected data,xgboost,XGBoost,2880,4.966271972488349,2.9211434371020037,True,placeholder_smoke_only
+reference_corrected,Manually corrected data,linear_regression,Linear regression,2880,1.5132220334189397,0.8549084657757384,True,placeholder_smoke_only
+reference_corrected,Manually corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.0,0.0,False,complete
+reference_corrected,Manually corrected data,seasonal_naive,Seasonal naive,2880,4.295647533313533,2.429854201671892,True,placeholder_smoke_only
+reference_corrected,Manually corrected data,xgboost,XGBoost,2880,1.0414075949793606,0.5903328683746077,True,placeholder_smoke_only

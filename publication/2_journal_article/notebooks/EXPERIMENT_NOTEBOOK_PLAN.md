@@ -28,7 +28,11 @@ commented code cells.
   This is provisional until the manual oracle review output replaces it.
 - **Dataset Gamma**: `dataset/final/dataset_gamma.parquet`, a one-site extract
   from Beta selected by Gamma candidate ranking. The current automatic ranking
-  uses raw-vs-reference data-error RMSE and selects `act_B` on current labels.
+  uses raw-vs-reference data-error RMSE and selects `beta_B` on current labels.
+
+Final dataset site IDs are paper-facing aliases: Alpha sites use `alpha_*` and
+Beta/Gamma sites use `beta_*`. The processed source files retain their original
+raw IDs.
 
 All final datasets preserve the original seven-column schema:
 `substation_id,date,timestamp,net_load_MW,solar_MW,label_interval,label_day`.
@@ -100,8 +104,10 @@ Key outputs:
 - `outputs/metrics/02_correction_validation/02_correction_confusion_matrices.csv`
 - `outputs/tables/02_correction_validation/table01_correction_metrics_summary.csv`
 - `outputs/tables/02_correction_validation/table02_beta_transfer_key_metrics.csv`
-- `outputs/figures/02_correction_validation/fig01_correction_confusion_matrices.png`
-- `outputs/figures/02_correction_validation/fig02_correction_precision_recall_f1.png`
+- `outputs/figures/02_correction_validation/fig01a_confusion_matrices_day.png`
+- `outputs/figures/02_correction_validation/fig01b_confusion_matrices_interval.png`
+- `outputs/figures/02_correction_validation/fig02a_precision_recall_f1_day.png`
+- `outputs/figures/02_correction_validation/fig02b_precision_recall_f1_interval.png`
 
 The config keeps full model training disabled by default so the notebook can be
 opened and inspected before running expensive work.
@@ -116,16 +122,17 @@ Key outputs:
 - `outputs/intermediate/03_gamma_forecast_impact/01_gamma_series.csv`
 - `outputs/intermediate/03_gamma_forecast_impact/*_gamma_forecast_examples_*.csv`
 - `outputs/intermediate/03_gamma_forecast_impact/*_gamma_forecasts.csv`
-- `outputs/metrics/03_gamma_forecast_impact/01_gamma_data_error_benchmark.csv`
+- `outputs/metrics/03_gamma_forecast_impact/01_gamma_perfect_model_baseline.csv`
 - `outputs/metrics/03_gamma_forecast_impact/02_gamma_forecast_metrics.csv`
 - `outputs/tables/03_gamma_forecast_impact/table01_forecast_impact.csv`
-- `outputs/tables/03_gamma_forecast_impact/table02_gamma_data_error_benchmark.csv`
+- `outputs/tables/03_gamma_forecast_impact/table02_gamma_perfect_model_baseline.csv`
 - `outputs/figures/03_gamma_forecast_impact/fig01_gamma_series_raw_corrected_reference.png`
 - `outputs/figures/03_gamma_forecast_impact/fig02_gamma_forecast_rmse.png`
 - `outputs/figures/03_gamma_forecast_impact/fig03_gamma_forecast_residuals.png`
 
-Smoke mode always produces the data-error-only benchmark. Full mode trains the
-forecast models and constructs the `m8_xgb`-corrected Gamma series.
+Smoke mode produces the real perfect-model baseline plus placeholder forecast
+rows for layout checks. Full mode trains the forecast models and constructs the
+real `m8_xgb`-corrected Gamma series.
 
 ### 04 Publication Tables Figures
 

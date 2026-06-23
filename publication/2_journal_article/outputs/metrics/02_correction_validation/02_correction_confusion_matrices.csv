@@ -1,0 +1,17 @@
+dataset,fold_id,method,level,tp,fp,fn,tn
+Alpha,alpha_holdout_alpha_F,m8_xgb,day,275,18,27,45
+Alpha,alpha_holdout_alpha_F,m8_xgb,interval,4805,594,782,12383
+Alpha,alpha_holdout_alpha_F,m7_dtr,day,211,63,91,0
+Alpha,alpha_holdout_alpha_F,m7_dtr,interval,3464,1706,2123,11271
+Alpha,alpha_holdout_alpha_E,m8_xgb,day,240,19,28,78
+Alpha,alpha_holdout_alpha_E,m8_xgb,interval,3487,498,640,13939
+Alpha,alpha_holdout_alpha_E,m7_dtr,day,184,63,84,34
+Alpha,alpha_holdout_alpha_E,m7_dtr,interval,2497,1315,1630,13122
+Alpha,alpha_holdout_alpha_G,m8_xgb,day,221,22,30,92
+Alpha,alpha_holdout_alpha_G,m8_xgb,interval,3379,550,692,13943
+Alpha,alpha_holdout_alpha_G,m7_dtr,day,168,62,83,52
+Alpha,alpha_holdout_alpha_G,m7_dtr,interval,2402,1351,1669,13142
+Beta,beta_transfer,m8_xgb,day,451,67,106,2304
+Beta,beta_transfer,m8_xgb,interval,7847,2086,2757,139410
+Beta,beta_transfer,m7_dtr,day,340,153,217,2218
+Beta,beta_transfer,m7_dtr,interval,5620,3905,4984,137591

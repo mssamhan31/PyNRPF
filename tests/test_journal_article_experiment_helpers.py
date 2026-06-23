@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import sys
+from copy import deepcopy
+from functools import lru_cache
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 
@@ -13,8 +16,53 @@ sys.path.insert(0, str(NOTEBOOK_DIR))
 import _experiment_helpers as helpers  # noqa: E402
 
 
+@lru_cache(maxsize=None)
+def cached_config() -> dict:
+    return helpers.load_config(ARTICLE_ROOT)
+
+
+@lru_cache(maxsize=None)
+def cached_dataset(dataset_key: str) -> pd.DataFrame:
+    return helpers.load_dataset(ARTICLE_ROOT, cached_config(), dataset_key)
+
+
+def tiny_forecast_config() -> dict:
+    cfg = deepcopy(cached_config())
+    cfg["windows"]["gamma_forecast_test_start"] = "2024-09-01"
+    cfg["windows"]["gamma_forecast_test_end"] = "2024-09-02"
+    return cfg
+
+
+def tiny_gamma_frame() -> pd.DataFrame:
+    timestamps = pd.date_range("2024-08-01 00:00", "2024-09-02 23:45", freq="15min")
+    minutes = timestamps.hour * 60 + timestamps.minute
+    net_load = 1.8 + 0.4 * pd.Series(np.sin(2 * np.pi * minutes / 1440)).to_numpy()
+    label_interval = (timestamps >= "2024-09-01 10:00") & (timestamps <= "2024-09-01 13:45")
+    frame = pd.DataFrame(
+        {
+            "substation_id": "beta_B",
+            "date": timestamps.strftime("%Y-%m-%d"),
+            "timestamp": timestamps.strftime("%Y-%m-%d %H:%M:%S+00:00"),
+            "net_load_MW": net_load,
+            "solar_MW": 0.0,
+            "label_interval": label_interval,
+            "label_day": label_interval,
+        }
+    )
+    return helpers.prepare_dataset(frame[helpers.EXPECTED_COLUMNS], "Tiny Gamma")
+
+
+def test_journal_palette_constants_are_available() -> None:
+    assert helpers.JOURNAL_COLORS["orange"] == "#eb932c"
+    assert helpers.JOURNAL_COLORS["dark_blue"] == "#22303d"
+    assert helpers.JOURNAL_COLORS["grey"] == "#2F4D67"
+    assert helpers.JOURNAL_COLORS["light_grey"] == "#5C7D99"
+    assert helpers.JOURNAL_COLORS["light_white"] == "#ebe3e3"
+    assert len(helpers.JOURNAL_BAR_COLORS) >= 4
+
+
 def test_config_paths_and_schema_resolve() -> None:
-    cfg = helpers.load_config(ARTICLE_ROOT)
+    cfg = cached_config()
     paths = helpers.article_paths(ARTICLE_ROOT, cfg)
 
     assert cfg["schema_version"] == "journal_v2"
@@ -31,24 +79,46 @@ def test_config_paths_and_schema_resolve() -> None:
 
 
 def test_real_data_rankings_match_current_labels() -> None:
-    cfg = helpers.load_config(ARTICLE_ROOT)
-    alpha = helpers.load_dataset(ARTICLE_ROOT, cfg, "alpha")
-    beta = helpers.load_dataset(ARTICLE_ROOT, cfg, "beta")
-    gamma = helpers.load_dataset(ARTICLE_ROOT, cfg, "gamma")
+    cfg = cached_config()
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+    gamma = cached_dataset("gamma")
 
-    assert helpers.alpha_loso_sites(alpha, cfg) == ["syn_F", "syn_E", "syn_G"]
-    assert helpers.select_gamma_site(beta, cfg) == "act_B"
+    assert sorted(alpha["substation_id"].unique()) == [
+        "alpha_A",
+        "alpha_B",
+        "alpha_C",
+        "alpha_D",
+        "alpha_E",
+        "alpha_F",
+        "alpha_G",
+        "alpha_H",
+        "alpha_I",
+        "alpha_J",
+    ]
+    assert sorted(beta["substation_id"].unique()) == [
+        "beta_A",
+        "beta_B",
+        "beta_C",
+        "beta_D",
+        "beta_E",
+        "beta_F",
+        "beta_G",
+        "beta_H",
+    ]
+    assert helpers.alpha_loso_sites(alpha, cfg) == ["alpha_F", "alpha_E", "alpha_G"]
+    assert helpers.select_gamma_site(beta, cfg) == "beta_B"
     assert beta["date"].min() == "2023-10-01"
     assert beta["date"].max() == "2024-09-30"
     assert len(beta) == 280_800
     assert beta[["substation_id", "date"]].drop_duplicates().shape[0] == 2_928
     assert gamma["substation_id"].nunique() == 1
-    assert gamma["substation_id"].iloc[0] == "act_B"
+    assert gamma["substation_id"].iloc[0] == "beta_B"
     assert len(gamma) == 35_136
 
 
 def test_binary_metrics_and_daytime_interval_scope() -> None:
-    cfg = helpers.load_config(ARTICLE_ROOT)
+    cfg = cached_config()
     frame = pd.DataFrame(
         {
             "substation_id": ["A"] * 4,
@@ -60,7 +130,7 @@ def test_binary_metrics_and_daytime_interval_scope() -> None:
     )
 
     metrics = helpers.evaluate_prediction_frame(frame, cfg, "Beta", "unit", "m8_xgb")
-    interval = metrics.loc[metrics["level"] == "interval_daytime"].iloc[0]
+    interval = metrics.loc[metrics["level"] == "interval"].iloc[0]
 
     assert int(interval["support"]) == 2
     assert int(interval["tp"]) == 0
@@ -68,12 +138,129 @@ def test_binary_metrics_and_daytime_interval_scope() -> None:
     assert int(interval["fn"]) == 1
 
 
+def test_correction_smoke_metrics_are_finite_placeholders() -> None:
+    cfg = cached_config()
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+
+    metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+
+    assert len(metrics) == 16
+    assert metrics.groupby(["dataset", "fold_id", "method", "level"]).size().eq(1).all()
+    assert set(metrics["level"]) == {"day", "interval"}
+    assert metrics["is_placeholder"].eq(True).all()
+    assert metrics["status"].eq("placeholder_smoke_only").all()
+    assert metrics[["support", "positive_support", "tp", "fp", "fn", "tn"]].notna().all().all()
+    assert metrics[["precision", "recall", "f1"]].notna().all().all()
+    assert metrics[["precision", "recall", "f1"]].ge(0).all().all()
+    assert metrics[["precision", "recall", "f1"]].le(1).all().all()
+
+
+def test_correction_beta_top3_site_metrics_use_highest_rpf_day_sites() -> None:
+    cfg = cached_config()
+    beta = cached_dataset("beta")
+
+    assert helpers.beta_top_rpf_sites(beta) == ["beta_B", "beta_F", "beta_G"]
+
+    metrics = helpers.correction_smoke_beta_top_site_metrics(beta, cfg)
+
+    assert len(metrics) == 12
+    assert metrics["substation_id"].drop_duplicates().tolist() == [
+        "beta_B",
+        "beta_F",
+        "beta_G",
+    ]
+    assert set(metrics["method"]) == {"m8_xgb", "m7_dtr"}
+    assert set(metrics["level"]) == {"day", "interval"}
+    assert metrics.groupby(["substation_id", "method", "level"]).size().eq(1).all()
+
+
+def test_correction_metrics_table_merges_beta_top3_rows() -> None:
+    cfg = cached_config()
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+    metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+    top3 = helpers.correction_smoke_beta_top_site_metrics(beta, cfg)
+
+    table = helpers.correction_metrics_table(metrics, top3)
+
+    assert "summary_scope" in table.columns
+    assert "substation_id" in table.columns
+    assert set(table["summary_scope"]) == {
+        "alpha_loso_fold",
+        "beta_overall",
+        "beta_top3_site",
+    }
+    assert len(table.loc[table["summary_scope"] == "beta_top3_site"]) == 12
+    assert table.loc[
+        table["summary_scope"] == "beta_top3_site", "substation_id"
+    ].drop_duplicates().tolist() == ["beta_B", "beta_F", "beta_G"]
+
+
+def test_correction_pooled_metrics_sum_alpha_loso_counts() -> None:
+    cfg = cached_config()
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+    metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+
+    pooled = helpers.correction_pooled_metrics(metrics)
+    source = metrics.loc[
+        (metrics["dataset"] == "Alpha")
+        & (metrics["method"] == "m8_xgb")
+        & (metrics["level"] == "day")
+    ]
+    pooled_row = pooled.loc[
+        (pooled["summary_group"] == "Alpha CV pooled")
+        & (pooled["method"] == "m8_xgb")
+        & (pooled["level"] == "day")
+    ].iloc[0]
+
+    assert int(pooled_row["support"]) == int(source["support"].sum())
+    assert int(pooled_row["tp"]) == int(source["tp"].sum())
+    assert int(pooled_row["fp"]) == int(source["fp"].sum())
+    assert int(pooled_row["fn"]) == int(source["fn"].sum())
+    assert int(pooled_row["tn"]) == int(source["tn"].sum())
+
+
+def test_correction_placeholder_figures_are_written(tmp_path: Path) -> None:
+    cfg = cached_config()
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+    metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+
+    figure_paths = helpers.write_correction_figures(metrics, tmp_path)
+
+    assert [path.name for path in figure_paths] == [
+        "fig01a_confusion_matrices_day.png",
+        "fig01b_confusion_matrices_interval.png",
+        "fig02a_precision_recall_f1_day.png",
+        "fig02b_precision_recall_f1_interval.png",
+    ]
+    assert all(path.exists() and path.stat().st_size > 0 for path in figure_paths)
+
+
+def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
+    cfg = cached_config()
+    paths = helpers.article_paths(ARTICLE_ROOT, cfg)
+    figures = helpers.publication_expected_figures(paths)
+
+    assert "fig01a_confusion_matrices_day" in figures
+    assert "fig01b_confusion_matrices_interval" in figures
+    assert "fig02a_precision_recall_f1_day" in figures
+    assert "fig02b_precision_recall_f1_interval" in figures
+    assert not any(path.name == "fig01_correction_confusion_matrices.png" for path in figures.values())
+    assert not any(path.name == "fig02_correction_precision_recall_f1.png" for path in figures.values())
+    assert "fig02_gamma_forecast_rmse" in figures
+    assert not any(path.name == "fig02a_gamma_perfect_model_baseline_rmse.png" for path in figures.values())
+    assert not any(path.name == "fig02b_gamma_forecast_rmse.png" for path in figures.values())
+
+
 def test_forecast_examples_are_exactly_seven_days_ahead_with_14_day_lookback() -> None:
-    cfg = helpers.load_config(ARTICLE_ROOT)
+    cfg = cached_config()
     timestamps = pd.date_range("2024-08-01 00:00", "2024-09-30 23:45", freq="15min")
     frame = pd.DataFrame(
         {
-            "substation_id": "act_B",
+            "substation_id": "beta_B",
             "date": timestamps.strftime("%Y-%m-%d"),
             "timestamp": timestamps.strftime("%Y-%m-%d %H:%M:%S+00:00"),
             "net_load_MW": range(len(timestamps)),
@@ -98,3 +285,100 @@ def test_forecast_examples_are_exactly_seven_days_ahead_with_14_day_lookback() -
     origin = pd.Timestamp(first["origin_timestamp"])
     assert target - origin == pd.Timedelta(days=7)
     assert first["origin_value"] == gamma.set_index("_timestamp_dt").loc[origin, "net_load_MW"]
+
+
+def test_gamma_forecast_smoke_rows_cover_placeholder_models_and_conditions() -> None:
+    cfg = tiny_forecast_config()
+    gamma = tiny_gamma_frame()
+    gamma["raw_uncorrected_MW"] = gamma["net_load_MW"]
+    gamma["reference_corrected_MW"] = gamma["reference_net_load_MW"]
+    gamma["m8_xgb_corrected_MW"] = helpers.placeholder_m8_corrected_series(gamma)
+
+    baseline = helpers.perfect_model_baseline(gamma, cfg)
+    placeholder = helpers.placeholder_forecast_rows(gamma, cfg)
+    forecasts = pd.concat([baseline, placeholder], ignore_index=True)
+    metrics = helpers.forecast_metric_rows(forecasts)
+
+    assert set(metrics["model"]) == {
+        "perfect_model_baseline",
+        "seasonal_naive",
+        "linear_regression",
+        "xgboost",
+    }
+    assert set(metrics["data_condition"]) == {
+        "raw_uncorrected",
+        "m8_xgb_corrected",
+        "reference_corrected",
+    }
+    baseline_metrics = metrics.loc[metrics["model"] == "perfect_model_baseline"]
+    assert len(baseline_metrics) == 3
+    assert baseline_metrics["is_placeholder"].eq(False).all()
+    assert metrics.loc[metrics["model"] != "perfect_model_baseline", "is_placeholder"].eq(True).all()
+    manual_baseline = baseline_metrics.loc[baseline_metrics["data_condition"] == "reference_corrected"].iloc[0]
+    assert np.isclose(manual_baseline["rmse_MW"], 0.0)
+    assert np.isclose(manual_baseline["mae_MW"], 0.0)
+    for condition in metrics["data_condition"].unique():
+        condition_metrics = metrics.loc[metrics["data_condition"] == condition]
+        baseline_rmse = float(
+            condition_metrics.loc[
+                condition_metrics["model"] == "perfect_model_baseline", "rmse_MW"
+            ].iloc[0]
+        )
+        model_rmse = condition_metrics.loc[
+            condition_metrics["model"] != "perfect_model_baseline", "rmse_MW"
+        ]
+        assert model_rmse.gt(baseline_rmse).all()
+    assert set(metrics["data_condition_label"]) == {
+        "Uncorrected data",
+        "m8_xgb-corrected data",
+        "Manually corrected data",
+    }
+    public_labels = set(metrics["data_condition_label"]).union(set(metrics["model_label"]))
+    assert not {"Raw", "Reference", "Data error"}.intersection(public_labels)
+
+
+def test_gamma_forecast_smoke_figures_are_written(tmp_path: Path) -> None:
+    cfg = tiny_forecast_config()
+    gamma = tiny_gamma_frame()
+    gamma["raw_uncorrected_MW"] = gamma["net_load_MW"]
+    gamma["reference_corrected_MW"] = gamma["reference_net_load_MW"]
+    gamma["m8_xgb_corrected_MW"] = helpers.placeholder_m8_corrected_series(gamma)
+    baseline = helpers.perfect_model_baseline(gamma, cfg)
+    forecasts = pd.concat(
+        [baseline, helpers.placeholder_forecast_rows(gamma, cfg)], ignore_index=True
+    )
+    metrics = helpers.forecast_metric_rows(forecasts)
+
+    paths = [
+        helpers.write_gamma_series_figure(gamma, tmp_path, "beta_B"),
+        helpers.write_forecast_metric_figure(metrics, tmp_path),
+        helpers.write_forecast_residual_figure(forecasts, tmp_path),
+    ]
+
+    assert [path.name for path in paths if path is not None] == [
+        "fig01_gamma_series_raw_corrected_reference.png",
+        "fig02_gamma_forecast_rmse.png",
+        "fig03_gamma_forecast_residuals.png",
+    ]
+    assert all(path is not None and path.exists() and path.stat().st_size > 0 for path in paths)
+
+
+def test_extract_rpf_events_reports_contiguous_duration_hours() -> None:
+    timestamps = pd.date_range("2024-09-01 00:00", periods=6, freq="15min")
+    frame = pd.DataFrame(
+        {
+            "substation_id": "beta_A",
+            "date": timestamps.strftime("%Y-%m-%d"),
+            "timestamp": timestamps.strftime("%Y-%m-%d %H:%M:%S+00:00"),
+            "net_load_MW": [1.0, 1.1, 1.2, -0.5, 1.3, 1.4],
+            "solar_MW": 0.0,
+            "label_interval": [True, True, False, True, True, True],
+            "label_day": True,
+        }
+    )
+    prepared = helpers.prepare_dataset(frame[helpers.EXPECTED_COLUMNS], "Event unit")
+
+    events = helpers.extract_rpf_events(prepared, "Beta")
+
+    assert list(events["duration_minutes"]) == [30, 45]
+    assert list(events["duration_hours"]) == [0.5, 0.75]
