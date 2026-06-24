@@ -11,6 +11,7 @@ __pycache__/
 .vscode
 .tools/
 /outputs/
+publication/2_journal_article/notebooks/99_Misc/outputs/
 config/databricks_connect.yaml
 build/
 dist/

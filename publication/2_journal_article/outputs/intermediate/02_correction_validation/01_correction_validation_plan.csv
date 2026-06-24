@@ -1,7 +1,14 @@
 experiment,fold_id,status
-alpha_top3_loso,holdout_alpha_F,planned
-alpha_top3_loso,holdout_alpha_E,planned
-alpha_top3_loso,holdout_alpha_G,planned
+alpha_complete_loso,holdout_alpha_F,planned
+alpha_complete_loso,holdout_alpha_E,planned
+alpha_complete_loso,holdout_alpha_G,planned
+alpha_complete_loso,holdout_alpha_C,planned
+alpha_complete_loso,holdout_alpha_J,planned
+alpha_complete_loso,holdout_alpha_I,planned
+alpha_complete_loso,holdout_alpha_B,planned
+alpha_complete_loso,holdout_alpha_A,planned
+alpha_complete_loso,holdout_alpha_D,planned
+alpha_complete_loso,holdout_alpha_H,planned
 beta_transfer,alpha_train_to_beta,planned
 beta_transfer,m7_dtr_beta,planned
 beta_rows,beta_filtered,280800

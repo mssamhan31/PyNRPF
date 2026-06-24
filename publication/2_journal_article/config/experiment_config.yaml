@@ -48,7 +48,7 @@ outputs:
   manifests_dir: "manifests"
 
 execution:
-  run_full_correction_validation: false
+  run_full_correction_validation: true
   run_full_forecast: false
   reuse_correction_prediction_files: false
   overwrite_outputs: true
@@ -58,7 +58,7 @@ correction:
   methods:
     - "m8_xgb"
     - "m7_dtr"
-  alpha_top_n_loso_sites: 3
+  alpha_top_n_loso_sites: 10
   interval_daytime_start_hour: 6
   interval_daytime_end_hour: 18
   m7_threshold:

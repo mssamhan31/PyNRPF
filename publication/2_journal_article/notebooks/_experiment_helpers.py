@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import calendar
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -586,6 +587,88 @@ def temporal_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     return pd.concat(summaries, ignore_index=True, sort=False)
 
 
+def rpf_day_of_month_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
+    site_days = (
+        df.groupby(["substation_id", "date"], as_index=False)
+        .agg(label_day=("label_interval", "any"))
+        .assign(
+            month=lambda x: pd.to_datetime(x["date"]).dt.month,
+            day=lambda x: pd.to_datetime(x["date"]).dt.day,
+        )
+    )
+    grouped = (
+        site_days.groupby(["month", "day"], as_index=False)
+        .agg(total_site_days=("label_day", "size"), rpf_site_days=("label_day", "sum"))
+        .assign(dataset=dataset_name)
+    )
+    grouped["rpf_site_day_pct"] = (
+        grouped["rpf_site_days"] / grouped["total_site_days"] * 100.0
+    )
+    grid = pd.MultiIndex.from_product(
+        [range(1, 13), range(1, 32)], names=["month", "day"]
+    ).to_frame(index=False)
+    out = grid.merge(grouped, on=["month", "day"], how="left")
+    out["dataset"] = out["dataset"].fillna(dataset_name)
+    out["valid_calendar_day"] = out.apply(
+        lambda row: int(row["day"]) <= calendar.monthrange(2024, int(row["month"]))[1],
+        axis=1,
+    )
+    for col in ["total_site_days", "rpf_site_days"]:
+        out.loc[out["valid_calendar_day"] & out[col].isna(), col] = 0
+    out.loc[~out["valid_calendar_day"], ["total_site_days", "rpf_site_days"]] = np.nan
+    out.loc[~out["valid_calendar_day"], "rpf_site_day_pct"] = np.nan
+    return out[
+        [
+            "dataset",
+            "month",
+            "day",
+            "valid_calendar_day",
+            "total_site_days",
+            "rpf_site_days",
+            "rpf_site_day_pct",
+        ]
+    ]
+
+
+def rpf_event_count_by_day(events: pd.DataFrame) -> pd.DataFrame:
+    if events.empty:
+        return pd.DataFrame(
+            columns=[
+                "dataset",
+                "n_contiguous_events",
+                "n_rpf_site_days",
+                "share_pct",
+                "plot_category",
+            ]
+        )
+    event_counts = (
+        events.groupby(["dataset", "substation_id", "date"], as_index=False)
+        .size()
+        .rename(columns={"size": "n_contiguous_events"})
+    )
+    distribution = (
+        event_counts.groupby(["dataset", "n_contiguous_events"], as_index=False)
+        .size()
+        .rename(columns={"size": "n_rpf_site_days"})
+    )
+    totals = distribution.groupby("dataset")["n_rpf_site_days"].transform("sum")
+    distribution["share_pct"] = distribution["n_rpf_site_days"] / totals * 100.0
+    distribution["plot_category"] = np.where(
+        distribution["n_contiguous_events"] >= 5,
+        "5+",
+        distribution["n_contiguous_events"].astype(int).astype(str),
+    )
+    return distribution[
+        [
+            "dataset",
+            "n_contiguous_events",
+            "n_rpf_site_days",
+            "share_pct",
+            "plot_category",
+        ]
+    ].sort_values(["dataset", "n_contiguous_events"]).reset_index(drop=True)
+
+
 def dataset_occurrence_summary(occurrence: pd.DataFrame) -> pd.DataFrame:
     grouped = (
         occurrence.groupby("dataset", as_index=False)
@@ -781,6 +864,14 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
         [extract_rpf_events(alpha, "Alpha"), extract_rpf_events(beta, "Beta")],
         ignore_index=True,
     )
+    day_of_month = pd.concat(
+        [
+            rpf_day_of_month_summary(alpha, "Alpha"),
+            rpf_day_of_month_summary(beta, "Beta"),
+        ],
+        ignore_index=True,
+    )
+    event_count_distribution = rpf_event_count_by_day(events)
     occurrence_dataset = dataset_occurrence_summary(occurrence)
     event_summary = event_dataset_summary(events)
 
@@ -788,13 +879,23 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
     write_csv(occurrence, dirs["intermediate"] / "02_rpf_occurrence_by_site.csv")
     write_csv(temporal, dirs["intermediate"] / "03_rpf_temporal_summary.csv")
     write_csv(events, dirs["intermediate"] / "04_rpf_event_summary.csv")
+    write_csv(day_of_month, dirs["intermediate"] / "05_rpf_day_of_month_summary.csv")
+    write_csv(
+        event_count_distribution,
+        dirs["intermediate"] / "06_rpf_event_count_by_day_distribution.csv",
+    )
     write_csv(
         occurrence_dataset,
         dirs["tables"] / "table01_rpf_occurrence_summary_alpha_beta.csv",
     )
     write_csv(event_summary, dirs["tables"] / "table02_rpf_event_summary_alpha_beta.csv")
     figure_paths = write_characterisation_figures(
-        occurrence, temporal, events, dirs["figures"]
+        occurrence,
+        temporal,
+        events,
+        day_of_month,
+        event_count_distribution,
+        dirs["figures"],
     )
     write_manifest(
         paths,
@@ -817,7 +918,10 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
         "occurrence": occurrence,
         "temporal": temporal,
         "events": events,
+        "day_of_month": day_of_month,
+        "event_count_distribution": event_count_distribution,
         "event_summary": event_summary,
+        "figure_paths": figure_paths,
     }
 
 
@@ -868,6 +972,8 @@ def write_characterisation_figures(
     occurrence: pd.DataFrame,
     temporal: pd.DataFrame,
     events: pd.DataFrame,
+    day_of_month: pd.DataFrame,
+    event_count_distribution: pd.DataFrame,
     figures_dir: Path,
 ) -> list[Path]:
     plt = _load_matplotlib()
@@ -966,6 +1072,100 @@ def write_characterisation_figures(
         fig.tight_layout()
         path = figures_dir / "fig03_event_duration_distribution_alpha_beta.png"
         fig.savefig(path, dpi=200)
+        figure_paths.append(path)
+        plt.close(fig)
+
+    if not day_of_month.empty:
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 4.8), sharey=True)
+        cmap = journal_colormap("rpf_heat").copy()
+        cmap.set_bad(color=JOURNAL_COLORS["light_white"])
+        for ax, dataset in zip(axes, ["Alpha", "Beta"]):
+            subset = day_of_month.loc[day_of_month["dataset"] == dataset].copy()
+            heat = subset.pivot(index="month", columns="day", values="rpf_site_day_pct")
+            heat = heat.reindex(index=range(1, 13), columns=range(1, 32))
+            masked = np.ma.masked_invalid(heat.to_numpy(dtype=float))
+            image = ax.imshow(masked, aspect="auto", origin="lower", cmap=cmap, vmin=0)
+            day_ticks = list(range(0, 31, 5))
+            ax.set_xticks(day_ticks)
+            ax.set_xticklabels([str(day + 1) for day in day_ticks], fontsize=10)
+            ax.set_yticks(range(12))
+            ax.set_yticklabels([str(month) for month in range(1, 13)], fontsize=10)
+            ax.set_xlabel("Day of month", fontsize=12)
+            ax.set_title(dataset, fontsize=14)
+            ax.grid(False)
+        axes[0].set_ylabel("Month", fontsize=12)
+        fig.suptitle("RPF site-day percentage by calendar day", fontsize=15, y=1.02)
+        colorbar = fig.colorbar(image, ax=axes.ravel().tolist(), label="RPF site-days (%)")
+        colorbar.ax.tick_params(labelsize=10)
+        colorbar.set_label("RPF site-days (%)", fontsize=12)
+        path = figures_dir / "fig04_day_of_month_rpf_heatmap_alpha_beta.png"
+        fig.savefig(path, dpi=250, bbox_inches="tight", pad_inches=0.15)
+        figure_paths.append(path)
+        plt.close(fig)
+
+    if not event_count_distribution.empty:
+        category_order = ["1", "2", "3", "4", "5+"]
+        colours = [
+            JOURNAL_COLORS["dark_blue"],
+            JOURNAL_COLORS["orange"],
+            JOURNAL_COLORS["grey"],
+            JOURNAL_COLORS["light_grey"],
+            "#8f5f2a",
+        ]
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9.2, 4.4))
+        for ax, dataset in zip(axes, ["Alpha", "Beta"]):
+            subset = event_count_distribution.loc[
+                event_count_distribution["dataset"] == dataset
+            ].copy()
+            grouped = (
+                subset.groupby("plot_category", as_index=False)["n_rpf_site_days"]
+                .sum()
+                .set_index("plot_category")
+                .reindex(category_order, fill_value=0)
+            )
+            values = grouped["n_rpf_site_days"].to_numpy(dtype=float)
+            if values.sum() == 0:
+                ax.text(0.5, 0.5, "No RPF days", ha="center", va="center")
+                ax.axis("off")
+                continue
+            wedges, _ = ax.pie(
+                values,
+                labels=None,
+                colors=colours,
+                startangle=90,
+                counterclock=False,
+                wedgeprops={"width": 0.42, "edgecolor": "white", "linewidth": 1.2},
+            )
+            total = int(values.sum())
+            ax.text(
+                0,
+                0,
+                f"{total:,}\nRPF days",
+                ha="center",
+                va="center",
+                fontsize=11,
+                color=JOURNAL_COLORS["dark_blue"],
+            )
+            ax.set_title(dataset, fontsize=13)
+        from matplotlib.patches import Patch
+
+        handles = [
+            Patch(facecolor=colour, label=label)
+            for colour, label in zip(colours, category_order)
+        ]
+        fig.legend(
+            handles=handles,
+            loc="lower center",
+            ncol=len(category_order),
+            frameon=False,
+            fontsize=10,
+            title="Contiguous RPF events per RPF day",
+            title_fontsize=10,
+        )
+        fig.suptitle("RPF event-count structure by day", fontsize=15, y=0.98)
+        fig.subplots_adjust(left=0.04, right=0.98, top=0.82, bottom=0.25, wspace=0.10)
+        path = figures_dir / "fig05_rpf_events_per_day_doughnut_alpha_beta.png"
+        fig.savefig(path, dpi=250, bbox_inches="tight", pad_inches=0.12)
         figure_paths.append(path)
         plt.close(fig)
     return figure_paths
@@ -1349,7 +1549,9 @@ def predict_m8_bundle(
     result_key = pd.DataFrame({cols["site"]: result[cols["site"]], cols["timestamp"]: result_ts})
     if not ts_results.empty:
         merged = result_key.merge(ts_results, on=[cols["site"], cols["timestamp"]], how="left")
-        result["pred_interval"] = merged["pred_interval"].fillna(False).astype(bool).to_numpy()
+        result["pred_interval"] = (
+            merged["pred_interval"].fillna(False).infer_objects(copy=False).astype(bool).to_numpy()
+        )
         result["prob_interval"] = merged["prob_interval"].to_numpy()
     result["corrected_net_load_MW"] = np.where(
         result["pred_interval"], -result["net_load_MW"], result["net_load_MW"]
@@ -1375,7 +1577,7 @@ def correction_smoke_plan(
     rows = []
     for site in alpha_loso_sites(alpha, cfg):
         rows.append(
-            {"experiment": "alpha_top3_loso", "fold_id": f"holdout_{site}", "status": "planned"}
+            {"experiment": "alpha_complete_loso", "fold_id": f"holdout_{site}", "status": "planned"}
         )
     rows.append(
         {"experiment": "beta_transfer", "fold_id": "alpha_train_to_beta", "status": "planned"}
@@ -1529,6 +1731,28 @@ def correction_beta_site_metrics_from_predictions(
     return out
 
 
+def correction_alpha_site_metrics_from_loso_metrics(metrics: pd.DataFrame) -> pd.DataFrame:
+    alpha_metrics = metrics.loc[metrics["dataset"] == "Alpha"].copy()
+    if alpha_metrics.empty:
+        return pd.DataFrame()
+    alpha_metrics["substation_id"] = (
+        alpha_metrics["fold_id"].astype(str).str.replace("alpha_holdout_", "", regex=False)
+    )
+    return alpha_metrics[
+        [
+            "dataset",
+            "substation_id",
+            "fold_id",
+            "method",
+            "level",
+            *COUNT_COLUMNS,
+            *SCORE_COLUMNS,
+            "is_placeholder",
+            "status",
+        ]
+    ].reset_index(drop=True)
+
+
 def correction_pooled_metrics(metrics: pd.DataFrame) -> pd.DataFrame:
     usable = metrics.copy()
     for col in COUNT_COLUMNS:
@@ -1654,10 +1878,15 @@ def _plot_confusion_panel(ax: Any, fig: Any, row: pd.Series, title: str) -> None
     ax.grid(False)
 
 
-def write_beta_site_score_boxplot(beta_site_metrics: pd.DataFrame, figures_dir: Path) -> Path | None:
-    if beta_site_metrics.empty:
+def write_site_score_boxplot(
+    site_metrics: pd.DataFrame,
+    figures_dir: Path,
+    dataset_label: str,
+    output_name: str,
+) -> Path | None:
+    if site_metrics.empty:
         return None
-    plot_df = beta_site_metrics.dropna(subset=SCORE_COLUMNS, how="all").copy()
+    plot_df = site_metrics.dropna(subset=SCORE_COLUMNS, how="all").copy()
     if plot_df.empty:
         return None
     plt = _load_matplotlib()
@@ -1716,7 +1945,7 @@ def write_beta_site_score_boxplot(beta_site_metrics: pd.DataFrame, figures_dir: 
         ax.set_ylim(0, 1.05)
         ax.tick_params(axis="y", labelsize=9)
         style_axis_grid(ax)
-    axes[0].set_ylabel("Score across Beta sites", fontsize=10)
+    axes[0].set_ylabel(f"Score across {dataset_label} sites", fontsize=10)
     from matplotlib.patches import Patch
 
     handles = [
@@ -1725,17 +1954,36 @@ def write_beta_site_score_boxplot(beta_site_metrics: pd.DataFrame, figures_dir: 
         if method in set(plot_df["method"])
     ]
     fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=9)
-    fig.suptitle("Beta site-level correction score distribution", fontsize=13, y=0.98)
+    fig.suptitle(f"{dataset_label} site-level correction score distribution", fontsize=13, y=0.98)
     fig.subplots_adjust(left=0.08, right=0.99, top=0.82, bottom=0.22, wspace=0.10)
-    path = figures_dir / "fig03_beta_site_precision_recall_f1_boxplot.png"
+    path = figures_dir / output_name
     fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
     return path
 
 
+def write_beta_site_score_boxplot(beta_site_metrics: pd.DataFrame, figures_dir: Path) -> Path | None:
+    return write_site_score_boxplot(
+        beta_site_metrics,
+        figures_dir,
+        "Beta",
+        "fig03_beta_site_precision_recall_f1_boxplot.png",
+    )
+
+
+def write_alpha_site_score_boxplot(alpha_site_metrics: pd.DataFrame, figures_dir: Path) -> Path | None:
+    return write_site_score_boxplot(
+        alpha_site_metrics,
+        figures_dir,
+        "Alpha",
+        "fig04_alpha_site_precision_recall_f1_boxplot.png",
+    )
+
+
 def write_correction_figures(
     metrics: pd.DataFrame,
     figures_dir: Path,
+    alpha_site_metrics: pd.DataFrame | None = None,
     beta_site_metrics: pd.DataFrame | None = None,
 ) -> list[Path]:
     usable = metrics.dropna(subset=["precision", "recall", "f1"], how="all").copy()
@@ -1840,6 +2088,10 @@ def write_correction_figures(
         beta_site_path = write_beta_site_score_boxplot(beta_site_metrics, figures_dir)
         if beta_site_path is not None:
             figure_paths.append(beta_site_path)
+    if alpha_site_metrics is not None:
+        alpha_site_path = write_alpha_site_score_boxplot(alpha_site_metrics, figures_dir)
+        if alpha_site_path is not None:
+            figure_paths.append(alpha_site_path)
     return figure_paths
 
 
@@ -1898,7 +2150,8 @@ def correction_validation_preflight(article_root: Path | None = None) -> dict[st
             {"step": "Alpha-to-Beta m8_xgb training", "count": 1},
             {"step": "Beta m8_xgb prediction", "count": 1},
             {"step": "Beta m7_dtr inference", "count": 1},
-            {"step": "Primary metric rows", "count": 16},
+            {"step": "Primary metric rows", "count": len(alpha_sites) * 4 + 4},
+            {"step": "Alpha site metric rows", "count": len(alpha_sites) * 4},
             {"step": "Beta site metric rows", "count": int(beta["substation_id"].nunique()) * 4},
         ]
     )
@@ -1915,6 +2168,7 @@ def correction_validation_preflight(article_root: Path | None = None) -> dict[st
                 "fig02a_precision_recall_f1_day.png",
                 "fig02b_precision_recall_f1_interval.png",
                 "fig03_beta_site_precision_recall_f1_boxplot.png",
+                "fig04_alpha_site_precision_recall_f1_boxplot.png",
             ]
         }
     )
@@ -1942,6 +2196,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     if not bool(cfg["execution"]["run_full_correction_validation"]):
         plan = correction_smoke_plan(alpha, beta, cfg)
         metrics = correction_smoke_metrics(alpha, beta, cfg)
+        alpha_site_metrics = correction_alpha_site_metrics_from_loso_metrics(metrics)
         beta_site_metrics = correction_smoke_beta_site_metrics(beta, cfg, sites=beta_sites)
         table_metrics = correction_metrics_table(metrics, beta_site_metrics)
         confusion = correction_confusion_matrices(metrics)
@@ -1953,7 +2208,12 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
             table_metrics.loc[table_metrics["summary_scope"] == "beta_overall"].copy(),
             dirs["tables"] / "table02_beta_transfer_key_metrics.csv",
         )
-        figure_paths = write_correction_figures(metrics, dirs["figures"], beta_site_metrics)
+        figure_paths = write_correction_figures(
+            metrics,
+            dirs["figures"],
+            alpha_site_metrics=alpha_site_metrics,
+            beta_site_metrics=beta_site_metrics,
+        )
         write_manifest(
             paths,
             "02_correction_validation.json",
@@ -1976,8 +2236,10 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
             "status": "placeholder_smoke_only",
             "plan": plan,
             "metrics": metrics,
+            "alpha_site_metrics": alpha_site_metrics,
             "beta_site_metrics": beta_site_metrics,
             "table_metrics": table_metrics,
+            "figure_paths": figure_paths,
         }
 
     metric_frames = []
@@ -2053,6 +2315,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     metrics = pd.concat(metric_frames, ignore_index=True)
     metrics["is_placeholder"] = False
     metrics["status"] = "complete"
+    alpha_site_metrics = correction_alpha_site_metrics_from_loso_metrics(metrics)
     beta_site_metrics = correction_beta_site_metrics_from_predictions(
         beta, cfg, beta_predictions_by_method, sites=beta_sites
     )
@@ -2067,7 +2330,12 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
         table_metrics.loc[table_metrics["summary_scope"] == "beta_overall"].copy(),
         dirs["tables"] / "table02_beta_transfer_key_metrics.csv",
     )
-    figure_paths = write_correction_figures(metrics, dirs["figures"], beta_site_metrics)
+    figure_paths = write_correction_figures(
+        metrics,
+        dirs["figures"],
+        alpha_site_metrics=alpha_site_metrics,
+        beta_site_metrics=beta_site_metrics,
+    )
     write_manifest(
         paths,
         "02_correction_validation.json",
@@ -2089,8 +2357,10 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     return {
         "status": "complete",
         "metrics": metrics,
+        "alpha_site_metrics": alpha_site_metrics,
         "beta_site_metrics": beta_site_metrics,
         "table_metrics": table_metrics,
+        "figure_paths": figure_paths,
     }
 
 
@@ -2692,6 +2962,12 @@ def publication_expected_figures(paths: ArticlePaths) -> dict[str, Path]:
         "fig03_event_duration_distribution_alpha_beta": paths.figures
         / "01_characterisation"
         / "fig03_event_duration_distribution_alpha_beta.png",
+        "fig04_day_of_month_rpf_heatmap_alpha_beta": paths.figures
+        / "01_characterisation"
+        / "fig04_day_of_month_rpf_heatmap_alpha_beta.png",
+        "fig05_rpf_events_per_day_doughnut_alpha_beta": paths.figures
+        / "01_characterisation"
+        / "fig05_rpf_events_per_day_doughnut_alpha_beta.png",
         "fig01a_confusion_matrices_day": paths.figures
         / "02_correction_validation"
         / "fig01a_confusion_matrices_day.png",
@@ -2707,6 +2983,9 @@ def publication_expected_figures(paths: ArticlePaths) -> dict[str, Path]:
         "fig03_beta_site_precision_recall_f1_boxplot": paths.figures
         / "02_correction_validation"
         / "fig03_beta_site_precision_recall_f1_boxplot.png",
+        "fig04_alpha_site_precision_recall_f1_boxplot": paths.figures
+        / "02_correction_validation"
+        / "fig04_alpha_site_precision_recall_f1_boxplot.png",
         "fig01_gamma_series_raw_corrected_reference": paths.figures
         / "03_gamma_forecast_impact"
         / "fig01_gamma_series_raw_corrected_reference.png",

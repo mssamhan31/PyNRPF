@@ -1,5 +1,5 @@
 summary_scope,dataset,substation_id,fold_id,method,level,support,positive_support,tp,fp,fn,tn,precision,recall,f1,is_placeholder,status
-beta_overall,Beta,,beta_transfer,m8_xgb,day,2928,557,451,67,106,2304,0.8706563706563707,0.8096947935368043,0.8390697674418605,True,placeholder_smoke_only
-beta_overall,Beta,,beta_transfer,m8_xgb,interval,152100,10604,7847,2086,2757,139410,0.7899929527836504,0.7400037721614485,0.7641817207966111,True,placeholder_smoke_only
-beta_overall,Beta,,beta_transfer,m7_dtr,day,2928,557,340,153,217,2218,0.6896551724137931,0.6104129263913824,0.6476190476190476,True,placeholder_smoke_only
-beta_overall,Beta,,beta_transfer,m7_dtr,interval,152100,10604,5620,3905,4984,137591,0.5900262467191602,0.5299886835156544,0.5583983307665557,True,placeholder_smoke_only
+beta_overall,Beta,,beta_transfer,m8_xgb,day,2928,557,234,152,323,2219,0.6062176165803109,0.42010771992818674,0.4962884411452811,False,complete
+beta_overall,Beta,,beta_transfer,m8_xgb,interval,152100,10604,2608,1347,7996,140149,0.6594184576485461,0.24594492644285176,0.35826636444810767,False,complete
+beta_overall,Beta,,beta_transfer,m7_dtr,day,2928,557,424,1781,133,590,0.19229024943310657,0.7612208258527827,0.30702389572773353,False,complete
+beta_overall,Beta,,beta_transfer,m7_dtr,interval,152100,10604,6847,11671,3757,129825,0.3697483529538827,0.6456997359486986,0.4702286930842662,False,complete

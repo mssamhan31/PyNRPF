@@ -79,6 +79,21 @@ def test_config_paths_and_schema_resolve() -> None:
     assert paths.metrics.name == "metrics"
 
 
+def test_misc_diagnostics_outputs_are_ignored_but_summary_is_tracked() -> None:
+    gitignore = (ARTICLE_ROOT.parents[1] / ".gitignore").read_text(encoding="utf-8")
+    summary_path = (
+        NOTEBOOK_DIR / "99_Misc" / "2026-06-24_beta_m8_diagnostics_summary.md"
+    )
+    summary = summary_path.read_text(encoding="utf-8")
+
+    assert "publication/2_journal_article/notebooks/99_Misc/outputs/" in gitignore
+    assert summary_path.exists()
+    assert "site-specific" in summary
+    assert "normalisation" in summary
+    assert "0.64" in summary
+    assert "m9" in summary
+
+
 def test_real_data_rankings_match_current_labels() -> None:
     cfg = cached_config()
     alpha = cached_dataset("alpha")
@@ -107,7 +122,18 @@ def test_real_data_rankings_match_current_labels() -> None:
         "beta_G",
         "beta_H",
     ]
-    assert helpers.alpha_loso_sites(alpha, cfg) == ["alpha_F", "alpha_E", "alpha_G"]
+    assert helpers.alpha_loso_sites(alpha, cfg) == [
+        "alpha_F",
+        "alpha_E",
+        "alpha_G",
+        "alpha_C",
+        "alpha_J",
+        "alpha_I",
+        "alpha_B",
+        "alpha_A",
+        "alpha_D",
+        "alpha_H",
+    ]
     assert helpers.select_gamma_site(beta, cfg) == "beta_B"
     assert beta["date"].min() == "2023-10-01"
     assert beta["date"].max() == "2024-09-30"
@@ -146,7 +172,7 @@ def test_correction_smoke_metrics_are_finite_placeholders() -> None:
 
     metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
 
-    assert len(metrics) == 16
+    assert len(metrics) == 44
     assert metrics.groupby(["dataset", "fold_id", "method", "level"]).size().eq(1).all()
     assert set(metrics["level"]) == {"day", "interval"}
     assert metrics["is_placeholder"].eq(True).all()
@@ -207,7 +233,22 @@ def test_correction_metrics_table_merges_beta_site_rows() -> None:
         "beta_overall",
         "beta_site",
     }
+    assert len(table.loc[table["summary_scope"] == "alpha_loso_fold"]) == 40
     assert len(table.loc[table["summary_scope"] == "beta_site"]) == 32
+    assert table.loc[
+        table["summary_scope"] == "alpha_loso_fold", "substation_id"
+    ].drop_duplicates().tolist() == [
+        "alpha_F",
+        "alpha_E",
+        "alpha_G",
+        "alpha_C",
+        "alpha_J",
+        "alpha_I",
+        "alpha_B",
+        "alpha_A",
+        "alpha_D",
+        "alpha_H",
+    ]
     assert table.loc[
         table["summary_scope"] == "beta_site", "substation_id"
     ].drop_duplicates().tolist() == [
@@ -298,9 +339,15 @@ def test_correction_placeholder_figures_are_written(tmp_path: Path) -> None:
     alpha = cached_dataset("alpha")
     beta = cached_dataset("beta")
     metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+    alpha_site_metrics = helpers.correction_alpha_site_metrics_from_loso_metrics(metrics)
     beta_site_metrics = helpers.correction_smoke_beta_site_metrics(beta, cfg)
 
-    figure_paths = helpers.write_correction_figures(metrics, tmp_path, beta_site_metrics)
+    figure_paths = helpers.write_correction_figures(
+        metrics,
+        tmp_path,
+        alpha_site_metrics=alpha_site_metrics,
+        beta_site_metrics=beta_site_metrics,
+    )
 
     assert [path.name for path in figure_paths] == [
         "fig01a_confusion_matrices_day.png",
@@ -308,8 +355,45 @@ def test_correction_placeholder_figures_are_written(tmp_path: Path) -> None:
         "fig02a_precision_recall_f1_day.png",
         "fig02b_precision_recall_f1_interval.png",
         "fig03_beta_site_precision_recall_f1_boxplot.png",
+        "fig04_alpha_site_precision_recall_f1_boxplot.png",
     ]
     assert all(path.exists() and path.stat().st_size > 0 for path in figure_paths)
+
+
+def test_characterisation_new_temporal_event_summaries() -> None:
+    alpha = cached_dataset("alpha")
+    beta = cached_dataset("beta")
+    events = pd.concat(
+        [
+            helpers.extract_rpf_events(alpha, "Alpha"),
+            helpers.extract_rpf_events(beta, "Beta"),
+        ],
+        ignore_index=True,
+    )
+
+    day_summary = pd.concat(
+        [
+            helpers.rpf_day_of_month_summary(alpha, "Alpha"),
+            helpers.rpf_day_of_month_summary(beta, "Beta"),
+        ],
+        ignore_index=True,
+    )
+    event_counts = helpers.rpf_event_count_by_day(events)
+
+    assert set(day_summary["month"]) == set(range(1, 13))
+    assert set(day_summary["day"]) == set(range(1, 32))
+    assert day_summary.loc[
+        (day_summary["month"] == 4) & (day_summary["day"] == 31),
+        "valid_calendar_day",
+    ].eq(False).all()
+    assert day_summary.loc[
+        (day_summary["month"] == 4) & (day_summary["day"] == 31),
+        "total_site_days",
+    ].isna().all()
+
+    expected_rpf_site_days = events[["dataset", "substation_id", "date"]].drop_duplicates()
+    assert int(event_counts["n_rpf_site_days"].sum()) == len(expected_rpf_site_days)
+    assert set(event_counts["plot_category"]).issubset({"1", "2", "3", "4", "5+"})
 
 
 def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
@@ -322,6 +406,9 @@ def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
     assert "fig02a_precision_recall_f1_day" in figures
     assert "fig02b_precision_recall_f1_interval" in figures
     assert "fig03_beta_site_precision_recall_f1_boxplot" in figures
+    assert "fig04_alpha_site_precision_recall_f1_boxplot" in figures
+    assert "fig04_day_of_month_rpf_heatmap_alpha_beta" in figures
+    assert "fig05_rpf_events_per_day_doughnut_alpha_beta" in figures
     assert not any(path.name == "fig01_correction_confusion_matrices.png" for path in figures.values())
     assert not any(path.name == "fig02_correction_precision_recall_f1.png" for path in figures.values())
     assert "fig02_gamma_forecast_rmse" in figures
