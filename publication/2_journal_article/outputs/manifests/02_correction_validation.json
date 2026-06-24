@@ -1,12 +1,13 @@
 {
   "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
   "contains_placeholder_metrics": true,
-  "created_at_utc": "2026-06-23T05:16:40.210644+00:00",
+  "created_at_utc": "2026-06-24T00:32:37.190479+00:00",
   "figures": [
     "fig01a_confusion_matrices_day.png",
     "fig01b_confusion_matrices_interval.png",
     "fig02a_precision_recall_f1_day.png",
-    "fig02b_precision_recall_f1_interval.png"
+    "fig02b_precision_recall_f1_interval.png",
+    "fig03_beta_site_precision_recall_f1_boxplot.png"
   ],
   "notebook": "02_correction_validation.ipynb",
   "output_subfolders": {

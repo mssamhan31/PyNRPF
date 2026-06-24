@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 
 ARTICLE_ROOT = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
@@ -156,45 +157,115 @@ def test_correction_smoke_metrics_are_finite_placeholders() -> None:
     assert metrics[["precision", "recall", "f1"]].le(1).all().all()
 
 
-def test_correction_beta_top3_site_metrics_use_highest_rpf_day_sites() -> None:
+def test_correction_beta_site_metrics_cover_all_beta_sites_in_rpf_order() -> None:
     cfg = cached_config()
     beta = cached_dataset("beta")
 
     assert helpers.beta_top_rpf_sites(beta) == ["beta_B", "beta_F", "beta_G"]
+    assert helpers.beta_rpf_site_order(beta) == [
+        "beta_B",
+        "beta_F",
+        "beta_G",
+        "beta_D",
+        "beta_E",
+        "beta_A",
+        "beta_H",
+        "beta_C",
+    ]
 
-    metrics = helpers.correction_smoke_beta_top_site_metrics(beta, cfg)
+    metrics = helpers.correction_smoke_beta_site_metrics(beta, cfg)
 
-    assert len(metrics) == 12
+    assert len(metrics) == 32
     assert metrics["substation_id"].drop_duplicates().tolist() == [
         "beta_B",
         "beta_F",
         "beta_G",
+        "beta_D",
+        "beta_E",
+        "beta_A",
+        "beta_H",
+        "beta_C",
     ]
     assert set(metrics["method"]) == {"m8_xgb", "m7_dtr"}
     assert set(metrics["level"]) == {"day", "interval"}
     assert metrics.groupby(["substation_id", "method", "level"]).size().eq(1).all()
 
 
-def test_correction_metrics_table_merges_beta_top3_rows() -> None:
+def test_correction_metrics_table_merges_beta_site_rows() -> None:
     cfg = cached_config()
     alpha = cached_dataset("alpha")
     beta = cached_dataset("beta")
     metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
-    top3 = helpers.correction_smoke_beta_top_site_metrics(beta, cfg)
+    site_metrics = helpers.correction_smoke_beta_site_metrics(beta, cfg)
 
-    table = helpers.correction_metrics_table(metrics, top3)
+    table = helpers.correction_metrics_table(metrics, site_metrics)
 
     assert "summary_scope" in table.columns
     assert "substation_id" in table.columns
     assert set(table["summary_scope"]) == {
         "alpha_loso_fold",
         "beta_overall",
-        "beta_top3_site",
+        "beta_site",
     }
-    assert len(table.loc[table["summary_scope"] == "beta_top3_site"]) == 12
+    assert len(table.loc[table["summary_scope"] == "beta_site"]) == 32
     assert table.loc[
-        table["summary_scope"] == "beta_top3_site", "substation_id"
-    ].drop_duplicates().tolist() == ["beta_B", "beta_F", "beta_G"]
+        table["summary_scope"] == "beta_site", "substation_id"
+    ].drop_duplicates().tolist() == [
+        "beta_B",
+        "beta_F",
+        "beta_G",
+        "beta_D",
+        "beta_E",
+        "beta_A",
+        "beta_H",
+        "beta_C",
+    ]
+
+
+def test_beta_site_metrics_from_predictions_use_supplied_frames() -> None:
+    cfg = cached_config()
+    beta = cached_dataset("beta")
+    pred = beta.copy()
+    pred["pred_interval"] = pred["label_interval"]
+    pred["corrected_net_load_MW"] = pred["reference_net_load_MW"]
+
+    metrics = helpers.correction_beta_site_metrics_from_predictions(
+        beta,
+        cfg,
+        {"m8_xgb": pred, "m7_dtr": pred},
+    )
+
+    assert len(metrics) == 32
+    assert metrics["precision"].eq(1.0).all()
+    assert metrics["recall"].eq(1.0).all()
+    assert metrics["f1"].eq(1.0).all()
+
+
+def test_reusable_prediction_validation_checks_columns_and_keys(tmp_path: Path) -> None:
+    beta = cached_dataset("beta").head(4).copy()
+    pred = beta[helpers.EXPECTED_COLUMNS].copy()
+    pred["pred_interval"] = [True, False, False, True]
+    pred["corrected_net_load_MW"] = beta["net_load_MW"].to_numpy()
+    path = tmp_path / "prediction.csv"
+    pred.to_csv(path, index=False)
+
+    reused = helpers.load_reusable_correction_prediction(path, beta, require_existing=True)
+
+    assert reused is not None
+    assert reused["pred_interval"].tolist() == [True, False, False, True]
+
+    missing = pred.drop(columns=["pred_interval"])
+    missing_path = tmp_path / "missing.csv"
+    missing.to_csv(missing_path, index=False)
+    with pytest.raises(ValueError):
+        helpers.load_reusable_correction_prediction(missing_path, beta, require_existing=True)
+
+    mismatched = pred.copy()
+    mismatched.loc[0, "timestamp"] = "1999-01-01 00:00:00+00:00"
+    mismatch_path = tmp_path / "mismatch.csv"
+    mismatched.to_csv(mismatch_path, index=False)
+    with pytest.raises(ValueError):
+        helpers.load_reusable_correction_prediction(mismatch_path, beta, require_existing=True)
 
 
 def test_correction_pooled_metrics_sum_alpha_loso_counts() -> None:
@@ -227,14 +298,16 @@ def test_correction_placeholder_figures_are_written(tmp_path: Path) -> None:
     alpha = cached_dataset("alpha")
     beta = cached_dataset("beta")
     metrics = helpers.correction_smoke_metrics(alpha, beta, cfg)
+    beta_site_metrics = helpers.correction_smoke_beta_site_metrics(beta, cfg)
 
-    figure_paths = helpers.write_correction_figures(metrics, tmp_path)
+    figure_paths = helpers.write_correction_figures(metrics, tmp_path, beta_site_metrics)
 
     assert [path.name for path in figure_paths] == [
         "fig01a_confusion_matrices_day.png",
         "fig01b_confusion_matrices_interval.png",
         "fig02a_precision_recall_f1_day.png",
         "fig02b_precision_recall_f1_interval.png",
+        "fig03_beta_site_precision_recall_f1_boxplot.png",
     ]
     assert all(path.exists() and path.stat().st_size > 0 for path in figure_paths)
 
@@ -248,6 +321,7 @@ def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
     assert "fig01b_confusion_matrices_interval" in figures
     assert "fig02a_precision_recall_f1_day" in figures
     assert "fig02b_precision_recall_f1_interval" in figures
+    assert "fig03_beta_site_precision_recall_f1_boxplot" in figures
     assert not any(path.name == "fig01_correction_confusion_matrices.png" for path in figures.values())
     assert not any(path.name == "fig02_correction_precision_recall_f1.png" for path in figures.values())
     assert "fig02_gamma_forecast_rmse" in figures

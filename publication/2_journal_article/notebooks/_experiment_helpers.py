@@ -1007,6 +1007,7 @@ def evaluate_prediction_frame(
     fold_id: str,
     method: str,
 ) -> pd.DataFrame:
+    interval_mask = daytime_mask(pred_df, cfg)
     day_df = (
         pred_df.groupby(["substation_id", "date"])
         .agg(label_day=("label_interval", "any"), pred_day=("pred_interval", "any"))
@@ -1018,8 +1019,8 @@ def evaluate_prediction_frame(
         (
             "interval",
             binary_metrics(
-                pred_df.loc[daytime_mask(pred_df, cfg), "label_interval"],
-                pred_df.loc[daytime_mask(pred_df, cfg), "pred_interval"],
+                pred_df.loc[interval_mask, "label_interval"],
+                pred_df.loc[interval_mask, "pred_interval"],
             ),
         ),
     ]:
@@ -1033,6 +1034,85 @@ def evaluate_prediction_frame(
             }
         )
     return pd.DataFrame(rows)
+
+
+CORRECTION_PREDICTION_COLUMNS = EXPECTED_COLUMNS + [
+    "pred_interval",
+    "corrected_net_load_MW",
+]
+
+
+def reusable_prediction_enabled(cfg: dict[str, Any]) -> bool:
+    return bool(cfg.get("execution", {}).get("reuse_correction_prediction_files", False))
+
+
+def load_reusable_correction_prediction(
+    path: Path,
+    eval_df: pd.DataFrame,
+    require_existing: bool = False,
+) -> pd.DataFrame | None:
+    if not path.exists():
+        if require_existing:
+            raise FileNotFoundError(f"Reusable correction prediction file not found: {path}")
+        return None
+    candidate = pd.read_csv(path)
+    missing = [col for col in CORRECTION_PREDICTION_COLUMNS if col not in candidate.columns]
+    if missing:
+        if require_existing:
+            raise ValueError(f"Reusable prediction {path} is missing columns: {missing}")
+        return None
+    if len(candidate) != len(eval_df):
+        if require_existing:
+            raise ValueError(
+                f"Reusable prediction {path} has {len(candidate)} rows; expected {len(eval_df)}."
+            )
+        return None
+    actual_keys = candidate[["substation_id", "timestamp"]].astype("string").reset_index(drop=True)
+    expected_keys = eval_df[["substation_id", "timestamp"]].astype("string").reset_index(drop=True)
+    if not actual_keys.equals(expected_keys):
+        if require_existing:
+            raise ValueError(f"Reusable prediction {path} has mismatched site/timestamp keys.")
+        return None
+
+    out = eval_df.copy()
+    out["pred_interval"] = _coerce_bool(candidate["pred_interval"]).to_numpy()
+    out["corrected_net_load_MW"] = pd.to_numeric(
+        candidate["corrected_net_load_MW"], errors="coerce"
+    ).to_numpy()
+    if "prob_interval" in candidate.columns:
+        out["prob_interval"] = pd.to_numeric(candidate["prob_interval"], errors="coerce").to_numpy()
+    return out
+
+
+def write_correction_prediction(pred: pd.DataFrame, path: Path) -> Path:
+    write_cols = list(CORRECTION_PREDICTION_COLUMNS)
+    if "prob_interval" in pred.columns:
+        write_cols.append("prob_interval")
+    return write_csv(pred[write_cols], path)
+
+
+def correction_prediction_path(
+    dirs: dict[str, Path],
+    index: int,
+    fold_id: str,
+    method: str,
+) -> Path:
+    return dirs["intermediate"] / f"{index:02d}_correction_predictions_{fold_id}_{method}.csv"
+
+
+def get_or_make_correction_prediction(
+    eval_df: pd.DataFrame,
+    cfg: dict[str, Any],
+    path: Path,
+    make_prediction: Any,
+) -> tuple[pd.DataFrame, bool]:
+    if reusable_prediction_enabled(cfg):
+        reused = load_reusable_correction_prediction(path, eval_df)
+        if reused is not None:
+            return reused, True
+    pred = make_prediction()
+    write_correction_prediction(pred, path)
+    return pred, False
 
 
 CORRECTION_PLACEHOLDER_TARGETS: dict[tuple[str, str, str], tuple[float, float]] = {
@@ -1377,22 +1457,25 @@ def metric_scores_from_counts(tp: int, fp: int, fn: int) -> dict[str, float]:
 
 
 def beta_top_rpf_sites(beta: pd.DataFrame, top_n: int = 3) -> list[str]:
+    return beta_rpf_site_order(beta)[:top_n]
+
+
+def beta_rpf_site_order(beta: pd.DataFrame) -> list[str]:
     rankings = site_rpf_summary(beta, "Beta").sort_values(
         ["rpf_days", "rpf_intervals", "substation_id"],
         ascending=[False, False, True],
     )
-    return rankings.head(top_n)["substation_id"].tolist()
+    return rankings["substation_id"].tolist()
 
 
-def correction_smoke_beta_top_site_metrics(
+def correction_smoke_beta_site_metrics(
     beta: pd.DataFrame,
     cfg: dict[str, Any],
-    top_n: int = 3,
-    top_sites: list[str] | None = None,
+    sites: list[str] | None = None,
 ) -> pd.DataFrame:
     rows = []
     methods = cfg["correction"]["methods"]
-    for site in (top_sites or beta_top_rpf_sites(beta, top_n=top_n)):
+    for site in (sites or beta_rpf_site_order(beta)):
         site_df = beta.loc[beta["substation_id"] == site].copy()
         supports = correction_metric_supports(site_df, cfg)
         for method in methods:
@@ -1420,15 +1503,14 @@ def correction_smoke_beta_top_site_metrics(
     return pd.DataFrame(rows)
 
 
-def correction_beta_top_site_metrics_from_predictions(
+def correction_beta_site_metrics_from_predictions(
     beta: pd.DataFrame,
     cfg: dict[str, Any],
     predictions_by_method: dict[str, pd.DataFrame],
-    top_n: int = 3,
-    top_sites: list[str] | None = None,
+    sites: list[str] | None = None,
 ) -> pd.DataFrame:
     frames = []
-    for site in (top_sites or beta_top_rpf_sites(beta, top_n=top_n)):
+    for site in (sites or beta_rpf_site_order(beta)):
         for method in cfg["correction"]["methods"]:
             if method not in predictions_by_method:
                 continue
@@ -1470,7 +1552,7 @@ def correction_pooled_metrics(metrics: pd.DataFrame) -> pd.DataFrame:
 
 def correction_metrics_table(
     metrics: pd.DataFrame,
-    beta_top_site_metrics: pd.DataFrame,
+    beta_site_metrics: pd.DataFrame,
 ) -> pd.DataFrame:
     base = metrics.copy()
     base["summary_scope"] = np.where(
@@ -1482,13 +1564,17 @@ def correction_metrics_table(
         base.loc[alpha_mask, "fold_id"].astype(str).str.replace("alpha_holdout_", "", regex=False)
     )
 
-    if beta_top_site_metrics.empty:
-        top_sites = pd.DataFrame(columns=base.columns)
+    if beta_site_metrics.empty:
+        site_rows = pd.DataFrame(columns=base.columns)
     else:
-        top_sites = beta_top_site_metrics.copy()
-        top_sites["summary_scope"] = "beta_top3_site"
+        site_rows = beta_site_metrics.copy()
+        site_rows["summary_scope"] = "beta_site"
 
-    combined = pd.concat([base, top_sites], ignore_index=True, sort=False)
+    combined = pd.concat([base, site_rows], ignore_index=True, sort=False)
+    combined["_scope_order"] = combined["summary_scope"].map(
+        {"alpha_loso_fold": 0, "beta_overall": 1, "beta_site": 2}
+    ).fillna(99)
+    combined["_row_order"] = np.arange(len(combined))
     ordered_cols = [
         "summary_scope",
         "dataset",
@@ -1504,9 +1590,10 @@ def correction_metrics_table(
     for col in ordered_cols:
         if col not in combined.columns:
             combined[col] = ""
-    return combined[ordered_cols].sort_values(
-        ["summary_scope", "dataset", "substation_id", "fold_id", "method", "level"]
-    ).reset_index(drop=True)
+    return (
+        combined.sort_values(["_scope_order", "_row_order"])
+        .reset_index(drop=True)[ordered_cols]
+    )
 
 
 def correction_confusion_matrices(metrics: pd.DataFrame) -> pd.DataFrame:
@@ -1567,7 +1654,90 @@ def _plot_confusion_panel(ax: Any, fig: Any, row: pd.Series, title: str) -> None
     ax.grid(False)
 
 
-def write_correction_figures(metrics: pd.DataFrame, figures_dir: Path) -> list[Path]:
+def write_beta_site_score_boxplot(beta_site_metrics: pd.DataFrame, figures_dir: Path) -> Path | None:
+    if beta_site_metrics.empty:
+        return None
+    plot_df = beta_site_metrics.dropna(subset=SCORE_COLUMNS, how="all").copy()
+    if plot_df.empty:
+        return None
+    plt = _load_matplotlib()
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    metric_labels = {"precision": "Precision", "recall": "Recall", "f1": "F1"}
+    method_labels = {"m8_xgb": "m8_xgb", "m7_dtr": "m7_dtr"}
+    method_colors = {
+        "m8_xgb": JOURNAL_COLORS["dark_blue"],
+        "m7_dtr": JOURNAL_COLORS["orange"],
+    }
+    fig, axes = plt.subplots(1, 2, figsize=(8.8, 4.2), sharey=True)
+    for ax, level, title in zip(axes, CORRECTION_LEVEL_ORDER, ["Day level", "Interval level"]):
+        level_df = plot_df.loc[plot_df["level"] == level].copy()
+        centers = np.arange(len(SCORE_COLUMNS))
+        offsets = {"m8_xgb": -0.18, "m7_dtr": 0.18}
+        for method in CORRECTION_METHOD_ORDER:
+            method_df = level_df.loc[level_df["method"] == method].copy()
+            if method_df.empty:
+                continue
+            positions = centers + offsets.get(method, 0.0)
+            data = [
+                pd.to_numeric(method_df[metric], errors="coerce").dropna().to_numpy()
+                for metric in SCORE_COLUMNS
+            ]
+            box = ax.boxplot(
+                data,
+                positions=positions,
+                widths=0.28,
+                patch_artist=True,
+                showfliers=False,
+            )
+            for patch in box["boxes"]:
+                patch.set_facecolor(method_colors.get(method, JOURNAL_COLORS["grey"]))
+                patch.set_alpha(0.70)
+                patch.set_edgecolor(JOURNAL_COLORS["dark_blue"])
+            for element in ["whiskers", "caps", "medians"]:
+                for item in box[element]:
+                    item.set_color(JOURNAL_COLORS["dark_blue"])
+            for metric_idx, metric in enumerate(SCORE_COLUMNS):
+                values = pd.to_numeric(method_df[metric], errors="coerce").dropna().to_numpy()
+                if len(values) == 0:
+                    continue
+                jitter = np.linspace(-0.045, 0.045, len(values))
+                ax.scatter(
+                    np.full(len(values), positions[metric_idx]) + jitter,
+                    values,
+                    s=16,
+                    color=method_colors.get(method, JOURNAL_COLORS["grey"]),
+                    edgecolors="white",
+                    linewidths=0.35,
+                    zorder=3,
+                )
+        ax.set_title(title, fontsize=12)
+        ax.set_xticks(centers)
+        ax.set_xticklabels([metric_labels[metric] for metric in SCORE_COLUMNS], fontsize=10)
+        ax.set_ylim(0, 1.05)
+        ax.tick_params(axis="y", labelsize=9)
+        style_axis_grid(ax)
+    axes[0].set_ylabel("Score across Beta sites", fontsize=10)
+    from matplotlib.patches import Patch
+
+    handles = [
+        Patch(facecolor=method_colors[method], label=method_labels[method], alpha=0.70)
+        for method in CORRECTION_METHOD_ORDER
+        if method in set(plot_df["method"])
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=9)
+    fig.suptitle("Beta site-level correction score distribution", fontsize=13, y=0.98)
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.82, bottom=0.22, wspace=0.10)
+    path = figures_dir / "fig03_beta_site_precision_recall_f1_boxplot.png"
+    fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.12)
+    plt.close(fig)
+    return path
+
+
+def write_correction_figures(
+    metrics: pd.DataFrame,
+    figures_dir: Path,
+    beta_site_metrics: pd.DataFrame | None = None,
+) -> list[Path]:
     usable = metrics.dropna(subset=["precision", "recall", "f1"], how="all").copy()
     if usable.empty:
         return []
@@ -1666,7 +1836,95 @@ def write_correction_figures(metrics: pd.DataFrame, figures_dir: Path) -> list[P
         fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.12)
         figure_paths.append(path)
         plt.close(fig)
+    if beta_site_metrics is not None:
+        beta_site_path = write_beta_site_score_boxplot(beta_site_metrics, figures_dir)
+        if beta_site_path is not None:
+            figure_paths.append(beta_site_path)
     return figure_paths
+
+
+def correction_validation_preflight(article_root: Path | None = None) -> dict[str, pd.DataFrame]:
+    root = find_article_root(article_root)
+    cfg = load_config(root)
+    paths = article_paths(root, cfg)
+    alpha = load_dataset(root, cfg, "alpha")
+    beta = load_dataset(root, cfg, "beta")
+    alpha_sites = alpha_loso_sites(alpha, cfg)
+    beta_rankings = site_rpf_summary(beta, "Beta").sort_values(
+        ["rpf_days", "rpf_intervals", "substation_id"],
+        ascending=[False, False, True],
+    )
+    dependency_rows = []
+    for package in ["pandas", "numpy", "sklearn", "xgboost", "pyarrow", "matplotlib"]:
+        try:
+            module = __import__(package)
+            dependency_rows.append(
+                {
+                    "package": package,
+                    "available": True,
+                    "version": getattr(module, "__version__", "installed"),
+                }
+            )
+        except Exception as exc:  # pragma: no cover - defensive notebook report
+            dependency_rows.append(
+                {"package": package, "available": False, "version": type(exc).__name__}
+            )
+    readiness = pd.DataFrame(
+        [
+            {
+                "check": "run_full_correction_validation",
+                "value": bool(cfg["execution"]["run_full_correction_validation"]),
+            },
+            {
+                "check": "reuse_correction_prediction_files",
+                "value": reusable_prediction_enabled(cfg),
+            },
+            {"check": "alpha_rows", "value": int(len(alpha))},
+            {"check": "alpha_sites", "value": int(alpha["substation_id"].nunique())},
+            {"check": "alpha_loso_sites", "value": ", ".join(alpha_sites)},
+            {"check": "beta_rows", "value": int(len(beta))},
+            {"check": "beta_sites", "value": int(beta["substation_id"].nunique())},
+            {
+                "check": "beta_date_window",
+                "value": f"{beta['date'].min()} to {beta['date'].max()}",
+            },
+        ]
+    )
+    workload = pd.DataFrame(
+        [
+            {"step": "Alpha LOSO m8_xgb training", "count": len(alpha_sites)},
+            {"step": "Alpha LOSO m8_xgb prediction", "count": len(alpha_sites)},
+            {"step": "Alpha LOSO m7_dtr batched inference", "count": 1},
+            {"step": "Alpha-to-Beta m8_xgb training", "count": 1},
+            {"step": "Beta m8_xgb prediction", "count": 1},
+            {"step": "Beta m7_dtr inference", "count": 1},
+            {"step": "Primary metric rows", "count": 16},
+            {"step": "Beta site metric rows", "count": int(beta["substation_id"].nunique()) * 4},
+        ]
+    )
+    expected_outputs = pd.DataFrame(
+        {
+            "artifact": [
+                "01_correction_validation_plan.csv",
+                "01_correction_metrics.csv",
+                "02_correction_confusion_matrices.csv",
+                "table01_correction_metrics_summary.csv",
+                "table02_beta_transfer_key_metrics.csv",
+                "fig01a_confusion_matrices_day.png",
+                "fig01b_confusion_matrices_interval.png",
+                "fig02a_precision_recall_f1_day.png",
+                "fig02b_precision_recall_f1_interval.png",
+                "fig03_beta_site_precision_recall_f1_boxplot.png",
+            ]
+        }
+    )
+    return {
+        "readiness": readiness,
+        "dependencies": pd.DataFrame(dependency_rows),
+        "workload": workload,
+        "beta_rankings": beta_rankings,
+        "expected_outputs": expected_outputs,
+    }
 
 
 def run_correction_validation(article_root: Path | None = None) -> dict[str, Any]:
@@ -1677,17 +1935,15 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     dirs = notebook_output_dirs(paths, "02_correction_validation")
     alpha = load_dataset(root, cfg, "alpha")
     beta = load_dataset(root, cfg, "beta")
-    beta_top_sites = beta_top_rpf_sites(beta)
+    beta_sites = beta_rpf_site_order(beta)
     stale_beta_top3_table = dirs["tables"] / "table03_beta_top3_site_metrics.csv"
     remove_file_if_exists(stale_beta_top3_table)
 
     if not bool(cfg["execution"]["run_full_correction_validation"]):
         plan = correction_smoke_plan(alpha, beta, cfg)
         metrics = correction_smoke_metrics(alpha, beta, cfg)
-        beta_top3_metrics = correction_smoke_beta_top_site_metrics(
-            beta, cfg, top_sites=beta_top_sites
-        )
-        table_metrics = correction_metrics_table(metrics, beta_top3_metrics)
+        beta_site_metrics = correction_smoke_beta_site_metrics(beta, cfg, sites=beta_sites)
+        table_metrics = correction_metrics_table(metrics, beta_site_metrics)
         confusion = correction_confusion_matrices(metrics)
         write_csv(plan, dirs["intermediate"] / "01_correction_validation_plan.csv")
         write_csv(metrics, dirs["metrics"] / "01_correction_metrics.csv")
@@ -1697,7 +1953,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
             table_metrics.loc[table_metrics["summary_scope"] == "beta_overall"].copy(),
             dirs["tables"] / "table02_beta_transfer_key_metrics.csv",
         )
-        figure_paths = write_correction_figures(metrics, dirs["figures"])
+        figure_paths = write_correction_figures(metrics, dirs["figures"], beta_site_metrics)
         write_manifest(
             paths,
             "02_correction_validation.json",
@@ -1720,59 +1976,87 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
             "status": "placeholder_smoke_only",
             "plan": plan,
             "metrics": metrics,
-            "beta_top3_metrics": beta_top3_metrics,
+            "beta_site_metrics": beta_site_metrics,
             "table_metrics": table_metrics,
         }
 
     metric_frames = []
-    pred_index = 2
-    for holdout_site in alpha_loso_sites(alpha, cfg):
-        train_source = alpha.loc[alpha["substation_id"] != holdout_site].copy()
+    alpha_sites = alpha_loso_sites(alpha, cfg)
+    alpha_eval_frames = []
+    for holdout_site in alpha_sites:
         eval_df = filter_date_window(
             alpha.loc[alpha["substation_id"] == holdout_site].copy(),
             cfg["windows"]["test_start"],
             cfg["windows"]["test_end"],
         )
-        bundle = train_m8_bundle(train_source, cfg, root)
-        for method, pred in [
-            ("m8_xgb", predict_m8_bundle(eval_df, bundle, cfg, root)),
-            ("m7_dtr", predict_m7(eval_df, cfg, root)),
-        ]:
-            fold_id = f"alpha_holdout_{holdout_site}"
-            pred_cols = EXPECTED_COLUMNS + ["pred_interval", "corrected_net_load_MW"]
-            pred_path = (
-                dirs["intermediate"]
-                / f"{pred_index:02d}_correction_predictions_{fold_id}_{method}.csv"
+        eval_df["_fold_id"] = f"alpha_holdout_{holdout_site}"
+        alpha_eval_frames.append(eval_df)
+
+    alpha_m7_by_fold: dict[str, pd.DataFrame] = {}
+    alpha_m7_missing_frames = []
+    for fold_index, eval_df_with_fold in enumerate(alpha_eval_frames):
+        fold_id = str(eval_df_with_fold["_fold_id"].iloc[0])
+        pred_path = correction_prediction_path(dirs, 3 + fold_index * 2, fold_id, "m7_dtr")
+        reusable = (
+            load_reusable_correction_prediction(
+                pred_path,
+                eval_df_with_fold.drop(columns=["_fold_id"]).reset_index(drop=True),
             )
-            write_csv(pred[pred_cols], pred_path)
+            if reusable_prediction_enabled(cfg)
+            else None
+        )
+        if reusable is not None:
+            alpha_m7_by_fold[fold_id] = reusable
+        else:
+            alpha_m7_missing_frames.append(eval_df_with_fold)
+    if alpha_m7_missing_frames:
+        alpha_m7_all = predict_m7(pd.concat(alpha_m7_missing_frames, ignore_index=True), cfg, root)
+        for fold_id, frame in alpha_m7_all.groupby("_fold_id", sort=False):
+            alpha_m7_by_fold[str(fold_id)] = frame.drop(columns=["_fold_id"]).reset_index(drop=True)
+
+    pred_index = 2
+    for holdout_site, eval_df_with_fold in zip(alpha_sites, alpha_eval_frames):
+        train_source = alpha.loc[alpha["substation_id"] != holdout_site].copy()
+        fold_id = f"alpha_holdout_{holdout_site}"
+        eval_df = eval_df_with_fold.drop(columns=["_fold_id"]).reset_index(drop=True)
+        bundle = train_m8_bundle(train_source, cfg, root)
+        for method, make_prediction in [
+            (
+                "m8_xgb",
+                lambda eval_df=eval_df, bundle=bundle: predict_m8_bundle(
+                    eval_df, bundle, cfg, root
+                ),
+            ),
+            ("m7_dtr", lambda fold_id=fold_id: alpha_m7_by_fold[fold_id]),
+        ]:
+            pred_path = correction_prediction_path(dirs, pred_index, fold_id, method)
+            pred, _ = get_or_make_correction_prediction(
+                eval_df, cfg, pred_path, make_prediction
+            )
             pred_index += 1
             metric_frames.append(evaluate_prediction_frame(pred, cfg, "Alpha", fold_id, method))
 
     alpha_train = alpha.copy()
     beta_bundle = train_m8_bundle(alpha_train, cfg, root)
     beta_predictions_by_method: dict[str, pd.DataFrame] = {}
-    for method, pred in [
-        ("m8_xgb", predict_m8_bundle(beta, beta_bundle, cfg, root)),
-        ("m7_dtr", predict_m7(beta, cfg, root)),
+    for method, make_prediction in [
+        ("m8_xgb", lambda: predict_m8_bundle(beta, beta_bundle, cfg, root)),
+        ("m7_dtr", lambda: predict_m7(beta, cfg, root)),
     ]:
         fold_id = "beta_transfer"
+        pred_path = correction_prediction_path(dirs, pred_index, fold_id, method)
+        pred, _ = get_or_make_correction_prediction(beta, cfg, pred_path, make_prediction)
         beta_predictions_by_method[method] = pred
-        pred_cols = EXPECTED_COLUMNS + ["pred_interval", "corrected_net_load_MW"]
-        pred_path = (
-            dirs["intermediate"]
-            / f"{pred_index:02d}_correction_predictions_{fold_id}_{method}.csv"
-        )
-        write_csv(pred[pred_cols], pred_path)
         pred_index += 1
         metric_frames.append(evaluate_prediction_frame(pred, cfg, "Beta", fold_id, method))
 
     metrics = pd.concat(metric_frames, ignore_index=True)
     metrics["is_placeholder"] = False
     metrics["status"] = "complete"
-    beta_top3_metrics = correction_beta_top_site_metrics_from_predictions(
-        beta, cfg, beta_predictions_by_method, top_sites=beta_top_sites
+    beta_site_metrics = correction_beta_site_metrics_from_predictions(
+        beta, cfg, beta_predictions_by_method, sites=beta_sites
     )
-    table_metrics = correction_metrics_table(metrics, beta_top3_metrics)
+    table_metrics = correction_metrics_table(metrics, beta_site_metrics)
     plan = correction_smoke_plan(alpha, beta, cfg)
     confusion = correction_confusion_matrices(metrics)
     write_csv(plan, dirs["intermediate"] / "01_correction_validation_plan.csv")
@@ -1783,7 +2067,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
         table_metrics.loc[table_metrics["summary_scope"] == "beta_overall"].copy(),
         dirs["tables"] / "table02_beta_transfer_key_metrics.csv",
     )
-    figure_paths = write_correction_figures(metrics, dirs["figures"])
+    figure_paths = write_correction_figures(metrics, dirs["figures"], beta_site_metrics)
     write_manifest(
         paths,
         "02_correction_validation.json",
@@ -1805,7 +2089,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     return {
         "status": "complete",
         "metrics": metrics,
-        "beta_top3_metrics": beta_top3_metrics,
+        "beta_site_metrics": beta_site_metrics,
         "table_metrics": table_metrics,
     }
 
@@ -2420,6 +2704,9 @@ def publication_expected_figures(paths: ArticlePaths) -> dict[str, Path]:
         "fig02b_precision_recall_f1_interval": paths.figures
         / "02_correction_validation"
         / "fig02b_precision_recall_f1_interval.png",
+        "fig03_beta_site_precision_recall_f1_boxplot": paths.figures
+        / "02_correction_validation"
+        / "fig03_beta_site_precision_recall_f1_boxplot.png",
         "fig01_gamma_series_raw_corrected_reference": paths.figures
         / "03_gamma_forecast_impact"
         / "fig01_gamma_series_raw_corrected_reference.png",
