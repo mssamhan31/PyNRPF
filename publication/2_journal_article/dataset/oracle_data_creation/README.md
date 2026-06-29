@@ -24,6 +24,16 @@ Manual decisions are stored in:
 manual_oracle_annotations.csv
 ```
 
+The Streamlit app can also edit separate review-mode files:
+
+```text
+manual_oracle_annotations_reviewer_A.csv
+manual_oracle_annotations_reviewer_B.csv
+manual_oracle_annotations_final_review.csv
+```
+
+`reviewer_A` is the default mode.
+
 ## Review Rules
 
 - Review only 2023-10-01 through 2024-09-30.
@@ -34,6 +44,8 @@ manual_oracle_annotations.csv
 - `review_action=manual_window` uses one inclusive 15-minute window from
   `rpf_start_time` through `rpf_end_time`.
 - `review_action=no_rpf` means no intervals are flagged for that site-day.
+- `confidence` is day-level reviewer confidence: `sure` by default, or `unsure`
+  for ambiguous cases.
 - Unreviewed site-days retain their original labels in draft exports.
 
 The Streamlit app opens on weekly review. Use `Accept old week` or
@@ -46,6 +58,12 @@ To generate the reviewed-year dataset:
 
 ```powershell
 python export_reflagged_dataset.py
+```
+
+To export a mode-specific review file:
+
+```powershell
+python export_reflagged_dataset.py --review-mode reviewer_A
 ```
 
 Outputs are written to `outputs/`:

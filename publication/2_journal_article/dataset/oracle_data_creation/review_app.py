@@ -14,6 +14,10 @@ REQUIRED_CORE_NAMES = [
     "ACTION_ACCEPT_OLD",
     "ACTION_MANUAL_WINDOW",
     "ACTION_NO_RPF",
+    "CONFIDENCE_SURE",
+    "CONFIDENCE_UNSURE",
+    "REVIEW_MODES",
+    "annotation_path_for_mode",
     "default_review_window",
     "review_control_defaults",
     "apply_annotation_batch",
@@ -56,6 +60,16 @@ ACTION_LABELS = {
     core.ACTION_MANUAL_WINDOW: "Manual RPF window",
     core.ACTION_NO_RPF: "No RPF",
 }
+CONFIDENCE_OPTIONS = [core.CONFIDENCE_SURE, core.CONFIDENCE_UNSURE]
+CONFIDENCE_LABELS = {
+    core.CONFIDENCE_SURE: "Sure",
+    core.CONFIDENCE_UNSURE: "Unsure",
+}
+REVIEW_MODE_LABELS = {
+    "reviewer_A": "reviewer_A",
+    "reviewer_B": "reviewer_B",
+    "final_review": "final_review",
+}
 FLAG_VIEW_OPTIONS = ["Original flags", "Reviewed flags"]
 FLAG_VIEW_COLUMNS = {
     "Original flags": "label_interval",
@@ -75,15 +89,45 @@ def load_review_dataframe(input_path: str) -> pd.DataFrame:
     return scoped
 
 
-def ensure_annotation_file() -> None:
-    path = core.default_annotation_path()
+def initialize_review_mode() -> None:
+    if "review_mode" not in st.session_state:
+        st.session_state["review_mode"] = core.REVIEW_MODES[0]
+
+
+def current_review_mode() -> str:
+    return st.session_state.get("review_mode", core.REVIEW_MODES[0])
+
+
+def current_annotation_path() -> Path:
+    return core.annotation_path_for_mode(current_review_mode())
+
+
+def ensure_annotation_file(review_mode: str) -> None:
+    path = core.annotation_path_for_mode(review_mode)
     if not path.exists():
-        core.write_annotations(core.empty_annotations(), path)
+        source_path = core.default_annotation_path()
+        if review_mode == core.REVIEW_MODES[0] and source_path.exists():
+            core.write_annotations(core.read_annotations(source_path), path)
+        else:
+            core.write_annotations(core.empty_annotations(), path)
 
 
-def load_annotations() -> pd.DataFrame:
-    ensure_annotation_file()
-    return core.read_annotations(core.default_annotation_path())
+def load_annotations(review_mode: str) -> pd.DataFrame:
+    ensure_annotation_file(review_mode)
+    return core.read_annotations(core.annotation_path_for_mode(review_mode))
+
+
+def filter_annotations_for_site_dates(
+    annotations: pd.DataFrame,
+    site: str,
+    dates: list[str],
+) -> pd.DataFrame:
+    if annotations.empty:
+        return annotations
+    date_set = set(dates)
+    return annotations[
+        (annotations["substation_id"] == site) & (annotations["date"].isin(date_set))
+    ].copy()
 
 
 def select_site_date(site: str, date: str) -> None:
@@ -96,7 +140,7 @@ def save_annotations(
     message: str,
     next_selection: tuple[str, str] | None = None,
 ) -> None:
-    core.write_annotations(df, core.default_annotation_path())
+    core.write_annotations(df, current_annotation_path())
     st.session_state["annotation_save_version"] = (
         st.session_state.get("annotation_save_version", 0) + 1
     )
@@ -335,8 +379,20 @@ def annotation_status_text(row: pd.Series | None) -> str:
         return "unreviewed"
     action = row["review_action"]
     if action == core.ACTION_MANUAL_WINDOW:
-        return f"manual window {row['rpf_start_time']} to {row['rpf_end_time']}"
-    return ACTION_LABELS[action].lower()
+        status = f"manual window {row['rpf_start_time']} to {row['rpf_end_time']}"
+    else:
+        status = ACTION_LABELS[action].lower()
+    confidence = str(row.get("confidence", core.CONFIDENCE_SURE)).strip().lower()
+    if confidence == core.CONFIDENCE_UNSURE:
+        return f"{status} (unsure)"
+    return status
+
+
+def annotation_confidence(row: pd.Series | None) -> str:
+    if row is None:
+        return core.CONFIDENCE_SURE
+    confidence = str(row.get("confidence", core.CONFIDENCE_SURE)).strip().lower()
+    return confidence if confidence in CONFIDENCE_OPTIONS else core.CONFIDENCE_SURE
 
 
 def review_save_message(was_reviewed: bool, site: str, date: str) -> str:
@@ -351,10 +407,19 @@ def save_daily_review(
     action: str,
     start: str,
     end: str,
+    confidence: str,
     was_reviewed: bool,
 ) -> None:
     try:
-        updated = core.upsert_annotation(annotations, site, date, action, start, end)
+        updated = core.upsert_annotation(
+            annotations,
+            site,
+            date,
+            action,
+            start,
+            end,
+            confidence,
+        )
     except ValueError as exc:
         st.error(f"Could not save {site} {date}: {exc}")
         return
@@ -370,6 +435,7 @@ def render_annotation_controls(
     row = existing_annotation(annotations, site, date)
     was_reviewed = row is not None
     action_default, start_default, end_default = core.review_control_defaults(day_df, row)
+    confidence_default = annotation_confidence(row)
     if row is None:
         st.warning("Manual review status: unreviewed")
     else:
@@ -390,6 +456,14 @@ def render_annotation_controls(
         horizontal=True,
         index=action_options.index(action_default),
         key=f"review_action_{widget_prefix}",
+    )
+    confidence = st.radio(
+        "Confidence",
+        CONFIDENCE_OPTIONS,
+        format_func=lambda value: CONFIDENCE_LABELS[value],
+        horizontal=True,
+        index=CONFIDENCE_OPTIONS.index(confidence_default),
+        key=f"review_confidence_{widget_prefix}",
     )
 
     options = core.time_options_for_day(day_df)
@@ -415,11 +489,29 @@ def render_annotation_controls(
 
     action_cols = st.columns([1, 1, 1, 1, 3])
     if action_cols[0].button("Save day", type="primary", key=f"save_day_{widget_prefix}"):
-        save_daily_review(annotations, site, date, action, start, end, was_reviewed)
+        save_daily_review(annotations, site, date, action, start, end, confidence, was_reviewed)
     if action_cols[1].button("Accept old", key=f"accept_old_{widget_prefix}"):
-        save_daily_review(annotations, site, date, core.ACTION_ACCEPT_OLD, "", "", was_reviewed)
+        save_daily_review(
+            annotations,
+            site,
+            date,
+            core.ACTION_ACCEPT_OLD,
+            "",
+            "",
+            confidence,
+            was_reviewed,
+        )
     if action_cols[2].button("No RPF", key=f"no_rpf_{widget_prefix}"):
-        save_daily_review(annotations, site, date, core.ACTION_NO_RPF, "", "", was_reviewed)
+        save_daily_review(
+            annotations,
+            site,
+            date,
+            core.ACTION_NO_RPF,
+            "",
+            "",
+            confidence,
+            was_reviewed,
+        )
     if action_cols[3].button("Clear", key=f"clear_day_{widget_prefix}"):
         updated = core.clear_annotation(annotations, site, date)
         save_annotations(updated, f"Cleared review for {site} {date}.")
@@ -433,7 +525,13 @@ def upsert_week_action(
 ) -> pd.DataFrame:
     updated = annotations
     for date in week_dates:
-        updated = core.upsert_annotation(updated, site, date, action)
+        updated = core.upsert_annotation(
+            updated,
+            site,
+            date,
+            action,
+            confidence=core.CONFIDENCE_SURE,
+        )
     return updated
 
 
@@ -520,10 +618,10 @@ def render_weekly_daily_editor(
     form_key = f"weekly_daily_form_{site}_{week_dates[0]}_{save_version}"
 
     with st.form(form_key, clear_on_submit=False):
-        header = st.columns([1.1, 2.0, 2.0, 1.25, 1.25, 0.9])
+        header = st.columns([1.0, 1.8, 1.8, 1.15, 1.15, 1.15, 0.8])
         for column, label in zip(
             header,
-            ["Date", "Current review", "Action", "Start", "End", "Clear"],
+            ["Date", "Current review", "Action", "Start", "End", "Confidence", "Clear"],
             strict=True,
         ):
             column.markdown(f"**{label}**")
@@ -536,12 +634,13 @@ def render_weekly_daily_editor(
                 day_df,
                 annotation_row,
             )
+            confidence_default = annotation_confidence(annotation_row)
             options = core.time_options_for_day(day_df)
             start_index = options.index(start_default) if start_default in options else 0
             end_index = options.index(end_default) if end_default in options else len(options) - 1
             widget_prefix = f"weekly_{site}_{row_date}_{save_version}"
 
-            cols = st.columns([1.1, 2.0, 2.0, 1.25, 1.25, 0.9])
+            cols = st.columns([1.0, 1.8, 1.8, 1.15, 1.15, 1.15, 0.8])
             cols[0].write(row_date)
             cols[1].caption(annotation_status_text(annotation_row))
             action = cols[2].selectbox(
@@ -566,7 +665,15 @@ def render_weekly_daily_editor(
                 key=f"weekly_end_{widget_prefix}",
                 label_visibility="collapsed",
             )
-            clear = cols[5].checkbox(
+            confidence = cols[5].selectbox(
+                f"Confidence for {row_date}",
+                CONFIDENCE_OPTIONS,
+                format_func=lambda value: CONFIDENCE_LABELS[value],
+                index=CONFIDENCE_OPTIONS.index(confidence_default),
+                key=f"weekly_confidence_{widget_prefix}",
+                label_visibility="collapsed",
+            )
+            clear = cols[6].checkbox(
                 f"Clear {row_date}",
                 value=False,
                 key=f"weekly_clear_{widget_prefix}",
@@ -579,6 +686,7 @@ def render_weekly_daily_editor(
                     "review_action": action,
                     "rpf_start_time": start,
                     "rpf_end_time": end,
+                    "confidence": confidence,
                     "clear": clear,
                 },
                 start_default,
@@ -606,6 +714,24 @@ def render_weekly_daily_editor(
 
 
 def render_sidebar(queue: pd.DataFrame, week_queue: pd.DataFrame) -> None:
+    st.sidebar.header("Review mode")
+    mode_index = core.REVIEW_MODES.index(current_review_mode())
+    review_mode = st.sidebar.selectbox(
+        "Annotation CSV",
+        core.REVIEW_MODES,
+        index=mode_index,
+        format_func=lambda value: REVIEW_MODE_LABELS.get(value, value),
+    )
+    if review_mode != current_review_mode():
+        st.session_state["review_mode"] = review_mode
+        st.session_state["annotation_save_version"] = (
+            st.session_state.get("annotation_save_version", 0) + 1
+        )
+        st.session_state["flash"] = f"Switched to {review_mode}."
+        st.rerun()
+    st.sidebar.caption(f"Editing `{core.annotation_path_for_mode(review_mode).name}`")
+
+    st.sidebar.divider()
     st.sidebar.header("Navigation")
     sites = [site for site in core.SITE_ORDER if site in set(queue["substation_id"])]
     site_index = sites.index(st.session_state["selected_site"])
@@ -647,7 +773,7 @@ def render_sidebar(queue: pd.DataFrame, week_queue: pd.DataFrame) -> None:
 
     st.sidebar.divider()
     if st.sidebar.button("Export reflagged dataset"):
-        result = core.export_reflagged_dataset()
+        result = core.export_reflagged_dataset(annotation_path=current_annotation_path())
         st.sidebar.success(
             f"Exported {result.csv_path.name}; "
             f"{result.reviewed_site_days}/{result.total_site_days} site-days reviewed."
@@ -682,9 +808,12 @@ def weekly_status_table(
 ) -> pd.DataFrame:
     rows = queue[(queue["substation_id"] == site) & (queue["date"].isin(week_dates))].copy()
     action_by_date = {}
+    confidence_by_date = {}
     for _, row in annotations[annotations["substation_id"] == site].iterrows():
         action_by_date[row["date"]] = annotation_status_text(row)
+        confidence_by_date[row["date"]] = row.get("confidence", core.CONFIDENCE_SURE)
     rows["review_status"] = rows["date"].map(action_by_date).fillna("unreviewed")
+    rows["confidence"] = rows["date"].map(confidence_by_date).fillna("")
 
     rows = rows.merge(preview_summary, on=["substation_id", "date"], how="left")
     rows["new_label_day"] = rows["new_label_day"].fillna(rows["old_label_day"]).astype(bool)
@@ -693,6 +822,7 @@ def weekly_status_table(
         [
             "date",
             "review_status",
+            "confidence",
             "new_label_day",
             "changed_from_old",
             "old_label_day",
@@ -704,11 +834,10 @@ def weekly_status_table(
 
 
 def main() -> None:
+    initialize_review_mode()
     input_path = core.default_input_path()
     df = load_review_dataframe(str(input_path))
-    annotations = load_annotations()
-    preview_df = core.with_reviewed_preview_labels(df, annotations)
-    preview_summary = core.review_preview_summary(preview_df)
+    annotations = load_annotations(current_review_mode())
     queue = core.build_review_queue(df, annotations)
     week_queue = core.build_week_queue(queue)
     initialize_selection(queue)
@@ -725,12 +854,19 @@ def main() -> None:
     week_dates = queue[
         (queue["substation_id"] == site) & (queue["week_start"] == week_start)
     ]["date"].tolist()
-    day_df = preview_df[(preview_df["substation_id"] == site) & (preview_df["date"] == date)].copy()
-    week_df = preview_df[
-        (preview_df["substation_id"] == site) & (preview_df["date"].isin(week_dates))
+    week_source_df = df[
+        (df["substation_id"] == site) & (df["date"].isin(week_dates))
     ].copy()
+    week_annotations = filter_annotations_for_site_dates(annotations, site, week_dates)
+    week_df = core.with_reviewed_preview_labels(week_source_df, week_annotations)
+    preview_summary = core.review_preview_summary(week_df)
+    day_df = week_df[week_df["date"] == date].copy()
 
     st.title("Oracle RPF Review")
+    st.caption(
+        f"Review mode: {current_review_mode()} | "
+        f"CSV: {current_annotation_path().name}"
+    )
     render_progress(queue, week_queue)
     flag_view = st.radio(
         "Flag view",

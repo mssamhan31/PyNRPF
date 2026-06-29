@@ -26,6 +26,14 @@ ANNOTATION_COLUMNS = [
     "review_action",
     "rpf_start_time",
     "rpf_end_time",
+    "confidence",
+]
+PRE_CONFIDENCE_ANNOTATION_COLUMNS = [
+    "substation_id",
+    "date",
+    "review_action",
+    "rpf_start_time",
+    "rpf_end_time",
 ]
 LEGACY_ANNOTATION_COLUMNS = [
     "substation_id",
@@ -33,6 +41,14 @@ LEGACY_ANNOTATION_COLUMNS = [
     "rpf_present",
     "rpf_start_time",
     "rpf_end_time",
+]
+LEGACY_CONFIDENCE_ANNOTATION_COLUMNS = [
+    "substation_id",
+    "date",
+    "rpf_present",
+    "rpf_start_time",
+    "rpf_end_time",
+    "confidence",
 ]
 INTERNAL_COLUMNS = ["_timestamp_dt", "_time_hhmm"]
 
@@ -47,6 +63,18 @@ ACTION_ACCEPT_OLD = "accept_old"
 ACTION_MANUAL_WINDOW = "manual_window"
 ACTION_NO_RPF = "no_rpf"
 REVIEW_ACTIONS = {ACTION_ACCEPT_OLD, ACTION_MANUAL_WINDOW, ACTION_NO_RPF}
+CONFIDENCE_SURE = "sure"
+CONFIDENCE_UNSURE = "unsure"
+CONFIDENCE_VALUES = {CONFIDENCE_SURE, CONFIDENCE_UNSURE}
+REVIEW_MODE_REVIEWER_A = "reviewer_A"
+REVIEW_MODE_REVIEWER_B = "reviewer_B"
+REVIEW_MODE_FINAL = "final_review"
+REVIEW_MODES = [REVIEW_MODE_REVIEWER_A, REVIEW_MODE_REVIEWER_B, REVIEW_MODE_FINAL]
+REVIEW_MODE_FILENAMES = {
+    REVIEW_MODE_REVIEWER_A: "manual_oracle_annotations_reviewer_A.csv",
+    REVIEW_MODE_REVIEWER_B: "manual_oracle_annotations_reviewer_B.csv",
+    REVIEW_MODE_FINAL: "manual_oracle_annotations_final_review.csv",
+}
 
 
 @dataclass(frozen=True)
@@ -71,6 +99,13 @@ def article_root() -> Path:
 
 def default_input_path() -> Path:
     return article_root() / "dataset" / "processed" / "actual_pynrpf_dataset.parquet"
+
+
+def annotation_path_for_mode(review_mode: str) -> Path:
+    mode = str(review_mode).strip()
+    if mode not in REVIEW_MODE_FILENAMES:
+        raise ValueError(f"Unknown review mode: {review_mode!r}.")
+    return workflow_root() / REVIEW_MODE_FILENAMES[mode]
 
 
 def default_annotation_path() -> Path:
@@ -287,6 +322,9 @@ def read_annotations(path: Path | str | None = None) -> pd.DataFrame:
 def _legacy_annotations_to_current(df: pd.DataFrame) -> pd.DataFrame:
     work = df.copy()
     work["rpf_present"] = coerce_bool(work["rpf_present"])
+    confidence = (
+        work["confidence"] if "confidence" in work.columns else CONFIDENCE_SURE
+    )
     out = pd.DataFrame(
         {
             "substation_id": work["substation_id"],
@@ -296,6 +334,7 @@ def _legacy_annotations_to_current(df: pd.DataFrame) -> pd.DataFrame:
             ),
             "rpf_start_time": work["rpf_start_time"],
             "rpf_end_time": work["rpf_end_time"],
+            "confidence": confidence,
         },
         columns=ANNOTATION_COLUMNS,
     )
@@ -313,10 +352,23 @@ def _validate_and_normalize_annotations(df: pd.DataFrame) -> pd.DataFrame:
     work["review_action"] = work["review_action"].astype(str).str.strip().str.lower()
     work["rpf_start_time"] = work["rpf_start_time"].astype(str).str.strip()
     work["rpf_end_time"] = work["rpf_end_time"].astype(str).str.strip()
+    if "confidence" not in work.columns:
+        work["confidence"] = CONFIDENCE_SURE
+    work["confidence"] = (
+        work["confidence"]
+        .astype("string")
+        .fillna(CONFIDENCE_SURE)
+        .str.strip()
+        .str.lower()
+        .replace("", CONFIDENCE_SURE)
+    )
 
     unknown_actions = sorted(set(work["review_action"]) - REVIEW_ACTIONS)
     if unknown_actions:
         raise ValueError(f"Unknown review_action values: {unknown_actions}.")
+    unknown_confidence = sorted(set(work["confidence"]) - CONFIDENCE_VALUES)
+    if unknown_confidence:
+        raise ValueError(f"Unknown confidence values: {unknown_confidence}.")
 
     duplicates = work.duplicated(["substation_id", "date"], keep=False)
     if duplicates.any():
@@ -343,12 +395,16 @@ def _validate_and_normalize_annotations(df: pd.DataFrame) -> pd.DataFrame:
 
 def read_annotations_from_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     columns = list(df.columns)
-    if columns == LEGACY_ANNOTATION_COLUMNS:
+    if columns in [LEGACY_ANNOTATION_COLUMNS, LEGACY_CONFIDENCE_ANNOTATION_COLUMNS]:
         df = _legacy_annotations_to_current(df)
+    elif columns == PRE_CONFIDENCE_ANNOTATION_COLUMNS:
+        df = df.copy()
+        df["confidence"] = CONFIDENCE_SURE
     elif columns != ANNOTATION_COLUMNS:
         raise ValueError(
             "Expected annotation columns "
-            f"{ANNOTATION_COLUMNS} or legacy columns {LEGACY_ANNOTATION_COLUMNS}, "
+            f"{ANNOTATION_COLUMNS}, previous columns {PRE_CONFIDENCE_ANNOTATION_COLUMNS}, "
+            f"or legacy columns {LEGACY_ANNOTATION_COLUMNS}, "
             f"found {columns}."
         )
     return _validate_and_normalize_annotations(df)
@@ -372,6 +428,7 @@ def upsert_annotation(
     review_action: str | bool,
     rpf_start_time: str = "",
     rpf_end_time: str = "",
+    confidence: str = CONFIDENCE_SURE,
 ) -> pd.DataFrame:
     work = read_annotations_from_dataframe(annotations)
     key_mask = (work["substation_id"] == substation_id) & (work["date"] == date)
@@ -383,6 +440,9 @@ def upsert_annotation(
         action = str(review_action).strip().lower()
     if action not in REVIEW_ACTIONS:
         raise ValueError(f"Unknown review_action: {review_action!r}.")
+    normalized_confidence = str(confidence).strip().lower() or CONFIDENCE_SURE
+    if normalized_confidence not in CONFIDENCE_VALUES:
+        raise ValueError(f"Unknown confidence: {confidence!r}.")
 
     if action == ACTION_MANUAL_WINDOW:
         start = _normalize_time(rpf_start_time)
@@ -401,6 +461,7 @@ def upsert_annotation(
                 "review_action": action,
                 "rpf_start_time": start,
                 "rpf_end_time": end,
+                "confidence": normalized_confidence,
             }
         ],
         columns=ANNOTATION_COLUMNS,
@@ -433,6 +494,7 @@ def apply_annotation_batch(
             str(update["review_action"]),
             str(update.get("rpf_start_time", "")),
             str(update.get("rpf_end_time", "")),
+            str(update.get("confidence", CONFIDENCE_SURE)),
         )
     return read_annotations_from_dataframe(work)
 
