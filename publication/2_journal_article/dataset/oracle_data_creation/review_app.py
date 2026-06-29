@@ -71,6 +71,19 @@ CONFIDENCE_LABELS = {
     core.CONFIDENCE_SURE: "Sure",
     core.CONFIDENCE_UNSURE: "Unsure",
 }
+CONFIDENCE_BULK_PER_DAY = "per_day"
+CONFIDENCE_BULK_SURE = "all_sure"
+CONFIDENCE_BULK_UNSURE = "all_unsure"
+CONFIDENCE_BULK_OPTIONS = [
+    CONFIDENCE_BULK_PER_DAY,
+    CONFIDENCE_BULK_SURE,
+    CONFIDENCE_BULK_UNSURE,
+]
+CONFIDENCE_BULK_LABELS = {
+    CONFIDENCE_BULK_PER_DAY: "Per day",
+    CONFIDENCE_BULK_SURE: "All Sure",
+    CONFIDENCE_BULK_UNSURE: "All Unsure",
+}
 REVIEW_MODE_LABELS = {
     "reviewer_A": "reviewer_A",
     "reviewer_B": "reviewer_B",
@@ -752,6 +765,19 @@ def render_weekly_daily_editor(
             )
             updates.append(update)
 
+        confidence_bulk = st.segmented_control(
+            "Week confidence",
+            CONFIDENCE_BULK_OPTIONS,
+            default=CONFIDENCE_BULK_PER_DAY,
+            format_func=lambda value: CONFIDENCE_BULK_LABELS[value],
+            key=f"weekly_confidence_bulk_{site}_{week_dates[0]}_{save_version}",
+            selection_mode="single",
+            required=True,
+            width="stretch",
+        )
+        if confidence_bulk is None:
+            confidence_bulk = CONFIDENCE_BULK_PER_DAY
+
         submitted = st.form_submit_button(
             "Save all 7 days and move to next week",
             type="primary",
@@ -770,6 +796,14 @@ def render_weekly_daily_editor(
     )
 
     if submitted:
+        if confidence_bulk in {CONFIDENCE_BULK_SURE, CONFIDENCE_BULK_UNSURE}:
+            bulk_confidence = (
+                core.CONFIDENCE_SURE
+                if confidence_bulk == CONFIDENCE_BULK_SURE
+                else core.CONFIDENCE_UNSURE
+            )
+            for update in updates:
+                update["confidence"] = bulk_confidence
         try:
             updated = core.apply_annotation_batch(annotations, updates)
         except ValueError as exc:
