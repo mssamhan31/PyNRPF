@@ -344,7 +344,7 @@ def test_upsert_annotation_replaces_existing_site_day() -> None:
     assert second.iloc[0]["review_action"] == core.ACTION_NO_RPF
     assert second.iloc[0]["rpf_start_time"] == ""
     assert second.iloc[0]["rpf_end_time"] == ""
-    assert second.iloc[0]["confidence"] == core.CONFIDENCE_UNSURE
+    assert second.iloc[0]["confidence"] == core.CONFIDENCE_SURE
 
 
 def test_apply_annotation_batch_upserts_and_clears_multiple_days() -> None:
@@ -436,8 +436,8 @@ def test_legacy_annotations_migrate_to_review_actions() -> None:
         core.ACTION_NO_RPF,
     ]
     assert migrated["confidence"].tolist() == [
-        core.CONFIDENCE_UNSURE,
-        core.CONFIDENCE_UNSURE,
+        core.CONFIDENCE_SURE,
+        core.CONFIDENCE_SURE,
     ]
 
 

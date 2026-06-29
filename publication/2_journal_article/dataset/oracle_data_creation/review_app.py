@@ -32,14 +32,9 @@ if str(APP_DIR) not in sys.path:
 
 stale_core = sys.modules.get("oracle_review_core")
 if stale_core is not None:
-    stale_path = Path(getattr(stale_core, "__file__", "")).resolve()
-    missing_core_names = [
-        required_name
-        for required_name in REQUIRED_CORE_NAMES
-        if not hasattr(stale_core, required_name)
-    ]
-    if stale_path != CORE_PATH.resolve() or missing_core_names:
-        del sys.modules["oracle_review_core"]
+    # Streamlit reruns this script in the same process. Always reload the local
+    # core module so changed defaults and CSV paths are picked up immediately.
+    del sys.modules["oracle_review_core"]
 
 import oracle_review_core as core
 
@@ -66,7 +61,7 @@ ACTION_COMPACT_LABELS = {
     core.ACTION_MANUAL_WINDOW: "Manual",
     core.ACTION_NO_RPF: "No RPF",
 }
-CONFIDENCE_OPTIONS = [core.CONFIDENCE_UNSURE, core.CONFIDENCE_SURE]
+CONFIDENCE_OPTIONS = [core.CONFIDENCE_SURE, core.CONFIDENCE_UNSURE]
 CONFIDENCE_LABELS = {
     core.CONFIDENCE_SURE: "Sure",
     core.CONFIDENCE_UNSURE: "Unsure",
@@ -98,6 +93,7 @@ FLAG_VIEW_TRACE_LABELS = {
     "Original flags": "Original",
     "Reviewed flags": "Reviewed",
 }
+UI_STATE_VERSION = "confidence_sure_v2"
 
 
 @st.cache_data(show_spinner="Loading actual oracle dataset...")
@@ -461,7 +457,7 @@ def render_annotation_controls(
         st.success(f"Manual review status: {annotation_status_text(row)}")
 
     widget_prefix = (
-        f"{site}_{date}_{st.session_state.get('annotation_save_version', 0)}"
+        f"{site}_{date}_{st.session_state.get('annotation_save_version', 0)}_{UI_STATE_VERSION}"
     )
     action_options = [
         core.ACTION_ACCEPT_OLD,
@@ -645,7 +641,7 @@ def render_weekly_daily_editor(
         core.ACTION_NO_RPF,
     ]
     save_version = st.session_state.get("annotation_save_version", 0)
-    form_key = f"weekly_daily_form_{site}_{week_dates[0]}_{save_version}"
+    form_key = f"weekly_daily_form_{site}_{week_dates[0]}_{save_version}_{UI_STATE_VERSION}"
 
     with st.form(form_key, clear_on_submit=False):
         if show_review_clear:
@@ -679,7 +675,7 @@ def render_weekly_daily_editor(
             options = core.time_options_for_day(day_df)
             start_index = options.index(start_default) if start_default in options else 0
             end_index = options.index(end_default) if end_default in options else len(options) - 1
-            widget_prefix = f"weekly_{site}_{row_date}_{save_version}"
+            widget_prefix = f"weekly_{site}_{row_date}_{save_version}_{UI_STATE_VERSION}"
 
             cols = st.columns(column_spec)
             compact_date = pd.Timestamp(row_date).strftime("%m-%d")
@@ -770,7 +766,7 @@ def render_weekly_daily_editor(
             CONFIDENCE_BULK_OPTIONS,
             default=CONFIDENCE_BULK_PER_DAY,
             format_func=lambda value: CONFIDENCE_BULK_LABELS[value],
-            key=f"weekly_confidence_bulk_{site}_{week_dates[0]}_{save_version}",
+            key=f"weekly_confidence_bulk_{site}_{week_dates[0]}_{save_version}_{UI_STATE_VERSION}",
             selection_mode="single",
             required=True,
             width="stretch",

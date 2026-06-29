@@ -44,7 +44,7 @@ manual_oracle_annotations_final_review.csv
 - `review_action=manual_window` uses one inclusive 15-minute window from
   `rpf_start_time` through `rpf_end_time`.
 - `review_action=no_rpf` means no intervals are flagged for that site-day.
-- `confidence` is day-level reviewer confidence: `unsure` by default, or `sure`
+- `confidence` is day-level reviewer confidence: `sure` by default, or `unsure`
   for ambiguous cases.
 - Unreviewed site-days retain their original labels in draft exports.
 
