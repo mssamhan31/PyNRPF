@@ -66,6 +66,7 @@ REVIEW_ACTIONS = {ACTION_ACCEPT_OLD, ACTION_MANUAL_WINDOW, ACTION_NO_RPF}
 CONFIDENCE_SURE = "sure"
 CONFIDENCE_UNSURE = "unsure"
 CONFIDENCE_VALUES = {CONFIDENCE_SURE, CONFIDENCE_UNSURE}
+DEFAULT_CONFIDENCE = CONFIDENCE_UNSURE
 REVIEW_MODE_REVIEWER_A = "reviewer_A"
 REVIEW_MODE_REVIEWER_B = "reviewer_B"
 REVIEW_MODE_FINAL = "final_review"
@@ -322,9 +323,7 @@ def read_annotations(path: Path | str | None = None) -> pd.DataFrame:
 def _legacy_annotations_to_current(df: pd.DataFrame) -> pd.DataFrame:
     work = df.copy()
     work["rpf_present"] = coerce_bool(work["rpf_present"])
-    confidence = (
-        work["confidence"] if "confidence" in work.columns else CONFIDENCE_SURE
-    )
+    confidence = work["confidence"] if "confidence" in work.columns else DEFAULT_CONFIDENCE
     out = pd.DataFrame(
         {
             "substation_id": work["substation_id"],
@@ -353,14 +352,14 @@ def _validate_and_normalize_annotations(df: pd.DataFrame) -> pd.DataFrame:
     work["rpf_start_time"] = work["rpf_start_time"].astype(str).str.strip()
     work["rpf_end_time"] = work["rpf_end_time"].astype(str).str.strip()
     if "confidence" not in work.columns:
-        work["confidence"] = CONFIDENCE_SURE
+        work["confidence"] = DEFAULT_CONFIDENCE
     work["confidence"] = (
         work["confidence"]
         .astype("string")
-        .fillna(CONFIDENCE_SURE)
+        .fillna(DEFAULT_CONFIDENCE)
         .str.strip()
         .str.lower()
-        .replace("", CONFIDENCE_SURE)
+        .replace("", DEFAULT_CONFIDENCE)
     )
 
     unknown_actions = sorted(set(work["review_action"]) - REVIEW_ACTIONS)
@@ -399,7 +398,7 @@ def read_annotations_from_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         df = _legacy_annotations_to_current(df)
     elif columns == PRE_CONFIDENCE_ANNOTATION_COLUMNS:
         df = df.copy()
-        df["confidence"] = CONFIDENCE_SURE
+        df["confidence"] = DEFAULT_CONFIDENCE
     elif columns != ANNOTATION_COLUMNS:
         raise ValueError(
             "Expected annotation columns "
@@ -428,7 +427,7 @@ def upsert_annotation(
     review_action: str | bool,
     rpf_start_time: str = "",
     rpf_end_time: str = "",
-    confidence: str = CONFIDENCE_SURE,
+    confidence: str = DEFAULT_CONFIDENCE,
 ) -> pd.DataFrame:
     work = read_annotations_from_dataframe(annotations)
     key_mask = (work["substation_id"] == substation_id) & (work["date"] == date)
@@ -440,7 +439,7 @@ def upsert_annotation(
         action = str(review_action).strip().lower()
     if action not in REVIEW_ACTIONS:
         raise ValueError(f"Unknown review_action: {review_action!r}.")
-    normalized_confidence = str(confidence).strip().lower() or CONFIDENCE_SURE
+    normalized_confidence = str(confidence).strip().lower() or DEFAULT_CONFIDENCE
     if normalized_confidence not in CONFIDENCE_VALUES:
         raise ValueError(f"Unknown confidence: {confidence!r}.")
 
@@ -494,7 +493,7 @@ def apply_annotation_batch(
             str(update["review_action"]),
             str(update.get("rpf_start_time", "")),
             str(update.get("rpf_end_time", "")),
-            str(update.get("confidence", CONFIDENCE_SURE)),
+            str(update.get("confidence", DEFAULT_CONFIDENCE)),
         )
     return read_annotations_from_dataframe(work)
 

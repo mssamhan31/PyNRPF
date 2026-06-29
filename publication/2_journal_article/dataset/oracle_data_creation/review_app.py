@@ -16,6 +16,7 @@ REQUIRED_CORE_NAMES = [
     "ACTION_NO_RPF",
     "CONFIDENCE_SURE",
     "CONFIDENCE_UNSURE",
+    "DEFAULT_CONFIDENCE",
     "REVIEW_MODES",
     "annotation_path_for_mode",
     "default_review_window",
@@ -60,7 +61,12 @@ ACTION_LABELS = {
     core.ACTION_MANUAL_WINDOW: "Manual RPF window",
     core.ACTION_NO_RPF: "No RPF",
 }
-CONFIDENCE_OPTIONS = [core.CONFIDENCE_SURE, core.CONFIDENCE_UNSURE]
+ACTION_COMPACT_LABELS = {
+    core.ACTION_ACCEPT_OLD: "Accept",
+    core.ACTION_MANUAL_WINDOW: "Manual",
+    core.ACTION_NO_RPF: "No RPF",
+}
+CONFIDENCE_OPTIONS = [core.CONFIDENCE_UNSURE, core.CONFIDENCE_SURE]
 CONFIDENCE_LABELS = {
     core.CONFIDENCE_SURE: "Sure",
     core.CONFIDENCE_UNSURE: "Unsure",
@@ -355,7 +361,7 @@ def build_weekly_figure(
     fig.add_hline(y=0, line_dash="dot", line_color="#111827", opacity=0.75)
     fig.update_layout(
         title=title,
-        height=460,
+        height=560,
         hovermode="x unified",
         margin={"l": 30, "r": 30, "t": 60, "b": 30},
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "x": 0},
@@ -382,7 +388,7 @@ def annotation_status_text(row: pd.Series | None) -> str:
         status = f"manual window {row['rpf_start_time']} to {row['rpf_end_time']}"
     else:
         status = ACTION_LABELS[action].lower()
-    confidence = str(row.get("confidence", core.CONFIDENCE_SURE)).strip().lower()
+    confidence = str(row.get("confidence", core.DEFAULT_CONFIDENCE)).strip().lower()
     if confidence == core.CONFIDENCE_UNSURE:
         return f"{status} (unsure)"
     return status
@@ -390,9 +396,9 @@ def annotation_status_text(row: pd.Series | None) -> str:
 
 def annotation_confidence(row: pd.Series | None) -> str:
     if row is None:
-        return core.CONFIDENCE_SURE
-    confidence = str(row.get("confidence", core.CONFIDENCE_SURE)).strip().lower()
-    return confidence if confidence in CONFIDENCE_OPTIONS else core.CONFIDENCE_SURE
+        return core.DEFAULT_CONFIDENCE
+    confidence = str(row.get("confidence", core.DEFAULT_CONFIDENCE)).strip().lower()
+    return confidence if confidence in CONFIDENCE_OPTIONS else core.DEFAULT_CONFIDENCE
 
 
 def review_save_message(was_reviewed: bool, site: str, date: str) -> str:
@@ -530,7 +536,7 @@ def upsert_week_action(
             site,
             date,
             action,
-            confidence=core.CONFIDENCE_SURE,
+            confidence=core.DEFAULT_CONFIDENCE,
         )
     return updated
 
@@ -603,11 +609,22 @@ def render_weekly_daily_editor(
     week_dates: list[str],
 ) -> None:
     st.markdown("#### Daily review")
-    st.caption(
-        "Edit the week freely; the app only saves and refreshes after submit. "
-        "If start/end differ from the visible defaults, that row is saved as a "
-        "manual RPF window."
+    st.markdown(
+        """
+        <style>
+        .oracle-weekly-date {
+            display: inline-block;
+            white-space: nowrap;
+            font-size: 0.82rem;
+            line-height: 1.1;
+            padding-top: 0.45rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
+    show_toggle_key = f"weekly_show_review_clear_{site}_{week_dates[0]}"
+    show_review_clear = bool(st.session_state.get(show_toggle_key, False))
 
     action_options = [
         core.ACTION_ACCEPT_OLD,
@@ -618,12 +635,23 @@ def render_weekly_daily_editor(
     form_key = f"weekly_daily_form_{site}_{week_dates[0]}_{save_version}"
 
     with st.form(form_key, clear_on_submit=False):
-        header = st.columns([1.0, 1.8, 1.8, 1.15, 1.15, 1.15, 0.8])
-        for column, label in zip(
-            header,
-            ["Date", "Current review", "Action", "Start", "End", "Confidence", "Clear"],
-            strict=True,
-        ):
+        if show_review_clear:
+            column_spec = [0.58, 1.2, 1.55, 0.86, 0.86, 1.15, 0.45]
+            header_labels = [
+                "Date",
+                "Current review",
+                "Action",
+                "Start",
+                "End",
+                "Confidence",
+                "Clear",
+            ]
+        else:
+            column_spec = [0.58, 1.75, 0.86, 0.86, 1.15]
+            header_labels = ["Date", "Action", "Start", "End", "Confidence"]
+
+        header = st.columns(column_spec)
+        for column, label in zip(header, header_labels, strict=True):
             column.markdown(f"**{label}**")
 
         updates: list[dict[str, object]] = []
@@ -640,45 +668,75 @@ def render_weekly_daily_editor(
             end_index = options.index(end_default) if end_default in options else len(options) - 1
             widget_prefix = f"weekly_{site}_{row_date}_{save_version}"
 
-            cols = st.columns([1.0, 1.8, 1.8, 1.15, 1.15, 1.15, 0.8])
-            cols[0].write(row_date)
-            cols[1].caption(annotation_status_text(annotation_row))
-            action = cols[2].selectbox(
+            cols = st.columns(column_spec)
+            compact_date = pd.Timestamp(row_date).strftime("%m-%d")
+            cols[0].markdown(
+                f'<span class="oracle-weekly-date" title="{row_date}">{compact_date}</span>',
+                unsafe_allow_html=True,
+            )
+            if show_review_clear:
+                current_review_col = 1
+                action_col = 2
+                start_col = 3
+                end_col = 4
+                confidence_col = 5
+                clear_col = 6
+                cols[current_review_col].caption(annotation_status_text(annotation_row))
+            else:
+                action_col = 1
+                start_col = 2
+                end_col = 3
+                confidence_col = 4
+                clear_col = None
+
+            action = cols[action_col].segmented_control(
                 f"Action for {row_date}",
                 action_options,
-                format_func=lambda value: ACTION_LABELS[value],
-                index=action_options.index(action_default),
+                default=action_default,
+                format_func=lambda value: ACTION_COMPACT_LABELS[value],
                 key=f"weekly_action_{widget_prefix}",
                 label_visibility="collapsed",
+                selection_mode="single",
+                required=True,
+                width="stretch",
             )
-            start = cols[3].selectbox(
+            if action is None:
+                action = action_default
+            start = cols[start_col].selectbox(
                 f"RPF start for {row_date}",
                 options,
                 index=start_index,
                 key=f"weekly_start_{widget_prefix}",
                 label_visibility="collapsed",
             )
-            end = cols[4].selectbox(
+            end = cols[end_col].selectbox(
                 f"RPF end for {row_date}",
                 options,
                 index=end_index,
                 key=f"weekly_end_{widget_prefix}",
                 label_visibility="collapsed",
             )
-            confidence = cols[5].selectbox(
+            confidence = cols[confidence_col].segmented_control(
                 f"Confidence for {row_date}",
                 CONFIDENCE_OPTIONS,
+                default=confidence_default,
                 format_func=lambda value: CONFIDENCE_LABELS[value],
-                index=CONFIDENCE_OPTIONS.index(confidence_default),
                 key=f"weekly_confidence_{widget_prefix}",
                 label_visibility="collapsed",
+                selection_mode="single",
+                required=True,
+                width="stretch",
             )
-            clear = cols[6].checkbox(
-                f"Clear {row_date}",
-                value=False,
-                key=f"weekly_clear_{widget_prefix}",
-                label_visibility="collapsed",
-            )
+            if confidence is None:
+                confidence = confidence_default
+            clear = False
+            if clear_col is not None:
+                clear = cols[clear_col].checkbox(
+                    f"Clear {row_date}",
+                    value=False,
+                    key=f"weekly_clear_{widget_prefix}",
+                    label_visibility="collapsed",
+                )
             update = core.infer_weekly_review_update(
                 {
                     "substation_id": site,
@@ -699,6 +757,17 @@ def render_weekly_daily_editor(
             type="primary",
             use_container_width=True,
         )
+
+    st.caption(
+        "Edit the week freely; the app only saves and refreshes after submit. "
+        "If start/end differ from the visible defaults, that row is saved as a "
+        "manual RPF window."
+    )
+    st.toggle(
+        "Show current review and clear controls",
+        value=False,
+        key=show_toggle_key,
+    )
 
     if submitted:
         try:
@@ -877,17 +946,27 @@ def main() -> None:
 
     tab_weekly, tab_daily, tab_queue = st.tabs(["Weekly review", "Daily override", "Queue"])
     with tab_weekly:
-        st.plotly_chart(
-            build_weekly_figure(
-                week_df,
-                date,
-                f"{site} week {week_row['first_date']} to {week_row['last_date']}",
-                flag_view,
-            ),
-            width="stretch",
-        )
         render_weekly_controls(annotations, week_queue, site, week_start, week_dates)
-        render_weekly_daily_editor(week_df, annotations, week_queue, site, week_start, week_dates)
+        plot_col, editor_col = st.columns([1.15, 1.0], gap="large")
+        with plot_col:
+            st.plotly_chart(
+                build_weekly_figure(
+                    week_df,
+                    date,
+                    f"{site} week {week_row['first_date']} to {week_row['last_date']}",
+                    flag_view,
+                ),
+                width="stretch",
+            )
+        with editor_col:
+            render_weekly_daily_editor(
+                week_df,
+                annotations,
+                week_queue,
+                site,
+                week_start,
+                week_dates,
+            )
         st.dataframe(
             weekly_status_table(queue, annotations, preview_summary, site, week_dates),
             width="stretch",
