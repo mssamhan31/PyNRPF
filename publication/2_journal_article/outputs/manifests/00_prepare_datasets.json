@@ -3,12 +3,19 @@
   "alpha_loso_sites": [
     "alpha_F",
     "alpha_E",
-    "alpha_G"
+    "alpha_G",
+    "alpha_C",
+    "alpha_J",
+    "alpha_I",
+    "alpha_B",
+    "alpha_A",
+    "alpha_D",
+    "alpha_H"
   ],
   "beta_dataset_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\final\\dataset_beta.parquet",
-  "beta_review_status": "provisional_current_labels",
+  "beta_review_status": "reviewer_B_final_2026-07-02",
   "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
-  "created_at_utc": "2026-06-23T01:56:06.158374+00:00",
+  "created_at_utc": "2026-07-02T06:29:39.866971+00:00",
   "gamma_dataset_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\final\\dataset_gamma.parquet",
   "gamma_override_used": false,
   "gamma_ranking_metric": "data_error_rmse_MW",

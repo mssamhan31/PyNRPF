@@ -1,0 +1,73 @@
+{
+  "archive_reason": "Promote reviewer_B annotations as final oracle for Beta/Gamma rebuild.",
+  "combined_a_b_audit": {
+    "a_only": 0,
+    "b_only": 2063,
+    "confidence_conflicts": 269,
+    "label_window_conflicts": 113,
+    "overlap": 865,
+    "rows": 2928
+  },
+  "counts": {
+    "default_before_promotion": {
+      "confidence_counts": {
+        "sure": 865
+      },
+      "review_action_counts": {
+        "accept_old": 738,
+        "manual_window": 115,
+        "no_rpf": 12
+      },
+      "rows": 865,
+      "unique_site_days": 865
+    },
+    "final_review_before_promotion": {
+      "confidence_counts": {
+        "sure": 865
+      },
+      "review_action_counts": {
+        "accept_old": 738,
+        "manual_window": 115,
+        "no_rpf": 12
+      },
+      "rows": 865,
+      "unique_site_days": 865
+    },
+    "reviewer_A": {
+      "confidence_counts": {
+        "sure": 865
+      },
+      "review_action_counts": {
+        "accept_old": 738,
+        "manual_window": 115,
+        "no_rpf": 12
+      },
+      "rows": 865,
+      "unique_site_days": 865
+    },
+    "reviewer_B": {
+      "confidence_counts": {
+        "sure": 2363,
+        "unsure": 565
+      },
+      "review_action_counts": {
+        "accept_old": 2616,
+        "manual_window": 194,
+        "no_rpf": 118
+      },
+      "rows": 2928,
+      "unique_site_days": 2928
+    }
+  },
+  "created_at_local": "2026-07-02T16:24:31",
+  "expected_site_days": 2928,
+  "files": {
+    "combined_a_b_audit.csv": "94be974762cf4d420b572a251855888d9618b0c35ea0cfecc8ace7e333256745",
+    "default_before_promotion.csv": "a839deee58f5847b71a66166a2f22528435ea538d2812c413d7f2ed867ec15dd",
+    "final_review_before_promotion.csv": "a839deee58f5847b71a66166a2f22528435ea538d2812c413d7f2ed867ec15dd",
+    "reviewer_A.csv": "a839deee58f5847b71a66166a2f22528435ea538d2812c413d7f2ed867ec15dd",
+    "reviewer_B.csv": "fd63f9f3c6d21b9a945db50f6b40f5d44eebdfcf37dfea74a3c356bc6a1d234f"
+  },
+  "final_source_of_truth": "manual_oracle_annotations_reviewer_B.csv",
+  "reviewer_B_complete": true
+}

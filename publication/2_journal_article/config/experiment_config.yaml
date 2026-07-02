@@ -8,7 +8,7 @@ paths:
 
 source_paths:
   alpha_processed_path: "dataset/processed/synthetic_pynrpf_dataset.parquet"
-  beta_processed_path: "dataset/processed/actual_pynrpf_dataset.parquet"
+  beta_processed_path: "dataset/oracle_data_creation/outputs/actual_pynrpf_dataset_reflagged.parquet"
 
 columns:
   site: "substation_id"
@@ -23,7 +23,7 @@ datasets:
   alpha_name: "Alpha"
   beta_name: "Beta"
   gamma_name: "Gamma"
-  beta_review_status: "provisional_current_labels"
+  beta_review_status: "reviewer_B_final_2026-07-02"
 
 gamma:
   selection_mode: "auto"
