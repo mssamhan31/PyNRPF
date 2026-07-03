@@ -48,9 +48,10 @@ def tiny_gamma_frame() -> pd.DataFrame:
             "solar_MW": 0.0,
             "label_interval": label_interval,
             "label_day": label_interval,
+            "confidence": "sure",
         }
     )
-    return helpers.prepare_dataset(frame[helpers.EXPECTED_COLUMNS], "Tiny Gamma")
+    return helpers.prepare_dataset(frame[helpers.CONFIDENCE_COLUMNS], "Tiny Gamma")
 
 
 def test_journal_palette_constants_are_available() -> None:
@@ -139,9 +140,19 @@ def test_real_data_rankings_match_current_labels() -> None:
     assert beta["date"].max() == "2024-09-30"
     assert len(beta) == 280_800
     assert beta[["substation_id", "date"]].drop_duplicates().shape[0] == 2_928
+    beta_confidence = beta[["substation_id", "date", "confidence"]].drop_duplicates()
+    assert beta_confidence["confidence"].value_counts().to_dict() == {
+        "sure": 2363,
+        "unsure": 565,
+    }
     assert gamma["substation_id"].nunique() == 1
     assert gamma["substation_id"].iloc[0] == "beta_B"
     assert len(gamma) == 35_136
+    gamma_confidence = gamma[["substation_id", "date", "confidence"]].drop_duplicates()
+    assert gamma_confidence["confidence"].value_counts().to_dict() == {
+        "sure": 252,
+        "unsure": 114,
+    }
 
 
 def test_binary_metrics_and_daytime_interval_scope() -> None:
@@ -187,10 +198,10 @@ def test_correction_beta_site_metrics_cover_all_beta_sites_in_rpf_order() -> Non
     cfg = cached_config()
     beta = cached_dataset("beta")
 
-    assert helpers.beta_top_rpf_sites(beta) == ["beta_B", "beta_F", "beta_G"]
+    assert helpers.beta_top_rpf_sites(beta) == ["beta_F", "beta_B", "beta_G"]
     assert helpers.beta_rpf_site_order(beta) == [
-        "beta_B",
         "beta_F",
+        "beta_B",
         "beta_G",
         "beta_D",
         "beta_E",
@@ -203,8 +214,8 @@ def test_correction_beta_site_metrics_cover_all_beta_sites_in_rpf_order() -> Non
 
     assert len(metrics) == 32
     assert metrics["substation_id"].drop_duplicates().tolist() == [
-        "beta_B",
         "beta_F",
+        "beta_B",
         "beta_G",
         "beta_D",
         "beta_E",
@@ -252,8 +263,8 @@ def test_correction_metrics_table_merges_beta_site_rows() -> None:
     assert table.loc[
         table["summary_scope"] == "beta_site", "substation_id"
     ].drop_duplicates().tolist() == [
-        "beta_B",
         "beta_F",
+        "beta_B",
         "beta_G",
         "beta_D",
         "beta_E",
@@ -294,6 +305,8 @@ def test_reusable_prediction_validation_checks_columns_and_keys(tmp_path: Path) 
 
     assert reused is not None
     assert reused["pred_interval"].tolist() == [True, False, False, True]
+    assert "confidence" in reused.columns
+    assert list(helpers._model_input_columns(beta).columns) == helpers.EXPECTED_COLUMNS
 
     missing = pred.drop(columns=["pred_interval"])
     missing_path = tmp_path / "missing.csv"
@@ -307,6 +320,47 @@ def test_reusable_prediction_validation_checks_columns_and_keys(tmp_path: Path) 
     mismatched.to_csv(mismatch_path, index=False)
     with pytest.raises(ValueError):
         helpers.load_reusable_correction_prediction(mismatch_path, beta, require_existing=True)
+
+
+def test_beta_confidence_split_metrics_filter_sure_site_days() -> None:
+    cfg = cached_config()
+    beta = cached_dataset("beta")
+    pred = beta.copy()
+    pred["pred_interval"] = pred["label_interval"]
+    pred["corrected_net_load_MW"] = pred["reference_net_load_MW"]
+
+    metrics = helpers.correction_beta_confidence_split_metrics_from_predictions(
+        beta,
+        cfg,
+        {"m8_xgb": pred, "m7_dtr": pred},
+    )
+
+    assert len(metrics) == 72
+    assert set(metrics["confidence_scope"]) == {"all", "sure"}
+    assert set(metrics["method"]) == {"m8_xgb", "m7_dtr"}
+    site_order = (
+        metrics.loc[metrics["summary_scope"] == "beta_site", "substation_id"]
+        .drop_duplicates()
+        .tolist()
+    )
+    assert site_order == [
+        "beta_F",
+        "beta_B",
+        "beta_G",
+        "beta_D",
+        "beta_E",
+        "beta_A",
+        "beta_H",
+        "beta_C",
+    ]
+    sure_day = metrics.loc[
+        (metrics["summary_scope"] == "beta_overall")
+        & (metrics["confidence_scope"] == "sure")
+        & (metrics["method"] == "m8_xgb")
+        & (metrics["level"] == "day")
+    ].iloc[0]
+    assert int(sure_day["support"]) == 2363
+    assert int(sure_day["positive_support"]) == 483
 
 
 def test_correction_pooled_metrics_sum_alpha_loso_counts() -> None:
@@ -428,9 +482,10 @@ def test_forecast_examples_are_exactly_seven_days_ahead_with_14_day_lookback() -
             "solar_MW": 0.0,
             "label_interval": False,
             "label_day": False,
+            "confidence": "sure",
         }
     )
-    gamma = helpers.prepare_dataset(frame[helpers.EXPECTED_COLUMNS], "Gamma unit")
+    gamma = helpers.prepare_dataset(frame[helpers.CONFIDENCE_COLUMNS], "Gamma unit")
 
     examples = helpers.build_forecast_examples(
         gamma,

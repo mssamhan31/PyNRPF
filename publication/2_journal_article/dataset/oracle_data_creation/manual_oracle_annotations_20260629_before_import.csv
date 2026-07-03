@@ -1,8 +1,0 @@
-substation_id,date,review_action,rpf_start_time,rpf_end_time
-act_D,2023-10-01,no_rpf,,
-act_D,2023-10-02,accept_old,,
-act_D,2023-10-03,no_rpf,,
-act_D,2023-10-04,accept_old,,
-act_D,2023-10-05,manual_window,11:15,15:15
-act_D,2023-10-06,accept_old,,
-act_D,2023-10-07,accept_old,,

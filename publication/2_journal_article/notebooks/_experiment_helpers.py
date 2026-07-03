@@ -24,6 +24,9 @@ EXPECTED_COLUMNS = [
     "label_interval",
     "label_day",
 ]
+CONFIDENCE_COLUMN = "confidence"
+CONFIDENCE_COLUMNS = EXPECTED_COLUMNS + [CONFIDENCE_COLUMN]
+CONFIDENCE_VALUES = {"sure", "unsure"}
 
 JOURNAL_COLORS = {
     "orange": "#eb932c",
@@ -218,10 +221,27 @@ def _parse_wall_clock(series: pd.Series) -> pd.Series:
     return pd.to_datetime(stripped, errors="raise")
 
 
+def expected_columns_for_dataset(dataset_name: str) -> list[str]:
+    normalized = str(dataset_name).strip().lower()
+    tokens = set(normalized.split())
+    if tokens & {"beta", "gamma"}:
+        return CONFIDENCE_COLUMNS
+    return EXPECTED_COLUMNS
+
+
+def normalize_confidence(series: pd.Series, dataset_name: str) -> pd.Series:
+    normalized = series.astype("string").fillna("").str.strip().str.lower()
+    unknown = sorted(set(normalized.unique()) - CONFIDENCE_VALUES)
+    if unknown:
+        raise ValueError(f"{dataset_name} has unknown confidence values: {unknown}")
+    return normalized
+
+
 def validate_schema(df: pd.DataFrame, dataset_name: str) -> None:
     actual = list(df.columns)
-    if actual != EXPECTED_COLUMNS:
-        raise ValueError(f"{dataset_name} expected {EXPECTED_COLUMNS}, found {actual}.")
+    expected = expected_columns_for_dataset(dataset_name)
+    if actual != expected:
+        raise ValueError(f"{dataset_name} expected {expected}, found {actual}.")
 
 
 def read_dataset_file(path: Path, dataset_name: str) -> pd.DataFrame:
@@ -235,12 +255,14 @@ def read_dataset_file(path: Path, dataset_name: str) -> pd.DataFrame:
 def raw_dataset_for_write(path: Path, dataset_name: str) -> pd.DataFrame:
     df = read_dataset_file(path, dataset_name)
     validate_schema(df, dataset_name)
-    return df[EXPECTED_COLUMNS].copy()
+    return df[expected_columns_for_dataset(dataset_name)].copy()
 
 
 def prepare_dataset(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     validate_schema(df, dataset_name)
     work = df.copy()
+    if CONFIDENCE_COLUMN in work.columns:
+        work[CONFIDENCE_COLUMN] = normalize_confidence(work[CONFIDENCE_COLUMN], dataset_name)
     work["_timestamp_dt"] = _parse_wall_clock(work["timestamp"])
     work["date"] = work["date"].astype(str)
     parsed_dates = work["_timestamp_dt"].dt.strftime("%Y-%m-%d")
@@ -310,7 +332,8 @@ def rename_final_site_ids(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
 
 
 def validate_final_dataset(df: pd.DataFrame, dataset_name: str, cfg: dict[str, Any]) -> None:
-    validate_schema(df[EXPECTED_COLUMNS], dataset_name)
+    expected = expected_columns_for_dataset(dataset_name)
+    validate_schema(df[expected], dataset_name)
     windows = cfg["windows"]
     if dataset_name == "Alpha":
         if df["date"].min() > windows["train_start"] or df["date"].max() < windows["test_end"]:
@@ -325,6 +348,12 @@ def validate_final_dataset(df: pd.DataFrame, dataset_name: str, cfg: dict[str, A
         site_days = df[["substation_id", "date"]].drop_duplicates().shape[0]
         if site_days != 2_928:
             raise ValueError(f"Beta final dataset expected 2928 site-days, found {site_days}.")
+        confidence = df[["substation_id", "date", CONFIDENCE_COLUMN]].drop_duplicates()
+        counts = confidence[CONFIDENCE_COLUMN].value_counts().to_dict()
+        if counts.get("sure", 0) != 2_363 or counts.get("unsure", 0) != 565:
+            raise ValueError(
+                f"Beta confidence counts expected sure=2363, unsure=565; found {counts}."
+            )
     if dataset_name == "Gamma":
         if df["substation_id"].nunique() != 1:
             raise ValueError("Gamma final dataset must contain exactly one site.")
@@ -332,6 +361,12 @@ def validate_final_dataset(df: pd.DataFrame, dataset_name: str, cfg: dict[str, A
             raise ValueError("Gamma final dataset must use the same date range as Beta.")
         if len(df) != 35_136:
             raise ValueError(f"Gamma final dataset expected 35136 rows, found {len(df)}.")
+        confidence = df[["substation_id", "date", CONFIDENCE_COLUMN]].drop_duplicates()
+        counts = confidence[CONFIDENCE_COLUMN].value_counts().to_dict()
+        if counts.get("sure", 0) != 252 or counts.get("unsure", 0) != 114:
+            raise ValueError(
+                f"Gamma confidence counts expected sure=252, unsure=114; found {counts}."
+            )
 
 
 def final_dataset_summary(
@@ -363,7 +398,9 @@ def build_final_datasets(
     beta_path = article_path(article_root, cfg["paths"]["beta_dataset_path"])
     gamma_path = article_path(article_root, cfg["paths"]["gamma_dataset_path"])
 
-    alpha_raw = rename_final_site_ids(raw_dataset_for_write(alpha_source, "Alpha processed"), "Alpha")
+    alpha_raw = rename_final_site_ids(
+        raw_dataset_for_write(alpha_source, "Alpha processed"), "Alpha"
+    )
     beta_raw = rename_final_site_ids(raw_dataset_for_write(beta_source, "Beta processed"), "Beta")
     alpha = prepare_dataset(alpha_raw, "Alpha")
     beta_full = prepare_dataset(beta_raw, "Beta")
@@ -377,9 +414,9 @@ def build_final_datasets(
     validate_final_dataset(beta, "Beta", cfg)
     validate_final_dataset(gamma, "Gamma", cfg)
 
-    write_parquet(alpha[EXPECTED_COLUMNS], alpha_path)
-    write_parquet(beta[EXPECTED_COLUMNS], beta_path)
-    write_parquet(gamma[EXPECTED_COLUMNS], gamma_path)
+    write_parquet(alpha[expected_columns_for_dataset("Alpha")], alpha_path)
+    write_parquet(beta[expected_columns_for_dataset("Beta")], beta_path)
+    write_parquet(gamma[expected_columns_for_dataset("Gamma")], gamma_path)
 
     final_rows = [
         final_dataset_summary(alpha, "Alpha", alpha_path, article_root),
@@ -430,7 +467,7 @@ def month_to_season(month: int) -> str:
 
 def dataset_summary(df: pd.DataFrame, dataset_name: str) -> dict[str, Any]:
     site_day = df[["substation_id", "date", "label_day"]].drop_duplicates()
-    return {
+    summary = {
         "dataset": dataset_name,
         "n_rows": int(len(df)),
         "n_sites": int(df["substation_id"].nunique()),
@@ -442,6 +479,15 @@ def dataset_summary(df: pd.DataFrame, dataset_name: str) -> dict[str, Any]:
         "positive_label_interval": int(df["label_interval"].sum()),
         "positive_label_day_site_days": int(site_day["label_day"].sum()),
     }
+    if CONFIDENCE_COLUMN in df.columns:
+        confidence_site_days = df[["substation_id", "date", CONFIDENCE_COLUMN]].drop_duplicates()
+        summary["sure_confidence_site_days"] = int(
+            confidence_site_days[CONFIDENCE_COLUMN].eq("sure").sum()
+        )
+        summary["unsure_confidence_site_days"] = int(
+            confidence_site_days[CONFIDENCE_COLUMN].eq("unsure").sum()
+        )
+    return summary
 
 
 def site_rpf_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
@@ -1731,6 +1777,90 @@ def correction_beta_site_metrics_from_predictions(
     return out
 
 
+def correction_beta_confidence_split_metrics_from_predictions(
+    beta: pd.DataFrame,
+    cfg: dict[str, Any],
+    predictions_by_method: dict[str, pd.DataFrame],
+    sites: list[str] | None = None,
+) -> pd.DataFrame:
+    if CONFIDENCE_COLUMN not in beta.columns:
+        raise ValueError("Beta confidence-split metrics require a confidence column.")
+
+    frames = []
+    site_order = sites or beta_rpf_site_order(beta)
+    for confidence_scope in ["all", "sure"]:
+        for method in cfg["correction"]["methods"]:
+            if method not in predictions_by_method:
+                continue
+            pred = predictions_by_method[method]
+            if CONFIDENCE_COLUMN not in pred.columns:
+                raise ValueError(f"{method} Beta predictions are missing confidence.")
+            scope_pred = pred.copy()
+            if confidence_scope == "sure":
+                scope_pred = scope_pred.loc[
+                    scope_pred[CONFIDENCE_COLUMN].eq("sure")
+                ].copy()
+
+            overall = evaluate_prediction_frame(
+                scope_pred, cfg, "Beta", "beta_transfer", method
+            )
+            overall.insert(0, "summary_scope", "beta_overall")
+            overall.insert(1, "confidence_scope", confidence_scope)
+            overall.insert(3, "substation_id", "")
+            frames.append(overall)
+
+            for site in site_order:
+                site_pred = scope_pred.loc[scope_pred["substation_id"] == site].copy()
+                site_metrics = evaluate_prediction_frame(
+                    site_pred, cfg, "Beta", f"beta_site_{site}", method
+                )
+                site_metrics.insert(0, "summary_scope", "beta_site")
+                site_metrics.insert(1, "confidence_scope", confidence_scope)
+                site_metrics.insert(3, "substation_id", site)
+                frames.append(site_metrics)
+
+    if not frames:
+        return pd.DataFrame()
+
+    ordered_cols = [
+        "summary_scope",
+        "confidence_scope",
+        "dataset",
+        "substation_id",
+        "fold_id",
+        "method",
+        "level",
+        *COUNT_COLUMNS,
+        *SCORE_COLUMNS,
+        "is_placeholder",
+        "status",
+    ]
+    out = pd.concat(frames, ignore_index=True)
+    out["is_placeholder"] = False
+    out["status"] = "complete"
+    out["_scope_order"] = out["summary_scope"].map({"beta_overall": 0, "beta_site": 1})
+    out["_confidence_order"] = out["confidence_scope"].map({"all": 0, "sure": 1})
+    out["_method_order"] = out["method"].map(
+        {method: i for i, method in enumerate(cfg["correction"]["methods"])}
+    )
+    out["_level_order"] = out["level"].map({"day": 0, "interval": 1})
+    out["_site_order"] = (
+        out["substation_id"].map({site: i for i, site in enumerate(site_order)}).fillna(-1)
+    )
+    return (
+        out.sort_values(
+            [
+                "_scope_order",
+                "_confidence_order",
+                "_site_order",
+                "_method_order",
+                "_level_order",
+            ]
+        )
+        .reset_index(drop=True)[ordered_cols]
+    )
+
+
 def correction_alpha_site_metrics_from_loso_metrics(metrics: pd.DataFrame) -> pd.DataFrame:
     alpha_metrics = metrics.loc[metrics["dataset"] == "Alpha"].copy()
     if alpha_metrics.empty:
@@ -2163,6 +2293,7 @@ def correction_validation_preflight(article_root: Path | None = None) -> dict[st
                 "02_correction_confusion_matrices.csv",
                 "table01_correction_metrics_summary.csv",
                 "table02_beta_transfer_key_metrics.csv",
+                "table03_beta_confidence_split_metrics.csv",
                 "fig01a_confusion_matrices_day.png",
                 "fig01b_confusion_matrices_interval.png",
                 "fig02a_precision_recall_f1_day.png",
@@ -2178,6 +2309,67 @@ def correction_validation_preflight(article_root: Path | None = None) -> dict[st
         "workload": workload,
         "beta_rankings": beta_rankings,
         "expected_outputs": expected_outputs,
+    }
+
+
+def beta_transfer_prediction_file(dirs: dict[str, Path], method: str) -> Path:
+    matches = sorted(
+        dirs["intermediate"].glob(f"*_correction_predictions_beta_transfer_{method}.csv")
+    )
+    if len(matches) != 1:
+        raise FileNotFoundError(
+            "Expected exactly one cached beta_transfer "
+            f"{method} prediction file, found {len(matches)}."
+        )
+    return matches[0]
+
+
+def load_cached_beta_transfer_predictions(
+    beta: pd.DataFrame,
+    cfg: dict[str, Any],
+    dirs: dict[str, Path],
+) -> dict[str, pd.DataFrame]:
+    predictions_by_method = {}
+    for method in cfg["correction"]["methods"]:
+        pred_path = beta_transfer_prediction_file(dirs, method)
+        predictions_by_method[method] = load_reusable_correction_prediction(
+            pred_path, beta, require_existing=True
+        )
+    return predictions_by_method
+
+
+def write_beta_confidence_split_outputs(
+    metrics: pd.DataFrame,
+    dirs: dict[str, Path],
+) -> dict[str, Path]:
+    metric_path = write_csv(
+        metrics,
+        dirs["metrics"] / "03_beta_confidence_split_metrics.csv",
+    )
+    table_path = write_csv(
+        metrics,
+        dirs["tables"] / "table03_beta_confidence_split_metrics.csv",
+    )
+    return {"metrics": metric_path, "table": table_path}
+
+
+def run_beta_confidence_split_smoke(article_root: Path | None = None) -> dict[str, Any]:
+    root = find_article_root(article_root)
+    cfg = load_config(root)
+    paths = article_paths(root, cfg)
+    ensure_output_dirs(paths)
+    dirs = notebook_output_dirs(paths, "02_correction_validation")
+    beta = load_dataset(root, cfg, "beta")
+    beta_sites = beta_rpf_site_order(beta)
+    predictions_by_method = load_cached_beta_transfer_predictions(beta, cfg, dirs)
+    metrics = correction_beta_confidence_split_metrics_from_predictions(
+        beta, cfg, predictions_by_method, sites=beta_sites
+    )
+    output_paths = write_beta_confidence_split_outputs(metrics, dirs)
+    return {
+        "status": "complete",
+        "metrics": metrics,
+        "output_paths": output_paths,
     }
 
 
@@ -2319,6 +2511,9 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
     beta_site_metrics = correction_beta_site_metrics_from_predictions(
         beta, cfg, beta_predictions_by_method, sites=beta_sites
     )
+    beta_confidence_split_metrics = correction_beta_confidence_split_metrics_from_predictions(
+        beta, cfg, beta_predictions_by_method, sites=beta_sites
+    )
     table_metrics = correction_metrics_table(metrics, beta_site_metrics)
     plan = correction_smoke_plan(alpha, beta, cfg)
     confusion = correction_confusion_matrices(metrics)
@@ -2330,6 +2525,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
         table_metrics.loc[table_metrics["summary_scope"] == "beta_overall"].copy(),
         dirs["tables"] / "table02_beta_transfer_key_metrics.csv",
     )
+    write_beta_confidence_split_outputs(beta_confidence_split_metrics, dirs)
     figure_paths = write_correction_figures(
         metrics,
         dirs["figures"],
@@ -2350,6 +2546,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
             "tables": [
                 "table01_correction_metrics_summary.csv",
                 "table02_beta_transfer_key_metrics.csv",
+                "table03_beta_confidence_split_metrics.csv",
             ],
             "figures": [path.name for path in figure_paths],
         },
@@ -2359,6 +2556,7 @@ def run_correction_validation(article_root: Path | None = None) -> dict[str, Any
         "metrics": metrics,
         "alpha_site_metrics": alpha_site_metrics,
         "beta_site_metrics": beta_site_metrics,
+        "beta_confidence_split_metrics": beta_confidence_split_metrics,
         "table_metrics": table_metrics,
         "figure_paths": figure_paths,
     }

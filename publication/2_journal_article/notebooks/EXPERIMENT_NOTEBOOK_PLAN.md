@@ -25,17 +25,20 @@ commented code cells.
   processed synthetic Parquet and kept at the full Alpha date range.
 - **Dataset Beta**: `dataset/final/dataset_beta.parquet`, copied from the
   processed actual Parquet and filtered to `2023-10-01` through `2024-09-30`.
-  This is provisional until the manual oracle review output replaces it.
+  It uses the final manual oracle review output and includes day-level reviewer
+  `confidence`.
 - **Dataset Gamma**: `dataset/final/dataset_gamma.parquet`, a one-site extract
   from Beta selected by Gamma candidate ranking. The current automatic ranking
   uses raw-vs-reference data-error RMSE and selects `beta_B` on current labels.
+  Gamma includes the same day-level reviewer `confidence` field from Beta.
 
 Final dataset site IDs are paper-facing aliases: Alpha sites use `alpha_*` and
 Beta/Gamma sites use `beta_*`. The processed source files retain their original
 raw IDs.
 
-All final datasets preserve the original seven-column schema:
+Alpha preserves the original seven-column schema:
 `substation_id,date,timestamp,net_load_MW,solar_MW,label_interval,label_day`.
+Beta and Gamma add `confidence` as an eighth, day-level review column.
 
 ## Output Convention
 

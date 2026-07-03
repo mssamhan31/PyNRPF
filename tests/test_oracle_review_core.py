@@ -12,6 +12,8 @@ WORKFLOW_DIR = (
     / "2_journal_article"
     / "dataset"
     / "oracle_data_creation"
+    / "archive"
+    / "2026-07-03_oracle_workspace_cleanup"
 )
 sys.path.insert(0, str(WORKFLOW_DIR))
 
@@ -104,9 +106,33 @@ def test_unreviewed_days_keep_old_labels_and_raw_values() -> None:
     out = core.apply_annotations(source, annotations)
     unreviewed = out[(out["substation_id"] == "act_A") & (out["date"] == "2023-10-02")]
 
-    assert list(out.columns) == core.EXPECTED_COLUMNS
+    assert list(out.columns) == core.OUTPUT_COLUMNS
+    assert unreviewed["confidence"].tolist() == [core.CONFIDENCE_SURE] * 4
     assert unreviewed["label_interval"].tolist() == [False, False, True, False]
     assert unreviewed["net_load_MW"].tolist() == [5.0, 5.0, 5.0, 5.0]
+
+
+def test_apply_annotations_repeats_day_confidence_on_output_rows() -> None:
+    source = _sample_source()
+    annotations = pd.DataFrame(
+        [
+            {
+                "substation_id": "act_D",
+                "date": "2023-10-01",
+                "review_action": core.ACTION_MANUAL_WINDOW,
+                "rpf_start_time": "00:30",
+                "rpf_end_time": "01:00",
+                "confidence": core.CONFIDENCE_UNSURE,
+            }
+        ],
+        columns=core.ANNOTATION_COLUMNS,
+    )
+
+    out = core.apply_annotations(source, annotations)
+    day = out[(out["substation_id"] == "act_D") & (out["date"] == "2023-10-01")]
+
+    assert list(out.columns) == core.OUTPUT_COLUMNS
+    assert day["confidence"].tolist() == [core.CONFIDENCE_UNSURE] * 4
 
 
 def test_queue_uses_site_order_before_obviousness() -> None:

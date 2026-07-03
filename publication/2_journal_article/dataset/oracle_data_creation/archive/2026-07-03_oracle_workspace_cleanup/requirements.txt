@@ -1,0 +1,2 @@
+# Oracle review app dependencies are managed centrally in the repo pyproject.
+-e ../../../..[journal]

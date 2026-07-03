@@ -8,7 +8,7 @@ paths:
 
 source_paths:
   alpha_processed_path: "dataset/processed/synthetic_pynrpf_dataset.parquet"
-  beta_processed_path: "dataset/oracle_data_creation/outputs/actual_pynrpf_dataset_reflagged.parquet"
+  beta_processed_path: "dataset/oracle_data_creation/actual_pynrpf_dataset_reflagged.parquet"
 
 columns:
   site: "substation_id"
