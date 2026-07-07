@@ -12,6 +12,7 @@ __pycache__/
 .tools/
 /outputs/
 publication/2_journal_article/notebooks/99_Misc/outputs/
+publication/2_journal_article/notebooks/99_Misc/*.png
 config/databricks_connect.yaml
 build/
 dist/

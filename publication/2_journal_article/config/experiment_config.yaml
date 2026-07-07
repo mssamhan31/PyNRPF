@@ -23,7 +23,7 @@ datasets:
   alpha_name: "Alpha"
   beta_name: "Beta"
   gamma_name: "Gamma"
-  beta_review_status: "reviewer_B_final_2026-07-02"
+  beta_review_status: "final_review_2026-07-06"
 
 gamma:
   selection_mode: "auto"

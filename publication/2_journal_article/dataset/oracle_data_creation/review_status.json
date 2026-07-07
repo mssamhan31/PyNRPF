@@ -1,13 +1,9 @@
 {
-  "annotation_path": "C:\\Users\\z5404477\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\oracle_data_creation\\archive\\2026-07-03_oracle_workspace_cleanup\\manual_oracle_annotations_final_review.csv",
-  "complete": true,
-  "csv_path": "C:\\Users\\z5404477\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\oracle_data_creation\\actual_pynrpf_dataset_reflagged.csv",
-  "input_path": "C:\\Users\\z5404477\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\processed\\actual_pynrpf_dataset.parquet",
-  "parquet_path": "C:\\Users\\z5404477\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\oracle_data_creation\\actual_pynrpf_dataset_reflagged.parquet",
-  "remaining_site_days": 0,
-  "review_end": "2024-09-30",
   "review_start": "2023-10-01",
-  "reviewed_site_days": 2928,
+  "review_end": "2024-09-30",
   "total_site_days": 2928,
+  "reviewed_site_days": 2928,
+  "remaining_site_days": 0,
+  "complete": true,
   "uses_old_labels_for_unreviewed_site_days": false
 }

@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>m9_pbm Physical RPF Sign-Error Model - Slide Deck</title>
+  <style>
+    :root {
+      --orange: #eb932c;
+      --dark-blue: #22303d;
+      --grey: #2F4D67;
+      --light-grey: #5C7D99;
+      --light-white: #ebe3e3;
+      --paper: #fbfaf9;
+      --line: #d8d1d1;
+      --white: #fff;
+      --shadow: rgba(34, 48, 61, 0.13);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--dark-blue);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+      overflow: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 18px;
+      background: var(--dark-blue);
+      color: var(--white);
+      border-bottom: 4px solid var(--orange);
+    }
+    .brand {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    button, select {
+      font-family: Arial, Helvetica, sans-serif;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 4px;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+    button {
+      color: var(--white);
+      background: rgba(255,255,255,0.1);
+      cursor: pointer;
+    }
+    button:hover { background: rgba(255,255,255,0.2); }
+    select {
+      color: var(--dark-blue);
+      background: var(--white);
+      max-width: 420px;
+    }
+    main {
+      position: relative;
+    }
+    .slide {
+      display: none;
+      height: calc(100vh - 94px);
+      overflow-y: auto;
+      padding: 28px;
+    }
+    .slide.active { display: block; }
+    .slide-inner {
+      width: min(1180px, 100%);
+      min-height: calc(100vh - 154px);
+      margin: 0 auto;
+      background: var(--white);
+      border: 1px solid var(--line);
+      box-shadow: 0 16px 40px var(--shadow);
+      padding: 34px 42px;
+    }
+    .kicker {
+      color: var(--orange);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+    h1 {
+      font-size: 40px;
+      max-width: 1040px;
+    }
+    h2 {
+      font-size: 31px;
+      max-width: 1080px;
+      margin-bottom: 18px;
+    }
+    h3 {
+      font-size: 18px;
+      color: var(--grey);
+      margin: 18px 0 8px;
+    }
+    p {
+      font-size: 17px;
+      margin: 8px 0 13px;
+    }
+    ul, ol {
+      font-size: 17px;
+      margin: 12px 0 0;
+      padding-left: 24px;
+    }
+    li { margin: 7px 0; }
+    .lead {
+      font-size: 20px;
+      color: var(--grey);
+      max-width: 980px;
+      margin-top: 14px;
+    }
+    .small {
+      font-size: 13px;
+      color: var(--grey);
+    }
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 14px;
+      align-items: start;
+      margin-top: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 15px;
+      min-height: 110px;
+    }
+    .card h3 {
+      color: var(--dark-blue);
+      margin-top: 0;
+    }
+    .metric {
+      border-top: 5px solid var(--orange);
+      min-height: 130px;
+    }
+    .metric .label {
+      font-size: 12px;
+      color: var(--grey);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .metric .value {
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1;
+      margin-top: 10px;
+    }
+    .metric .note {
+      color: var(--light-grey);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .callout {
+      border-left: 5px solid var(--orange);
+      background: #fff;
+      padding: 14px 18px;
+      margin: 18px 0;
+      box-shadow: 0 1px 4px rgba(34,48,61,0.08);
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--light-white);
+      border: 1px solid var(--line);
+      color: var(--grey);
+      font-size: 13px;
+      font-weight: 700;
+      margin: 3px 5px 3px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 13px 0 17px;
+      background: #fff;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--dark-blue);
+      color: #fff;
+      font-weight: 700;
+    }
+    tr:nth-child(even) td { background: #f8f6f5; }
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .formula {
+      background: #f8f4f1;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 17px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .math {
+      font-family: "Times New Roman", Georgia, serif;
+      font-style: italic;
+      white-space: nowrap;
+    }
+    .figure {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px;
+      margin-top: 14px;
+    }
+    .figure img {
+      width: 100%;
+      display: block;
+      height: auto;
+      border: 1px solid #eee;
+    }
+    .caption {
+      color: var(--grey);
+      font-size: 13px;
+      margin-top: 7px;
+    }
+    .mini-viz {
+      width: 100%;
+      height: 170px;
+      border: 1px solid var(--line);
+      background: #f8f4f1;
+      margin-top: 10px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 13px;
+      color: var(--grey);
+    }
+    .track {
+      position: relative;
+      height: 20px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+    .window {
+      position: absolute;
+      height: 100%;
+      top: 0;
+      opacity: 0.9;
+    }
+    .actual { left: 26%; width: 34%; background: var(--orange); }
+    .predicted { left: 38%; width: 36%; background: var(--grey); }
+    .overlap { left: 38%; width: 22%; background: var(--dark-blue); }
+    .progress { height: 6px; background: #d6d0cf; }
+    .progress-bar {
+      height: 6px;
+      background: var(--orange);
+      width: 0%;
+      transition: width 0.18s ease;
+    }
+    footer {
+      background: var(--paper);
+      border-top: 1px solid var(--line);
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: var(--grey);
+    }
+    .next-list {
+      columns: 2;
+      column-gap: 34px;
+    }
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      header { position: sticky; top: 0; z-index: 5; align-items: flex-start; }
+      .slide { height: auto; min-height: calc(100vh - 94px); padding: 16px; }
+      .slide-inner { min-height: 0; padding: 24px; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      h1 { font-size: 31px; }
+      h2 { font-size: 25px; }
+      p, ul, ol { font-size: 16px; }
+      .brand { white-space: normal; }
+      .next-list { columns: 1; }
+    }
+    @media print {
+      body { overflow: visible; background: #fff; }
+      header, footer { display: none; }
+      .slide { display: block !important; height: auto; page-break-after: always; padding: 0; }
+      .slide-inner { box-shadow: none; border: none; min-height: auto; }
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <header>
+    <div class="brand">m9_pbm Physical RPF Sign-Error Model</div>
+    <div class="nav">
+      <button type="button" id="prevBtn">Prev</button>
+      <button type="button" id="nextBtn">Next</button>
+      <select id="slideSelect" aria-label="Jump to slide"></select>
+    </div>
+  </header>
+
+  <main>
+    <section class="slide active" data-title="1. Exec Summary">
+      <div class="slide-inner">
+        <div class="kicker">1. Exec Summary</div>
+        <h1>m9_pbm is now the strongest working baseline for reducing manual review</h1>
+        <p class="lead"><strong>m9_pbm</strong> was developed because <strong>m7_dtr</strong> and <strong>m8_xgb</strong> performed well under conference-paper time split, but reached a ceiling under station split and actual Beta deployment.</p>
+        <div class="grid-4">
+          <div class="card metric"><div class="label">Beta sure day F1</div><div class="value">0.8994</div><div class="note">P=0.8730, R=0.9274</div></div>
+          <div class="card metric"><div class="label">Beta all day F1</div><div class="value">0.8096</div><div class="note">Includes unsure review days</div></div>
+          <div class="card metric"><div class="label">Beta sure interval F1</div><div class="value">0.8793</div><div class="note">15-minute interval flags</div></div>
+          <div class="card metric"><div class="label">Beta sure energy IoU</div><div class="value">0.8950</div><div class="note">MWh correction overlap</div></div>
+        </div>
+        <div class="callout">
+          <strong>Current working candidate:</strong>
+          <span class="tag">R2_beta_loso_plus_alpha</span>
+          <span class="tag">G_b1p0_r1p5_sc0p5</span>
+          This uses Beta leave-one-site-out tuning with Alpha added to the training pool, and a small physical-score weight grid where roughness is weighted 1.5 and site-centering 0.5.
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="2. Background And Datasets">
+      <div class="slide-inner">
+        <div class="kicker">2. Background And Datasets</div>
+        <h2>Alpha gives controlled ground truth, while Beta tests the real oracle problem</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Dataset Alpha</h3>
+            <p>Alpha contains observed negative net-load readings. For sign-error modelling, negative readings can be converted to positive wrong-sign readings by taking their absolute value, while true RPF windows remain known.</p>
+            <p><span class="tag">10 sites</span><span class="tag">alpha_A to alpha_J</span><span class="tag">2021-11-01 to 2024-09-30</span><span class="tag">10,643 site-days</span><span class="tag">3,423 RPF days</span></p>
+          </div>
+          <div class="card">
+            <h3>Dataset Beta</h3>
+            <p>Beta is the actual oracle dataset. It has no physically observed negative net-load ground truth for these sign-error cases, so labels come from manual review.</p>
+            <p><span class="tag">8 sites</span><span class="tag">beta_A to beta_H</span><span class="tag">2023-10-01 to 2024-09-30</span><span class="tag">2,928 site-days</span><span class="tag">634 RPF days</span></p>
+          </div>
+        </div>
+        <h3>The old models look strong under time split but do not transfer cleanly to actual Beta deployment</h3>
+        <table>
+          <thead>
+            <tr><th>Model / setting</th><th>Validation setting</th><th>Dataset / subset</th><th class="num">Day P</th><th class="num">Day R</th><th class="num">Day F1</th><th>Interpretation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>m7_dtr</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">-</td><td class="num">-</td><td class="num"><strong>0.9370</strong></td><td>Strong when train/test share stations and differ mainly by time.</td></tr>
+            <tr><td>m8_xgb</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">-</td><td class="num">-</td><td class="num"><strong>0.9560</strong></td><td>Best conference-paper result, but optimistic for deployment.</td></tr>
+            <tr><td>m7_dtr</td><td>Spatiotemporal / final labels</td><td>Beta sure-only</td><td class="num">0.2137</td><td class="num">0.7988</td><td class="num">0.3371</td><td>High recall but too many false positives in actual oracle data.</td></tr>
+            <tr><td>m8_xgb</td><td>Spatiotemporal / final labels</td><td>Beta sure-only</td><td class="num">0.7563</td><td class="num">0.3734</td><td class="num">0.5000</td><td>More precise, but misses too many actual RPF days.</td></tr>
+          </tbody>
+        </table>
+        <p class="small">Important limitation: Beta is an oracle review dataset, not physically observed negative net-load ground truth. The sure subset is the cleaner evaluation subset; all-days remains important for deployment realism.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="3. Goal And Evaluation">
+      <div class="slide-inner">
+        <div class="kicker">3. Goal And Evaluation</div>
+        <h2>The optimisation target is day F1, with confidence used to reduce review workload</h2>
+        <p>The practical aim is to minimise manual checking, not to claim manual checking can be removed completely. The model should rank site-days so high-confidence decisions can be accepted quickly and ambiguous days remain in a smaller review queue.</p>
+        <div class="callout"><strong>Primary model-selection metric:</strong> Beta leave-one-site-out <strong>sure-only day-level F1</strong>. Beta all-days, interval F1, window IoU, energy F1, and energy IoU are secondary checks.</div>
+        <div class="grid-3">
+          <div class="card"><h3>Day flag</h3><p>Does this day contain an RPF sign-error window?</p></div>
+          <div class="card"><h3>Start/end window</h3><p>One predicted RPF interval per positive day.</p></div>
+          <div class="card"><h3>Confidence or margin</h3><p>How far the prediction sits from the selected threshold.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="3b. Manual Review And Metrics">
+      <div class="slide-inner">
+        <div class="kicker">3. Goal And Evaluation</div>
+        <h2>The manual-review process becomes a triage process</h2>
+        <table>
+          <thead><tr><th>Step</th><th>What happens</th><th>How it reduces manual checking</th></tr></thead>
+          <tbody>
+            <tr><td>1. Score every site-day</td><td>The model proposes no RPF or one RPF window, plus a confidence margin.</td><td>All days are processed automatically in one batch.</td></tr>
+            <tr><td>2. Auto-accept high-confidence decisions</td><td>Very confident positives and negatives can be accepted first.</td><td>The review queue shrinks to uncertain boundary cases.</td></tr>
+            <tr><td>3. Review low-confidence days</td><td>A human checks only days near the threshold plus selected audit samples.</td><td>Manual effort is targeted where it is most valuable.</td></tr>
+            <tr><td>4. Re-run after label corrections</td><td>If review discovers label mistakes, regenerate Beta/Gamma and re-score.</td><td>The process improves the oracle dataset as well as the model.</td></tr>
+          </tbody>
+        </table>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Day F1 is the optimisation metric; interval and energy metrics are guardrails</h3>
+            <table>
+              <tr><th>Metric</th><th>Role</th></tr>
+              <tr><td>Day F1</td><td>Main selection metric.</td></tr>
+              <tr><td>Interval F1</td><td>Checks 15-minute window flags.</td></tr>
+              <tr><td>Window IoU</td><td>Checks predicted/manual window overlap.</td></tr>
+              <tr><td>Energy F1 / IoU</td><td>Weights mistakes by MWh correction magnitude.</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>IoU makes window placement visible</h3>
+            <div class="bar-row"><div>Actual</div><div class="track"><div class="window actual"></div></div></div>
+            <div class="bar-row"><div>Predicted</div><div class="track"><div class="window predicted"></div></div></div>
+            <div class="bar-row"><div>Overlap</div><div class="track"><div class="window overlap"></div></div></div>
+            <p class="small">Across current experiments, model rankings are usually consistent across day, interval, and energy metrics.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="4. Method Overview">
+      <div class="slide-inner">
+        <div class="kicker">4. Method Overview</div>
+        <h2>m9_pbm scores whether sign correction makes demand physically plausible</h2>
+        <p><strong>m9_pbm</strong> searches candidate windows during daytime and asks whether flipping the sign creates a more plausible underlying demand curve.</p>
+        <div class="formula">
+          Let \(\ S(t)\ \) be solar generation and \(\ y(t)\ \) be recorded net load.<br><br>
+          Outside candidate window \(\ W\ \): \(\ U(t)=S(t)+y(t)\ \)<br>
+          Inside \(\ W\ \): compare \(\ U_{\mathrm{no}}(t)=S(t)+y(t)\ \) with \(\ U_{\mathrm{corr}}(t)=S(t)-y(t)\ \).
+        </div>
+        <div class="figure">
+          <img src="2026-07-07_m9_pbm_real_curve_example.png" alt="Real Beta RPF day showing solar, raw net load, uncorrected demand, and corrected demand">
+          <div class="caption">Real reviewed Beta RPF day. The corrected underlying demand curve is computed as \(S(t)-y(t)\) inside the window and compared against \(S(t)+y(t)\).</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="5. Bridge">
+      <div class="slide-inner">
+        <div class="kicker">5. Feature 1: Bridge</div>
+        <h2>Bridge is the strongest single signal because true windows repair a demand gap</h2>
+        <div class="grid-2">
+          <div>
+            <p>The bridge feature measures whether corrected demand joins more smoothly from the left side of the candidate window to the right side.</p>
+            <div class="formula">\(B(W)=E_{\mathrm{bridge}}(U_{\mathrm{no}},W)-E_{\mathrm{bridge}}(U_{\mathrm{corr}},W)\)</div>
+            <ul>
+              <li>Large positive B(W) means the corrected curve bridges the shoulders better.</li>
+              <li>It was the strongest separator in Beta sure-only days.</li>
+            </ul>
+          </div>
+          <div>
+            <svg class="mini-viz" viewBox="0 0 470 170">
+              <rect x="170" y="28" width="140" height="106" fill="#eb932c" opacity="0.15"></rect>
+              <path d="M35 90 C90 88 130 94 170 98 C220 134 260 134 310 98 C350 94 395 88 435 90" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="7 5"></path>
+              <path d="M35 90 C92 88 130 91 170 94 C220 91 260 91 310 94 C350 91 394 88 435 90" fill="none" stroke="#eb932c" stroke-width="4"></path>
+              <text x="318" y="116" fill="#2F4D67" font-size="13" font-family="Arial">uncorrected gap</text>
+              <text x="318" y="78" fill="#eb932c" font-size="13" font-family="Arial">corrected bridge</text>
+            </svg>
+            <table><tr><th>Group</th><th class="num">Median bridge</th></tr><tr><td>RPF days</td><td class="num">0.8653</td></tr><tr><td>Non-RPF days</td><td class="num">-0.9803</td></tr><tr><td>Std. median diff.</td><td class="num"><strong>2.3591</strong></td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="6. Roughness">
+      <div class="slide-inner">
+        <div class="kicker">6. Feature 2: Roughness</div>
+        <h2>Roughness improves window quality by rewarding smoother corrected demand</h2>
+        <div class="grid-2">
+          <div>
+            <p>Roughness uses total variation or mean absolute changes in the reconstructed demand curve. Corrected demand should usually be less jumpy than the uncorrected interpretation.</p>
+            <div class="formula">\(TV(U,W)=\sum_{t \in W^+}|U(t)-U(t-\Delta t)|\)<br>\(R(W)=TV(U_{\mathrm{no}},W)-TV(U_{\mathrm{corr}},W)\)</div>
+            <ul>
+              <li>Roughness is a window-quality feature, not only a day detector.</li>
+              <li>The best grid result increased roughness weight to 1.5.</li>
+            </ul>
+          </div>
+          <div>
+            <svg class="mini-viz" viewBox="0 0 470 170">
+              <rect x="165" y="28" width="150" height="106" fill="#eb932c" opacity="0.15"></rect>
+              <polyline points="35,94 70,84 105,104 140,76 175,126 210,58 245,122 280,62 315,118 350,88 385,101 435,94" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="7 5"></polyline>
+              <path d="M35 94 C105 91 145 90 175 92 C220 94 260 94 315 92 C360 90 395 91 435 94" fill="none" stroke="#eb932c" stroke-width="4"></path>
+              <text x="48" y="42" fill="#2F4D67" font-size="13" font-family="Arial">uncorrected: jumpy</text>
+              <text x="48" y="62" fill="#eb932c" font-size="13" font-family="Arial">corrected: smoother</text>
+            </svg>
+            <table><tr><th>Beta sure feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th></tr><tr><td>Roughness improvement</td><td class="num">0.0972</td><td class="num">-0.2210</td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="7. N-height">
+      <div class="slide-inner">
+        <div class="kicker">7. Feature 3: N-height</div>
+        <h2>N-height captures the raw net-load bounce that many false positives lack</h2>
+        <div class="grid-2">
+          <div>
+            <p>True RPF days often show raw net load rising into an N-shaped bounce inside the wrong-sign window. Many false positives have a much weaker bounce.</p>
+            <div class="formula">\(H_N(W)=\frac{\max(y_W)-\max(y_{\mathrm{left}},y_{\mathrm{right}})}{\mathrm{scale}_{\mathrm{site/day}}}\)</div>
+            <ul>
+              <li>It tests the visual FP/FN hypothesis directly.</li>
+              <li>It reduces weak low-bounce false windows.</li>
+            </ul>
+          </div>
+          <div>
+            <svg class="mini-viz" viewBox="0 0 470 170">
+              <rect x="130" y="30" width="210" height="110" fill="#eb932c" opacity="0.15"></rect>
+              <path d="M40 116 C90 118 120 116 130 113 C170 76 205 48 235 46 C270 48 305 78 340 113 C375 116 405 118 435 115" fill="none" stroke="#22303d" stroke-width="4"></path>
+              <line x1="235" y1="46" x2="235" y2="113" stroke="#eb932c" stroke-width="3" stroke-dasharray="5 4"></line>
+              <circle cx="130" cy="113" r="5" fill="#2F4D67"></circle><circle cx="340" cy="113" r="5" fill="#2F4D67"></circle><circle cx="235" cy="46" r="5" fill="#eb932c"></circle>
+              <text x="246" y="82" fill="#eb932c" font-size="13" font-family="Arial">N-height</text>
+            </svg>
+            <table><tr><th>Subset</th><th class="num">RPF median</th><th class="num">Non-RPF median</th><th class="num">Std. diff.</th></tr><tr><td>Beta sure-only</td><td class="num">0.2451</td><td class="num">0.0000</td><td class="num"><strong>1.9933</strong></td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="8. Other Features">
+      <div class="slide-inner">
+        <div class="kicker">8. Other Features</div>
+        <h2>The remaining features act as interpretable guardrails around the core physics score</h2>
+        <h3>Window plausibility guards</h3>
+        <div class="grid-3">
+          <div class="card"><h3>Duration</h3><p>Encodes that plausible RPF windows are not usually extremely short.</p><div class="formula">\(D(W)=\min(1,\mathrm{duration}(W)/1.5\mathrm{h})\)</div></div>
+          <div class="card"><h3>Solar strength</h3><p>Penalises weak-solar candidates.</p><div class="formula">\(S_{\mathrm{ratio}}(W)=p95(S_W)/p95_{\mathrm{site}}(S)\)</div></div>
+          <div class="card"><h3>Solar peak alignment</h3><p>Keeps the search aligned with the physical driver.</p><div class="formula">\(A(W)=1-\mathrm{dist}(\mathrm{mid}(W),\mathrm{peak}_S)/3.5\mathrm{h}\)</div></div>
+        </div>
+        <h3>Site comparability guards</h3>
+        <div class="grid-3">
+          <div class="card"><h3>Site-centered score</h3><p>Subtracts a site baseline using unlabelled site score distribution.</p><div class="formula">\(C_{\mathrm{site}}(d)=\mathrm{core}(d)-\mathrm{median}_{\mathrm{site}}(\mathrm{core})\)</div></div>
+          <div class="card"><h3>Site rank score</h3><p>Uses within-site percentile rank to compare days within a site.</p><div class="formula">\(R_{\mathrm{site}}(d)=\mathrm{percentile\_rank}_{\mathrm{site}}(\mathrm{core}(d))\)</div></div>
+          <div class="card"><h3>Slope continuity</h3><p>A secondary guard for jumpy windows, not a strong positive discriminator.</p><div class="formula">\(SC(W)=\mathrm{slope\_jump}(U_{\mathrm{no}})-\mathrm{slope\_jump}(U_{\mathrm{corr}})\)</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="9. Experiments">
+      <div class="slide-inner">
+        <div class="kicker">9. Experiments And Key Results</div>
+        <h2>A small physical-score weight grid gave the best result without adding black-box complexity</h2>
+        <h3>The experiments compare training regime first, then physical-score variants</h3>
+        <div class="grid-2">
+          <table><tr><th>Regime</th><th>Meaning</th></tr><tr><td>R1 Beta LOSO</td><td>Train/tune using seven Beta sites and test on the held-out Beta site.</td></tr><tr><td>R2 Beta LOSO + Alpha</td><td>Same held-out Beta test, but add Alpha to the training/tuning pool.</td></tr><tr><td>R3 Alpha only to Beta</td><td>Use Alpha only for tuning, then transfer to Beta.</td></tr></table>
+          <table><tr><th>Variant type</th><th>Purpose</th></tr><tr><td>Equal-weight score</td><td>Simple baseline with all physical components included.</td></tr><tr><td>Drop-one ablation</td><td>Set one component weight to zero to test whether it matters.</td></tr><tr><td>Small weight grid</td><td>Adjust a few interpretable weights after ablation.</td></tr></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="9b. Development Path">
+      <div class="slide-inner">
+        <div class="kicker">9. Experiments And Key Results</div>
+        <h2>The development path narrowed from broad model search to one interpretable physical family</h2>
+        <table>
+          <thead><tr><th>Stage</th><th>Purpose</th><th>Main learning</th></tr></thead>
+          <tbody>
+            <tr><td>m7/m8 baselines</td><td>Compare deterministic and XGB models under final labels.</td><td>Time-split performance did not transfer well to station/Beta deployment.</td></tr>
+            <tr><td>E1-E3 bridge ladder</td><td>Test simple bridge, roughness proxy, and site-median variants.</td><td>Bridge was the strongest simple signal; site-relative scores helped.</td></tr>
+            <tr><td>E4-E6 v0.3 candidate features</td><td>Add bridge, roughness, and slope-continuity candidate scan.</td><td>Three-feature physical scoring became the practical baseline.</td></tr>
+            <tr><td>E11-E13 duration guards</td><td>Test whether short-window false positives could be removed.</td><td>Hard guards were too blunt; soft physical scoring remained better.</td></tr>
+            <tr><td>C14 small weight grid</td><td>Small interpretable weight search over the physical-score family.</td><td>Best Beta sure day F1 improved from 0.8857 to 0.8994.</td></tr>
+            <tr><td>C17/C18 border-minimum diagnostics</td><td>Test whether true windows have local-minimum borders.</td><td>The hypothesis is real diagnostically, but hard filters did not beat baseline.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-title="9c. Best Metrics">
+      <div class="slide-inner">
+        <div class="kicker">9. Experiments And Key Results</div>
+        <h2>The current best model improves both day detection and window quality</h2>
+        <table>
+          <thead><tr><th>Subset</th><th class="num">Day P</th><th class="num">Day R</th><th class="num">Day F1</th><th class="num">Interval F1</th><th class="num">Energy F1</th><th class="num">Energy IoU</th></tr></thead>
+          <tbody>
+            <tr><td>Beta all days</td><td class="num">0.7714</td><td class="num">0.8517</td><td class="num"><strong>0.8096</strong></td><td class="num">0.8053</td><td class="num">0.8948</td><td class="num">0.8096</td></tr>
+            <tr><td>Beta sure-only</td><td class="num">0.8730</td><td class="num">0.9274</td><td class="num"><strong>0.8994</strong></td><td class="num">0.8793</td><td class="num">0.9446</td><td class="num">0.8950</td></tr>
+          </tbody>
+        </table>
+        <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C9_all_result_visualisations/fig01_all_regime_variant_f1_heatmap.png" alt="F1 heatmap across regimes and variants"><div class="caption">Development context: F1 heatmap across regimes and variants. The latest C14 table contains the current headline model.</div></div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="9d. Feature Separation">
+      <div class="slide-inner">
+        <div class="kicker">9. Experiments And Key Results</div>
+        <h2>The best features match the visual error-review hypotheses</h2>
+        <table>
+          <thead><tr><th>Feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th><th class="num">Std. median difference</th></tr></thead>
+          <tbody>
+            <tr><td>Bridge improvement</td><td class="num">0.8653</td><td class="num">-0.9803</td><td class="num"><strong>2.3591</strong></td></tr>
+            <tr><td>N-height ratio</td><td class="num">0.2451</td><td class="num">0.0000</td><td class="num"><strong>1.9933</strong></td></tr>
+            <tr><td>Site-rank core score</td><td class="num">0.6803</td><td class="num">-0.2787</td><td class="num">1.6186</td></tr>
+            <tr><td>Roughness improvement</td><td class="num">0.0972</td><td class="num">-0.2210</td><td class="num">1.4282</td></tr>
+            <tr><td>Site-centered core score</td><td class="num">0.2687</td><td class="num">-0.0400</td><td class="num">1.2538</td></tr>
+            <tr><td>Slope continuity</td><td class="num">0.6659</td><td class="num">0.7529</td><td class="num">-0.3231</td></tr>
+          </tbody>
+        </table>
+        <div class="grid-2">
+          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig02_beta_site_precision_recall_f1.png" alt="Beta site precision recall F1"><div class="caption">Per-site precision, recall, and F1 show where remaining audit risk sits.</div></div>
+          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig03_confidence_coverage_f1.png" alt="Confidence coverage F1 curve"><div class="caption">Confidence coverage connects model performance to review burden.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="9e. Key Insights">
+      <div class="slide-inner">
+        <div class="kicker">9. Experiments And Key Results</div>
+        <h2>The main finding is that physical interpretability and performance improved together</h2>
+        <div class="grid-2">
+          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C9_all_result_visualisations/fig04_ablation_precision_recall_f1_delta.png" alt="Ablation precision recall F1 delta"><div class="caption">Ablation shows which physical components matter most.</div></div>
+          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig04_manual_review_burden.png" alt="Manual review burden"><div class="caption">The operational value is reducing and prioritising manual review.</div></div>
+        </div>
+        <ul>
+          <li><strong>Bridge</strong> is the strongest single physical signal.</li>
+          <li><strong>Roughness</strong> improves interval and energy behaviour.</li>
+          <li><strong>N-height</strong> supports the visual FP/FN hypothesis.</li>
+          <li><strong>Border-minimum behaviour</strong> is diagnostic, but hard filtering did not beat baseline.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide" data-title="10. Paper Outline">
+      <div class="slide-inner">
+        <div class="kicker">10. Paper Outline</div>
+        <h2>The paper can be framed around the phenomenon, the model, and forecast impact</h2>
+        <table>
+          <thead><tr><th>Paper part</th><th>Purpose</th><th>Likely evidence</th></tr></thead>
+          <tbody>
+            <tr><td>Dataset and phenomenon characterisation</td><td>Show when and where RPF sign errors occur, and why they matter.</td><td>Alpha/Beta summaries, seasonal heatmaps, event duration and continuity.</td></tr>
+            <tr><td>Model development and validation</td><td>Introduce m9_pbm and compare against m7/m8 baselines.</td><td>Day, interval, IoU, energy, site-level, and confidence-coverage metrics.</td></tr>
+            <tr><td>Forecast-impact case study</td><td>Quantify how wrong-sign RPF data can produce large forecast errors.</td><td>Gamma site case study, corrected vs uncorrected series, forecast RMSE/MAE.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide" data-title="11. Next Steps">
+      <div class="slide-inner">
+        <div class="kicker">11. Next Steps</div>
+        <h2>The next step is to lock the baseline and only refine from clear error patterns</h2>
+        <ol class="next-list">
+          <li>Lock current <strong>m9_pbm</strong> candidate as the working baseline.</li>
+          <li>Review high-confidence FP/FN HTML examples.</li>
+          <li>Decide whether any manual labels need correction.</li>
+          <li>Regenerate final Beta/Gamma after label changes.</li>
+          <li>Re-run C14/C16/C17 metric summaries after label updates.</li>
+          <li>Add interval/window IoU reporting to the journal result tables.</li>
+          <li>Prepare final paper figures with current best model only.</li>
+          <li>Decide whether confidence-triage is a main paper contribution or secondary result.</li>
+          <li>Stop broad model searching unless a clear error pattern emerges.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="slide" data-title="12. Source Artifacts">
+      <div class="slide-inner">
+        <div class="kicker">12. Source Artifacts</div>
+        <h2>The brief is traceable to existing experiment artifacts</h2>
+        <p class="small">This deck is static. It summarises existing artifacts and does not rerun notebooks or experiments.</p>
+        <table>
+          <thead><tr><th>Artifact</th><th>Role in this deck</th></tr></thead>
+          <tbody>
+            <tr><td><code>C14_small_weight_grid/07_c14_top_multi_metric_summary.csv</code></td><td>Current best day, interval, and energy metrics.</td></tr>
+            <tr><td><code>C12_multi_model_metric_summary/02_c12_multi_model_metric_summary.csv</code></td><td>m7/m8 deployment baseline metrics under final labels.</td></tr>
+            <tr><td><code>C15_feature_distribution_summary/03_c15_feature_separation_summary.csv</code></td><td>Feature separation and component interpretation.</td></tr>
+            <tr><td><code>C17_c14_border_minima_diagnostics/03_c17_border_minima_summary.csv</code></td><td>Border-minimum diagnostic findings.</td></tr>
+            <tr><td><code>C8_key_result_figures</code> and <code>C9_all_result_visualisations</code></td><td>Existing visual context for comparison, confidence coverage, and ablation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="footer-inner">
+      <div id="slideCounter">Slide 1</div>
+      <div>Use dropdown, buttons, or left/right arrow keys.</div>
+    </div>
+  </footer>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const select = document.getElementById('slideSelect');
+    const counter = document.getElementById('slideCounter');
+    const progress = document.getElementById('progressBar');
+    let current = 0;
+
+    slides.forEach((slide, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = slide.dataset.title || `Slide ${index + 1}`;
+      select.appendChild(option);
+    });
+
+    function showSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+      select.value = String(current);
+      counter.textContent = `Slide ${current + 1} of ${slides.length}`;
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      history.replaceState(null, '', `#slide-${current + 1}`);
+    }
+
+    function fromHash() {
+      const match = location.hash.match(/slide-(\d+)/);
+      return match ? Math.max(0, Math.min(Number(match[1]) - 1, slides.length - 1)) : 0;
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => showSlide(current - 1));
+    document.getElementById('nextBtn').addEventListener('click', () => showSlide(current + 1));
+    select.addEventListener('change', event => showSlide(Number(event.target.value)));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown') showSlide(current + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') showSlide(current - 1);
+      if (event.key === 'Home') showSlide(0);
+      if (event.key === 'End') showSlide(slides.length - 1);
+    });
+
+    showSlide(fromHash());
+  </script>
+</body>
+</html>
