@@ -139,6 +139,28 @@
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 22px;
+    }
+    .summary-section {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 18px;
+      border-top: 5px solid var(--orange);
+      min-height: 320px;
+    }
+    .summary-section h3 {
+      margin-top: 0;
+      color: var(--dark-blue);
+    }
+    .summary-section ul {
+      font-size: 16px;
+      margin-top: 10px;
+      padding-left: 20px;
+    }
     .card {
       border: 1px solid var(--line);
       background: #fff;
@@ -148,6 +170,18 @@
     .card h3 {
       color: var(--dark-blue);
       margin-top: 0;
+    }
+    .compact-card {
+      padding: 12px 14px;
+      min-height: 0;
+    }
+    .compact-card p {
+      font-size: 15px;
+      margin: 6px 0 9px;
+    }
+    .compact-card .tag {
+      font-size: 12px;
+      padding: 3px 7px;
     }
     .metric {
       border-top: 5px solid var(--orange);
@@ -178,6 +212,11 @@
       margin: 18px 0;
       box-shadow: 0 1px 4px rgba(34,48,61,0.08);
     }
+    .compact-callout {
+      padding: 10px 16px;
+      margin: 12px 0;
+      font-size: 15px;
+    }
     .tag {
       display: inline-block;
       padding: 4px 8px;
@@ -207,6 +246,14 @@
       font-weight: 700;
     }
     tr:nth-child(even) td { background: #f8f6f5; }
+    table.compact-table {
+      font-size: 12px;
+      margin: 9px 0 10px;
+    }
+    table.compact-table th,
+    table.compact-table td {
+      padding: 5px 6px;
+    }
     .num {
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -220,6 +267,21 @@
       margin: 12px 0;
       overflow-x: auto;
     }
+    .notation {
+      border-left: 4px solid var(--light-grey);
+      background: #fbfaf9;
+      padding: 10px 12px;
+      margin: 10px 0 14px;
+      font-size: 14px;
+      color: var(--grey);
+    }
+    .notation strong { color: var(--dark-blue); }
+    .notation ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      font-size: 14px;
+    }
+    .notation li { margin: 3px 0; }
     .math {
       font-family: "Times New Roman", Georgia, serif;
       font-style: italic;
@@ -249,6 +311,35 @@
       background: #f8f4f1;
       margin-top: 10px;
     }
+    .split-diagram,
+    .score-diagram {
+      width: 100%;
+      min-height: 210px;
+      border: 1px solid var(--line);
+      background: #fbfaf9;
+      margin-top: 12px;
+    }
+    .split-card .split-diagram { margin-top: 8px; }
+    .weight-table td:first-child {
+      font-family: "Times New Roman", Georgia, serif;
+      font-size: 16px;
+      white-space: nowrap;
+    }
+    .priority-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .priority-card {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 15px;
+      min-height: 250px;
+    }
+    .priority-card.must { border-top: 5px solid var(--orange); }
+    .priority-card.should { border-top: 5px solid var(--dark-blue); }
+    .priority-card.could { border-top: 5px solid var(--light-grey); }
     .bar-row {
       display: grid;
       grid-template-columns: 92px 1fr;
@@ -303,6 +394,8 @@
       .slide { height: auto; min-height: calc(100vh - 94px); padding: 16px; }
       .slide-inner { min-height: 0; padding: 24px; }
       .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .priority-grid { grid-template-columns: 1fr; }
       h1 { font-size: 31px; }
       h2 { font-size: 25px; }
       p, ul, ol { font-size: 16px; }
@@ -343,18 +436,32 @@
       <div class="slide-inner">
         <div class="kicker">1. Exec Summary</div>
         <h1>m9_pbm is now the strongest working baseline for reducing manual review</h1>
-        <p class="lead"><strong>m9_pbm</strong> was developed because <strong>m7_dtr</strong> and <strong>m8_xgb</strong> performed well under conference-paper time split, but reached a ceiling under station split and actual Beta deployment.</p>
-        <div class="grid-4">
-          <div class="card metric"><div class="label">Beta sure day F1</div><div class="value">0.8994</div><div class="note">P=0.8730, R=0.9274</div></div>
-          <div class="card metric"><div class="label">Beta all day F1</div><div class="value">0.8096</div><div class="note">Includes unsure review days</div></div>
-          <div class="card metric"><div class="label">Beta sure interval F1</div><div class="value">0.8793</div><div class="note">15-minute interval flags</div></div>
-          <div class="card metric"><div class="label">Beta sure energy IoU</div><div class="value">0.8950</div><div class="note">MWh correction overlap</div></div>
-        </div>
-        <div class="callout">
-          <strong>Current working candidate:</strong>
-          <span class="tag">R2_beta_loso_plus_alpha</span>
-          <span class="tag">G_b1p0_r1p5_sc0p5</span>
-          This uses Beta leave-one-site-out tuning with Alpha added to the training pool, and a small physical-score weight grid where roughness is weighted 1.5 and site-centering 0.5.
+        <p class="lead"><strong>m9_pbm</strong> was developed because <strong>m7_dtr</strong> and <strong>m8_xgb</strong> performed well under a conference-paper time split, but did not transfer cleanly to held-out-substation Beta deployment.</p>
+        <div class="summary-grid">
+          <div class="summary-section">
+            <h3>Background</h3>
+            <ul>
+              <li>Alpha gives controlled sign-error ground truth, while Beta is the real oracle-review problem.</li>
+              <li>The conference time split tests new dates from the same substations; the harder Beta setup tests a held-out substation.</li>
+              <li><strong>Beta sure</strong> is the cleaner development subset because ambiguous manual-review labels are excluded.</li>
+            </ul>
+          </div>
+          <div class="summary-section">
+            <h3>Method</h3>
+            <ul>
+              <li>m9_pbm generates candidate RPF windows for each substation-day and scores whether sign correction makes demand physically plausible.</li>
+              <li>The current C14 model uses nine interpretable features with simple weights, including stronger roughness weight and lighter substation-centering weight.</li>
+              <li>The operational goal is not perfect automation; it is to minimise manual checking by prioritising uncertain cases.</li>
+            </ul>
+          </div>
+          <div class="summary-section">
+            <h3>Result</h3>
+            <ul>
+              <li>Current working candidate: <strong>R2_beta_loso_plus_alpha / G_b1p0_r1p5_sc0p5</strong>.</li>
+              <li>Beta sure day result: <strong>P=0.8730, R=0.9274, F1=0.8994</strong>.</li>
+              <li>Window-quality checks are also strong: interval F1 <strong>0.8793</strong> and energy IoU <strong>0.8950</strong>.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -364,39 +471,82 @@
         <div class="kicker">2. Background And Datasets</div>
         <h2>Alpha gives controlled ground truth, while Beta tests the real oracle problem</h2>
         <div class="grid-2">
-          <div class="card">
+          <div class="card compact-card">
             <h3>Dataset Alpha</h3>
             <p>Alpha contains observed negative net-load readings. For sign-error modelling, negative readings can be converted to positive wrong-sign readings by taking their absolute value, while true RPF windows remain known.</p>
-            <p><span class="tag">10 sites</span><span class="tag">alpha_A to alpha_J</span><span class="tag">2021-11-01 to 2024-09-30</span><span class="tag">10,643 site-days</span><span class="tag">3,423 RPF days</span></p>
+            <p><span class="tag">10 substations</span><span class="tag">alpha_A to alpha_J</span><span class="tag">2021-11-01 to 2024-09-30</span><span class="tag">10,643 substation-days</span><span class="tag">3,423 RPF days</span></p>
           </div>
-          <div class="card">
+          <div class="card compact-card">
             <h3>Dataset Beta</h3>
             <p>Beta is the actual oracle dataset. It has no physically observed negative net-load ground truth for these sign-error cases, so labels come from manual review.</p>
-            <p><span class="tag">8 sites</span><span class="tag">beta_A to beta_H</span><span class="tag">2023-10-01 to 2024-09-30</span><span class="tag">2,928 site-days</span><span class="tag">634 RPF days</span></p>
+            <p><span class="tag">8 substations</span><span class="tag">beta_A to beta_H</span><span class="tag">2023-10-01 to 2024-09-30</span><span class="tag">2,928 substation-days</span><span class="tag">634 RPF days</span></p>
+          </div>
+        </div>
+        <div class="callout compact-callout">
+          <strong>Beta sure</strong> means manually reviewed Beta substation-days where reviewer confidence is <code>sure</code>. It is the cleaner evaluation subset because the most ambiguous manual labels are excluded from the main development metric.
+        </div>
+        <div class="grid-2">
+          <div class="card compact-card split-card">
+            <h3>Time split</h3>
+            <p>Train and test use the same substations, with roughly 90% of dates for training and 10% for testing. This checks temporal generalisation, not unseen-substation deployment.</p>
+            <svg class="split-diagram" viewBox="0 0 520 230" role="img" aria-label="Time split diagram">
+              <text x="24" y="34" fill="#22303d" font-size="18" font-family="Arial" font-weight="700">Same substations</text>
+              <line x1="110" y1="70" x2="470" y2="70" stroke="#d8d1d1" stroke-width="2"></line>
+              <line x1="110" y1="125" x2="470" y2="125" stroke="#d8d1d1" stroke-width="2"></line>
+              <line x1="110" y1="180" x2="470" y2="180" stroke="#d8d1d1" stroke-width="2"></line>
+              <text x="14" y="76" fill="#2F4D67" font-size="12" font-family="Arial">substation A</text>
+              <text x="14" y="131" fill="#2F4D67" font-size="12" font-family="Arial">substation B</text>
+              <text x="14" y="186" fill="#2F4D67" font-size="12" font-family="Arial">substation C</text>
+              <rect x="110" y="55" width="324" height="30" fill="#22303d" opacity="0.9"></rect>
+              <rect x="434" y="55" width="36" height="30" fill="#eb932c" opacity="0.9"></rect>
+              <rect x="110" y="110" width="324" height="30" fill="#22303d" opacity="0.9"></rect>
+              <rect x="434" y="110" width="36" height="30" fill="#eb932c" opacity="0.9"></rect>
+              <rect x="110" y="165" width="324" height="30" fill="#22303d" opacity="0.9"></rect>
+              <rect x="434" y="165" width="36" height="30" fill="#eb932c" opacity="0.9"></rect>
+              <text x="230" y="214" fill="#22303d" font-size="13" font-family="Arial">train dates ~90%</text>
+              <text x="415" y="214" fill="#eb932c" font-size="13" font-family="Arial">test ~10%</text>
+            </svg>
+          </div>
+          <div class="card compact-card split-card">
+            <h3>Substation split</h3>
+            <p>Train and tune on several substations, then test on one held-out substation. This is closer to the real deployment question.</p>
+            <svg class="split-diagram" viewBox="0 0 520 230" role="img" aria-label="Substation split diagram">
+              <text x="24" y="34" fill="#22303d" font-size="18" font-family="Arial" font-weight="700">One held-out substation</text>
+              <rect x="28" y="62" width="135" height="55" fill="#22303d" opacity="0.9"></rect>
+              <rect x="190" y="62" width="135" height="55" fill="#22303d" opacity="0.9"></rect>
+              <rect x="352" y="62" width="135" height="55" fill="#22303d" opacity="0.9"></rect>
+              <rect x="190" y="148" width="135" height="55" fill="#eb932c" opacity="0.9"></rect>
+              <text x="47" y="95" fill="#fff" font-size="12" font-family="Arial">train substation A</text>
+              <text x="209" y="95" fill="#fff" font-size="12" font-family="Arial">train substation B</text>
+              <text x="371" y="95" fill="#fff" font-size="12" font-family="Arial">train substation C</text>
+              <text x="207" y="181" fill="#fff" font-size="12" font-family="Arial">held-out substation D</text>
+              <text x="54" y="132" fill="#22303d" font-size="13" font-family="Arial">train/tune pool</text>
+              <text x="199" y="218" fill="#eb932c" font-size="13" font-family="Arial">single test substation</text>
+            </svg>
           </div>
         </div>
         <h3>The old models look strong under time split but do not transfer cleanly to actual Beta deployment</h3>
-        <table>
+        <table class="compact-table">
           <thead>
             <tr><th>Model / setting</th><th>Validation setting</th><th>Dataset / subset</th><th class="num">Day P</th><th class="num">Day R</th><th class="num">Day F1</th><th>Interpretation</th></tr>
           </thead>
           <tbody>
-            <tr><td>m7_dtr</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">-</td><td class="num">-</td><td class="num"><strong>0.9370</strong></td><td>Strong when train/test share stations and differ mainly by time.</td></tr>
-            <tr><td>m8_xgb</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">-</td><td class="num">-</td><td class="num"><strong>0.9560</strong></td><td>Best conference-paper result, but optimistic for deployment.</td></tr>
-            <tr><td>m7_dtr</td><td>Spatiotemporal / final labels</td><td>Beta sure-only</td><td class="num">0.2137</td><td class="num">0.7988</td><td class="num">0.3371</td><td>High recall but too many false positives in actual oracle data.</td></tr>
-            <tr><td>m8_xgb</td><td>Spatiotemporal / final labels</td><td>Beta sure-only</td><td class="num">0.7563</td><td class="num">0.3734</td><td class="num">0.5000</td><td>More precise, but misses too many actual RPF days.</td></tr>
+            <tr><td>m7_dtr</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">0.912</td><td class="num">0.963</td><td class="num"><strong>0.9370</strong></td><td>Strong when train/test share substations and differ mainly by date.</td></tr>
+            <tr><td>m8_xgb</td><td>Conference time split</td><td>Alpha-style synthetic</td><td class="num">0.954</td><td class="num">0.958</td><td class="num"><strong>0.9560</strong></td><td>Best conference-paper result, but optimistic for deployment.</td></tr>
+            <tr><td>m7_dtr</td><td>Substation split / final labels</td><td>Beta sure-only</td><td class="num">0.2137</td><td class="num">0.7988</td><td class="num">0.3371</td><td>High recall but too many false positives in actual oracle data.</td></tr>
+            <tr><td>m8_xgb</td><td>Substation split / final labels</td><td>Beta sure-only</td><td class="num">0.7563</td><td class="num">0.3734</td><td class="num">0.5000</td><td>More precise, but misses too many actual RPF days.</td></tr>
           </tbody>
         </table>
-        <p class="small">Important limitation: Beta is an oracle review dataset, not physically observed negative net-load ground truth. The sure subset is the cleaner evaluation subset; all-days remains important for deployment realism.</p>
+        <p class="small">Important limitation: Beta is an oracle review dataset, not physically observed negative net-load ground truth. The sure subset is cleaner for model development; all-days remains important for deployment realism.</p>
       </div>
     </section>
 
     <section class="slide" data-title="3. Goal And Evaluation">
       <div class="slide-inner">
         <div class="kicker">3. Goal And Evaluation</div>
-        <h2>The optimisation target is day F1, with confidence used to reduce review workload</h2>
-        <p>The practical aim is to minimise manual checking, not to claim manual checking can be removed completely. The model should rank site-days so high-confidence decisions can be accepted quickly and ambiguous days remain in a smaller review queue.</p>
-        <div class="callout"><strong>Primary model-selection metric:</strong> Beta leave-one-site-out <strong>sure-only day-level F1</strong>. Beta all-days, interval F1, window IoU, energy F1, and energy IoU are secondary checks.</div>
+        <h2>The aim is to minimise manual checking</h2>
+        <p>The practical aim is to minimise manual checking, not to claim manual checking can be removed completely. The model should rank substation-days so high-confidence decisions can be accepted quickly and ambiguous days remain in a smaller review queue.</p>
+        <div class="callout"><strong>Primary model-selection metric:</strong> Beta leave-one-substation-out <strong>sure-only day-level F1</strong>. Beta all-days, interval F1, window IoU, energy F1, and energy IoU are secondary checks.</div>
         <div class="grid-3">
           <div class="card"><h3>Day flag</h3><p>Does this day contain an RPF sign-error window?</p></div>
           <div class="card"><h3>Start/end window</h3><p>One predicted RPF interval per positive day.</p></div>
@@ -405,14 +555,14 @@
       </div>
     </section>
 
-    <section class="slide" data-title="3b. Manual Review And Metrics">
+    <section class="slide" data-title="4. Manual Review And Metrics">
       <div class="slide-inner">
-        <div class="kicker">3. Goal And Evaluation</div>
+        <div class="kicker">4. Manual Review And Metrics</div>
         <h2>The manual-review process becomes a triage process</h2>
         <table>
           <thead><tr><th>Step</th><th>What happens</th><th>How it reduces manual checking</th></tr></thead>
           <tbody>
-            <tr><td>1. Score every site-day</td><td>The model proposes no RPF or one RPF window, plus a confidence margin.</td><td>All days are processed automatically in one batch.</td></tr>
+            <tr><td>1. Score every substation-day</td><td>The model proposes no RPF or one RPF window, plus a confidence margin.</td><td>All days are processed automatically in one batch.</td></tr>
             <tr><td>2. Auto-accept high-confidence decisions</td><td>Very confident positives and negatives can be accepted first.</td><td>The review queue shrinks to uncertain boundary cases.</td></tr>
             <tr><td>3. Review low-confidence days</td><td>A human checks only days near the threshold plus selected audit samples.</td><td>Manual effort is targeted where it is most valuable.</td></tr>
             <tr><td>4. Re-run after label corrections</td><td>If review discovers label mistakes, regenerate Beta/Gamma and re-score.</td><td>The process improves the oracle dataset as well as the model.</td></tr>
@@ -440,15 +590,33 @@
       </div>
     </section>
 
-    <section class="slide" data-title="4. Method Overview">
+    <section class="slide" data-title="5. Method Overview">
       <div class="slide-inner">
-        <div class="kicker">4. Method Overview</div>
+        <div class="kicker">5. Method Overview</div>
         <h2>m9_pbm scores whether sign correction makes demand physically plausible</h2>
-        <p><strong>m9_pbm</strong> searches candidate windows during daytime and asks whether flipping the sign creates a more plausible underlying demand curve.</p>
+        <p><strong>m9_pbm</strong> searches candidate windows during daytime. For each candidate window \(W\), it reconstructs the full-day underlying demand curve under two interpretations, then evaluates physical plausibility on \(W\) and its local shoulders.</p>
         <div class="formula">
-          Let \(\ S(t)\ \) be solar generation and \(\ y(t)\ \) be recorded net load.<br><br>
-          Outside candidate window \(\ W\ \): \(\ U(t)=S(t)+y(t)\ \)<br>
-          Inside \(\ W\ \): compare \(\ U_{\mathrm{no}}(t)=S(t)+y(t)\ \) with \(\ U_{\mathrm{corr}}(t)=S(t)-y(t)\ \).
+          \[
+          U_{\mathrm{no}}(t)=S(t)+y(t)
+          \]
+          \[
+          U_{\mathrm{corr},W}(t)=
+          \begin{cases}
+          S(t)-y(t), & t \in W \\
+          S(t)+y(t), & t \notin W
+          \end{cases}
+          \]
+        </div>
+        <div class="notation">
+          <strong>Notation:</strong>
+          <ul>
+            <li>\(t\): 15-minute timestamp within one day.</li>
+            <li>\(y(t)\): observed net load at time \(t\); wrong-sign RPF appears as a positive raw net-load bump.</li>
+            <li>\(S(t)\): solar generation at time \(t\).</li>
+            <li>\(W\): candidate RPF window, meaning a contiguous set of timestamps being tested for sign correction.</li>
+            <li>\(U_{\mathrm{no}}(t)\): reconstructed demand if no sign error is corrected.</li>
+            <li>\(U_{\mathrm{corr},W}(t)\): reconstructed demand after applying the sign correction only inside \(W\).</li>
+          </ul>
         </div>
         <div class="figure">
           <img src="2026-07-07_m9_pbm_real_curve_example.png" alt="Real Beta RPF day showing solar, raw net load, uncorrected demand, and corrected demand">
@@ -457,26 +625,119 @@
       </div>
     </section>
 
-    <section class="slide" data-title="5. Bridge">
+    <section class="slide" data-title="6. Scores And Thresholds">
       <div class="slide-inner">
-        <div class="kicker">5. Feature 1: Bridge</div>
+        <div class="kicker">6. Scores And Thresholds</div>
+        <h2>Each candidate window is scored with nine interpretable physical features</h2>
+        <div class="grid-2">
+          <div>
+            <p>For each substation-day, the model generates many candidate windows. Each candidate receives nine feature values, combines them with simple weights, then selects the highest-scoring window for the day.</p>
+            <div class="formula">
+              \[
+              \mathrm{Score}(W)=\sum_{i=1}^{9} w_i F_i(W)
+              \]
+              \[
+              \widehat{y}_{\mathrm{day}} =
+              \begin{cases}
+              1, & \max_W \mathrm{Score}(W) \ge \tau \\
+              0, & \max_W \mathrm{Score}(W) &lt; \tau
+              \end{cases}
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): one candidate RPF window from a substation-day.</li>
+                <li>\(F_i(W)\): value of feature \(i\), where \(i=1,\ldots,9\).</li>
+                <li>\(w_i\): fixed weight applied to feature \(F_i\) in the C14 scoring rule.</li>
+                <li>\(\mathrm{Score}(W)\): weighted physical-plausibility score for candidate window \(W\).</li>
+                <li>\(\max_W \mathrm{Score}(W)\): best candidate score found on the day.</li>
+                <li>\(\tau\): threshold for converting the best candidate score into a day-level RPF decision.</li>
+                <li>\(\widehat{y}_{\mathrm{day}}\): predicted day flag, with 1 = RPF day and 0 = non-RPF day.</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <svg class="score-diagram" viewBox="0 0 560 250" role="img" aria-label="Score and threshold diagram">
+              <rect x="24" y="35" width="120" height="46" fill="#22303d" opacity="0.92"></rect>
+              <rect x="24" y="103" width="120" height="46" fill="#22303d" opacity="0.92"></rect>
+              <rect x="24" y="171" width="120" height="46" fill="#22303d" opacity="0.92"></rect>
+              <text x="48" y="64" fill="#fff" font-size="14" font-family="Arial">window W1</text>
+              <text x="48" y="132" fill="#fff" font-size="14" font-family="Arial">window W2</text>
+              <text x="48" y="200" fill="#fff" font-size="14" font-family="Arial">window W3</text>
+              <line x1="144" y1="58" x2="235" y2="126" stroke="#5C7D99" stroke-width="3"></line>
+              <line x1="144" y1="126" x2="235" y2="126" stroke="#5C7D99" stroke-width="3"></line>
+              <line x1="144" y1="194" x2="235" y2="126" stroke="#5C7D99" stroke-width="3"></line>
+              <rect x="235" y="92" width="120" height="68" fill="#eb932c" opacity="0.92"></rect>
+              <text x="260" y="119" fill="#fff" font-size="14" font-family="Arial">9 features</text>
+              <text x="256" y="139" fill="#fff" font-size="14" font-family="Arial">+ weights</text>
+              <line x1="355" y1="126" x2="430" y2="126" stroke="#5C7D99" stroke-width="3"></line>
+              <rect x="430" y="92" width="105" height="68" fill="#2F4D67" opacity="0.92"></rect>
+              <text x="456" y="119" fill="#fff" font-size="14" font-family="Arial">max score</text>
+              <text x="458" y="139" fill="#fff" font-size="14" font-family="Arial">vs tau</text>
+            </svg>
+            <table class="weight-table">
+              <tr><th>Current C14 weight</th><th>Value</th></tr>
+              <tr><td>\(w_1\) bridge</td><td class="num">1.0</td></tr>
+              <tr><td>\(w_2\) roughness</td><td class="num">1.5</td></tr>
+              <tr><td>\(w_8\) substation-centered</td><td class="num">0.5</td></tr>
+              <tr><td>\(w_9\) substation-rank</td><td class="num">0.0</td></tr>
+              <tr><td>all other active weights</td><td class="num">1.0</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="7. F1 Bridge">
+      <div class="slide-inner">
+        <div class="kicker">7. Feature 1: Bridge Improvement</div>
         <h2>Bridge is the strongest single signal because true windows repair a demand gap</h2>
         <div class="grid-2">
           <div>
-            <p>The bridge feature measures whether corrected demand joins more smoothly from the left side of the candidate window to the right side.</p>
-            <div class="formula">\(B(W)=E_{\mathrm{bridge}}(U_{\mathrm{no}},W)-E_{\mathrm{bridge}}(U_{\mathrm{corr}},W)\)</div>
+            <p>The bridge feature compares whether the corrected full-day demand curve joins more smoothly across the candidate window than the no-correction curve.</p>
+            <div class="formula">
+              \[
+              E_{\mathrm{bridge}}(U,W)=\mathrm{median}_{t \in W}\left|U(t)-L_W(t)\right|
+              \]
+              \[
+              F_1(W)=
+              \frac{E_{\mathrm{bridge}}(U_{\mathrm{no}},W)-E_{\mathrm{bridge}}(U_{\mathrm{corr},W},W)}
+              {E_{\mathrm{bridge}}(U_{\mathrm{no}},W)+E_{\mathrm{bridge}}(U_{\mathrm{corr},W},W)+\epsilon}
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(U\): either \(U_{\mathrm{no}}\) or \(U_{\mathrm{corr},W}\), depending on which reconstruction is being evaluated.</li>
+                <li>\(W\): candidate RPF window; \(t \in W\) means the timestamp is inside that window.</li>
+                <li>\(L_W(t)\): straight-line bridge between demand anchors just before and just after \(W\).</li>
+                <li>\(E_{\mathrm{bridge}}(U,W)\): median absolute distance between reconstruction \(U(t)\) and bridge line \(L_W(t)\) inside \(W\).</li>
+                <li>\(\epsilon\): small constant that prevents division by zero.</li>
+                <li>\(F_1(W)\): normalized bridge improvement; positive values mean correction makes the bridge more plausible.</li>
+              </ul>
+            </div>
             <ul>
-              <li>Large positive B(W) means the corrected curve bridges the shoulders better.</li>
+              <li>Large positive \(F_1(W)\) means the corrected curve bridges the shoulders better.</li>
               <li>It was the strongest separator in Beta sure-only days.</li>
             </ul>
           </div>
           <div>
             <svg class="mini-viz" viewBox="0 0 470 170">
-              <rect x="170" y="28" width="140" height="106" fill="#eb932c" opacity="0.15"></rect>
-              <path d="M35 90 C90 88 130 94 170 98 C220 134 260 134 310 98 C350 94 395 88 435 90" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="7 5"></path>
-              <path d="M35 90 C92 88 130 91 170 94 C220 91 260 91 310 94 C350 91 394 88 435 90" fill="none" stroke="#eb932c" stroke-width="4"></path>
-              <text x="318" y="116" fill="#2F4D67" font-size="13" font-family="Arial">uncorrected gap</text>
-              <text x="318" y="78" fill="#eb932c" font-size="13" font-family="Arial">corrected bridge</text>
+              <rect x="150" y="26" width="170" height="114" fill="#eb932c" opacity="0.13"></rect>
+              <line x1="150" y1="28" x2="150" y2="140" stroke="#eb932c" stroke-width="2" stroke-dasharray="5 4"></line>
+              <line x1="320" y1="28" x2="320" y2="140" stroke="#eb932c" stroke-width="2" stroke-dasharray="5 4"></line>
+              <polyline points="36,92 150,90 205,54 270,118 320,90 434,92" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="8 5"></polyline>
+              <path d="M36 92 C86 88 116 88 150 90 C202 93 265 93 320 90 C358 88 397 88 434 92" fill="none" stroke="#eb932c" stroke-width="4"></path>
+              <line x1="150" y1="90" x2="320" y2="90" stroke="#22303d" stroke-width="3" opacity="0.9"></line>
+              <circle cx="150" cy="90" r="5" fill="#22303d"></circle>
+              <circle cx="320" cy="90" r="8" fill="#22303d"></circle>
+              <text x="86" y="76" fill="#22303d" font-size="11" font-family="Arial">left anchor, lower weight</text>
+              <text x="282" y="76" fill="#22303d" font-size="11" font-family="Arial">right anchor, higher weight</text>
+              <text x="203" y="48" fill="#22303d" font-size="11" font-family="Arial">linear bridge L_W</text>
+              <text x="326" y="124" fill="#2F4D67" font-size="13" font-family="Arial">U_no: uncorrected</text>
+              <text x="326" y="103" fill="#eb932c" font-size="13" font-family="Arial">U_corr,W: corrected</text>
+              <text x="205" y="153" fill="#2F4D67" font-size="12" font-family="Arial">candidate window W</text>
             </svg>
             <table><tr><th>Group</th><th class="num">Median bridge</th></tr><tr><td>RPF days</td><td class="num">0.8653</td></tr><tr><td>Non-RPF days</td><td class="num">-0.9803</td></tr><tr><td>Std. median diff.</td><td class="num"><strong>2.3591</strong></td></tr></table>
           </div>
@@ -484,14 +745,36 @@
       </div>
     </section>
 
-    <section class="slide" data-title="6. Roughness">
+    <section class="slide" data-title="8. F2 Roughness">
       <div class="slide-inner">
-        <div class="kicker">6. Feature 2: Roughness</div>
+        <div class="kicker">8. Feature 2: Roughness Improvement</div>
         <h2>Roughness improves window quality by rewarding smoother corrected demand</h2>
         <div class="grid-2">
           <div>
-            <p>Roughness uses total variation or mean absolute changes in the reconstructed demand curve. Corrected demand should usually be less jumpy than the uncorrected interpretation.</p>
-            <div class="formula">\(TV(U,W)=\sum_{t \in W^+}|U(t)-U(t-\Delta t)|\)<br>\(R(W)=TV(U_{\mathrm{no}},W)-TV(U_{\mathrm{corr}},W)\)</div>
+            <p>Roughness uses total variation over the candidate window plus local shoulders. Corrected demand should usually be less jumpy than the no-correction interpretation.</p>
+            <div class="formula">
+              \[
+              TV(U,\Omega(W))=\sum_{t \in \Omega(W),\ t-\Delta t \in \Omega(W)}
+              \left|U(t)-U(t-\Delta t)\right|
+              \]
+              \[
+              F_2(W)=
+              \frac{TV(U_{\mathrm{no}},\Omega(W))-TV(U_{\mathrm{corr},W},\Omega(W))}
+              {TV(U_{\mathrm{no}},\Omega(W))+TV(U_{\mathrm{corr},W},\Omega(W))+\epsilon}
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(U\): demand reconstruction being evaluated, either no-correction or corrected-inside-\(W\).</li>
+                <li>\(W\): candidate RPF window.</li>
+                <li>\(\Omega(W)\): \(W\) plus short left/right context shoulders used to judge local smoothness.</li>
+                <li>\(\Delta t\): one sampling step, here 15 minutes.</li>
+                <li>\(TV(U,\Omega(W))\): total variation, or the sum of absolute step-to-step changes in \(U\) across \(\Omega(W)\).</li>
+                <li>\(\epsilon\): small constant that prevents division by zero.</li>
+                <li>\(F_2(W)\): normalized roughness improvement; positive values mean correction reduces roughness.</li>
+              </ul>
+            </div>
             <ul>
               <li>Roughness is a window-quality feature, not only a day detector.</li>
               <li>The best grid result increased roughness weight to 1.5.</li>
@@ -500,10 +783,12 @@
           <div>
             <svg class="mini-viz" viewBox="0 0 470 170">
               <rect x="165" y="28" width="150" height="106" fill="#eb932c" opacity="0.15"></rect>
-              <polyline points="35,94 70,84 105,104 140,76 175,126 210,58 245,122 280,62 315,118 350,88 385,101 435,94" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="7 5"></polyline>
-              <path d="M35 94 C105 91 145 90 175 92 C220 94 260 94 315 92 C360 90 395 91 435 94" fill="none" stroke="#eb932c" stroke-width="4"></path>
-              <text x="48" y="42" fill="#2F4D67" font-size="13" font-family="Arial">uncorrected: jumpy</text>
-              <text x="48" y="62" fill="#eb932c" font-size="13" font-family="Arial">corrected: smoother</text>
+              <polyline points="35,104 165,104 215,50 270,122 315,108 435,104" fill="none" stroke="#2F4D67" stroke-width="4" stroke-dasharray="7 5"></polyline>
+              <path d="M35 104 C92 102 135 101 165 102 C205 99 265 99 315 102 C360 101 398 102 435 104" fill="none" stroke="#eb932c" stroke-width="4"></path>
+              <circle cx="165" cy="104" r="4" fill="#2F4D67"></circle>
+              <circle cx="315" cy="108" r="4" fill="#2F4D67"></circle>
+              <text x="48" y="42" fill="#2F4D67" font-size="13" font-family="Arial">uncorrected: N-shaped bump</text>
+              <text x="48" y="62" fill="#eb932c" font-size="13" font-family="Arial">corrected: smoother shoulder</text>
             </svg>
             <table><tr><th>Beta sure feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th></tr><tr><td>Roughness improvement</td><td class="num">0.0972</td><td class="num">-0.2210</td></tr></table>
           </div>
@@ -511,14 +796,111 @@
       </div>
     </section>
 
-    <section class="slide" data-title="7. N-height">
+    <section class="slide" data-title="9. F3 Slope Continuity">
       <div class="slide-inner">
-        <div class="kicker">7. Feature 3: N-height</div>
+        <div class="kicker">9. Feature 3: Slope-Continuity Improvement</div>
+        <h2>Slope continuity penalises windows that introduce boundary jumps</h2>
+        <div class="grid-2">
+          <div>
+            <p>A visually plausible correction should not create sharp slope discontinuities at the left and right edges of the selected window.</p>
+            <div class="formula">
+              \[
+              J(U,W)=
+              \left|m_{\mathrm{left}}(U,\Omega(W))-m_{\mathrm{in,left}}(U,W)\right|
+              +
+              \left|m_{\mathrm{right}}(U,\Omega(W))-m_{\mathrm{in,right}}(U,W)\right|
+              \]
+              \[
+              F_3(W)=
+              \frac{J(U_{\mathrm{no}},W)-J(U_{\mathrm{corr},W},W)}
+              {J(U_{\mathrm{no}},W)+J(U_{\mathrm{corr},W},W)+\epsilon}
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(U\): demand reconstruction being evaluated.</li>
+                <li>\(W\): candidate RPF window; \(\Omega(W)\) is \(W\) plus local shoulders.</li>
+                <li>\(m_{\mathrm{left}}\), \(m_{\mathrm{right}}\): robust slopes estimated in the shoulders outside \(W\).</li>
+                <li>\(m_{\mathrm{in,left}}\), \(m_{\mathrm{in,right}}\): robust slopes estimated just inside the left and right edges of \(W\).</li>
+                <li>\(J(U,W)\): boundary slope-jump penalty for reconstruction \(U\).</li>
+                <li>\(\epsilon\): small constant that prevents division by zero.</li>
+                <li>\(F_3(W)\): normalized slope-continuity improvement; positive values mean correction improves boundary continuity.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Role in the model</h3>
+            <p>Slope continuity is a guard against sharp, artificial-looking corrections. It is not the strongest standalone separator, but it helps keep selected windows physically coherent.</p>
+            <p><span class="tag">C14 weight 1.0</span><span class="tag">guardrail feature</span></p>
+            <table><tr><th>Beta sure feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th></tr><tr><td>Slope continuity</td><td class="num">0.6659</td><td class="num">0.7529</td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="10. F4 Duration">
+      <div class="slide-inner">
+        <div class="kicker">10. Feature 4: Duration Plausibility</div>
+        <h2>Duration turns the short-window false-positive lesson into a soft score</h2>
+        <div class="grid-2">
+          <div>
+            <p>Earlier diagnostics showed many Beta false positives were very short local wiggles. A soft duration feature favours sustained windows without completely banning short true events.</p>
+            <div class="formula">
+              \[
+              F_4(W)=\min\left(1,\frac{\mathrm{duration}(W)}{1.5\ \mathrm{h}}\right)
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): candidate RPF window.</li>
+                <li>\(\mathrm{duration}(W)\): length of \(W\), measured in hours.</li>
+                <li>\(1.5\,\mathrm{h}\): soft reference duration; windows at or above this duration receive the maximum duration score.</li>
+                <li>\(\min(1,\cdot)\): caps the feature at 1 so duration cannot dominate the score by itself.</li>
+                <li>\(F_4(W)\): duration plausibility feature, ranging from 0 to 1.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Why soft, not hard?</h3>
+            <p>Hard duration guards improved Beta precision but damaged Alpha recall because Alpha contains many valid short RPF events. The soft feature keeps that evidence without making it a brittle rule.</p>
+            <p><span class="tag">C14 weight 1.0</span><span class="tag">soft plausibility</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="11. F5 N-height">
+      <div class="slide-inner">
+        <div class="kicker">11. Feature 5: N-height Ratio</div>
         <h2>N-height captures the raw net-load bounce that many false positives lack</h2>
         <div class="grid-2">
           <div>
             <p>True RPF days often show raw net load rising into an N-shaped bounce inside the wrong-sign window. Many false positives have a much weaker bounce.</p>
-            <div class="formula">\(H_N(W)=\frac{\max(y_W)-\max(y_{\mathrm{left}},y_{\mathrm{right}})}{\mathrm{scale}_{\mathrm{site/day}}}\)</div>
+            <div class="formula">
+              \[
+              F_5(W)=
+              \mathrm{clip}_{[0,1]}
+              \left(
+              \frac{\max_{t \in W} y(t)-\max(y(t_{\mathrm{left}}),y(t_{\mathrm{right}}))}
+              {\mathrm{scale}_{\mathrm{day/substation}}}
+              \right)
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): candidate RPF window.</li>
+                <li>\(y(t)\): observed net load at timestamp \(t\).</li>
+                <li>\(\max_{t \in W} y(t)\): highest raw net-load value inside the candidate window.</li>
+                <li>\(t_{\mathrm{left}}\), \(t_{\mathrm{right}}\): timestamps at the left and right boundaries of \(W\).</li>
+                <li>\(\max(y(t_{\mathrm{left}}),y(t_{\mathrm{right}}))\): stronger of the two boundary net-load values.</li>
+                <li>\(\mathrm{scale}_{\mathrm{day/substation}}\): robust power scale from the current day and substation, used to normalize the bounce height.</li>
+                <li>\(\mathrm{clip}_{[0,1]}\): truncates the value to the range 0 to 1.</li>
+                <li>\(F_5(W)\): N-height ratio; larger values mean a stronger N-shaped raw net-load bounce.</li>
+              </ul>
+            </div>
             <ul>
               <li>It tests the visual FP/FN hypothesis directly.</li>
               <li>It reduces weak low-bounce false windows.</li>
@@ -538,58 +920,208 @@
       </div>
     </section>
 
-    <section class="slide" data-title="8. Other Features">
+    <section class="slide" data-title="12. F6 Solar Strength">
       <div class="slide-inner">
-        <div class="kicker">8. Other Features</div>
-        <h2>The remaining features act as interpretable guardrails around the core physics score</h2>
-        <h3>Window plausibility guards</h3>
-        <div class="grid-3">
-          <div class="card"><h3>Duration</h3><p>Encodes that plausible RPF windows are not usually extremely short.</p><div class="formula">\(D(W)=\min(1,\mathrm{duration}(W)/1.5\mathrm{h})\)</div></div>
-          <div class="card"><h3>Solar strength</h3><p>Penalises weak-solar candidates.</p><div class="formula">\(S_{\mathrm{ratio}}(W)=p95(S_W)/p95_{\mathrm{site}}(S)\)</div></div>
-          <div class="card"><h3>Solar peak alignment</h3><p>Keeps the search aligned with the physical driver.</p><div class="formula">\(A(W)=1-\mathrm{dist}(\mathrm{mid}(W),\mathrm{peak}_S)/3.5\mathrm{h}\)</div></div>
-        </div>
-        <h3>Site comparability guards</h3>
-        <div class="grid-3">
-          <div class="card"><h3>Site-centered score</h3><p>Subtracts a site baseline using unlabelled site score distribution.</p><div class="formula">\(C_{\mathrm{site}}(d)=\mathrm{core}(d)-\mathrm{median}_{\mathrm{site}}(\mathrm{core})\)</div></div>
-          <div class="card"><h3>Site rank score</h3><p>Uses within-site percentile rank to compare days within a site.</p><div class="formula">\(R_{\mathrm{site}}(d)=\mathrm{percentile\_rank}_{\mathrm{site}}(\mathrm{core}(d))\)</div></div>
-          <div class="card"><h3>Slope continuity</h3><p>A secondary guard for jumpy windows, not a strong positive discriminator.</p><div class="formula">\(SC(W)=\mathrm{slope\_jump}(U_{\mathrm{no}})-\mathrm{slope\_jump}(U_{\mathrm{corr}})\)</div></div>
+        <div class="kicker">12. Feature 6: Solar Strength Ratio</div>
+        <h2>Solar strength keeps candidate windows tied to the physical driver</h2>
+        <div class="grid-2">
+          <div>
+            <p>Wrong-sign RPF is physically most plausible when solar generation is strong. This feature down-weights windows during weak-solar periods.</p>
+            <div class="formula">
+              \[
+              F_6(W)=
+              \mathrm{clip}_{[0,1]}
+              \left(
+              \frac{p95\{S(t):t \in W\}}{\mathrm{median}_{d \in \mathrm{substation}}\ p95\{S_d(t):t \in \mathrm{daytime}\}+\epsilon}
+              \right)
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): candidate RPF window.</li>
+                <li>\(S(t)\): solar generation at timestamp \(t\).</li>
+                <li>\(p95\{S(t):t \in W\}\): 95th percentile of solar generation inside \(W\).</li>
+                <li>\(d\): a day from the same substation's unlabelled history.</li>
+                <li>\(S_d(t)\): solar generation on historical day \(d\).</li>
+                <li>\(\mathrm{daytime}\): daylight timestamps used to estimate normal solar strength.</li>
+                <li>\(\epsilon\): small constant that prevents division by zero.</li>
+                <li>\(F_6(W)\): solar strength ratio after clipping to 0-1.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Role in the model</h3>
+            <p>This is a plausibility guard, not a substation-specific labelled threshold. It makes weak-solar lookalikes less attractive while preserving the same scoring framework.</p>
+            <p><span class="tag">C14 weight 1.0</span><span class="tag">unlabelled substation scale</span></p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="slide" data-title="9. Experiments">
+    <section class="slide" data-title="13. F7 Solar Peak Alignment">
       <div class="slide-inner">
-        <div class="kicker">9. Experiments And Key Results</div>
+        <div class="kicker">13. Feature 7: Solar Peak Alignment</div>
+        <h2>Solar peak alignment favours windows near the daily solar maximum</h2>
+        <div class="grid-2">
+          <div>
+            <p>RPF sign-error windows should usually be near the time when solar export pressure is highest, so the score favours candidates centred near the daily solar peak.</p>
+            <div class="formula">
+              \[
+              F_7(W)=
+              \mathrm{clip}_{[0,1]}
+              \left(
+              1-\frac{\left|\mathrm{mid}(W)-t_{\mathrm{peak},S}\right|}{3.5\ \mathrm{h}}
+              \right)
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): candidate RPF window.</li>
+                <li>\(\mathrm{mid}(W)\): midpoint time of \(W\).</li>
+                <li>\(t_{\mathrm{peak},S}\): timestamp of peak solar generation on that day.</li>
+                <li>\(|\mathrm{mid}(W)-t_{\mathrm{peak},S}|\): time distance between candidate midpoint and solar peak.</li>
+                <li>\(3.5\,\mathrm{h}\): soft timing scale used to convert peak distance into a score.</li>
+                <li>\(\mathrm{clip}_{[0,1]}\): truncates the score to the range 0 to 1.</li>
+                <li>\(F_7(W)\): solar peak alignment feature; larger values mean closer alignment with peak solar generation.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Role in the model</h3>
+            <p>The feature is deliberately soft. It aligns search with the physical cause without forcing every event to be perfectly centred on noon or the solar peak.</p>
+            <p><span class="tag">C14 weight 1.0</span><span class="tag">soft timing guard</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="14. F8 Substation-Centered Core">
+      <div class="slide-inner">
+        <div class="kicker">14. Feature 8: Substation-Centered Core Score</div>
+        <h2>Substation-centering makes physical scores more comparable across substations</h2>
+        <div class="grid-2">
+          <div>
+            <p>Some substations have naturally higher or lower core physical scores. Substation-centering subtracts the unlabelled substation median before using the score.</p>
+            <div class="formula">
+              \[
+              \mathrm{core}(W)=F_1(W)+F_2(W)+F_3(W)
+              \]
+              \[
+              F_8(W)=\mathrm{robust\_bound}
+              \left(
+              \mathrm{core}(W)-\mathrm{median}_{d \in \mathrm{substation}}\left(\max_{W_d}\mathrm{core}(W_d)\right)
+              \right)
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(W\): candidate RPF window on the current day.</li>
+                <li>\(F_1(W)\), \(F_2(W)\), \(F_3(W)\): bridge, roughness, and slope-continuity feature values.</li>
+                <li>\(\mathrm{core}(W)\): uncentred physical core score from the first three features.</li>
+                <li>\(d\): a day from the same substation's unlabelled history.</li>
+                <li>\(W_d\): a candidate window from historical day \(d\).</li>
+                <li>\(\max_{W_d}\mathrm{core}(W_d)\): best core score on historical substation-day \(d\).</li>
+                <li>\(\mathrm{median}_{d \in \mathrm{substation}}\): median across unlabelled days from the same substation.</li>
+                <li>\(\mathrm{robust\_bound}(\cdot)\): bounding step that limits extreme centred values.</li>
+                <li>\(F_8(W)\): substation-centered core feature.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Current C14 role</h3>
+            <p>The small weight grid kept this feature, but reduced its weight to avoid over-normalising the signal.</p>
+            <p><span class="tag">C14 weight 0.5</span><span class="tag">substation comparability</span></p>
+            <table><tr><th>Beta sure feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th></tr><tr><td>Substation-centered core</td><td class="num">0.2687</td><td class="num">-0.0400</td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="15. F9 Substation-Rank Core">
+      <div class="slide-inner">
+        <div class="kicker">15. Feature 9: Substation-Rank Core Score</div>
+        <h2>Substation-rank was useful diagnostically, but the current best model drops it</h2>
+        <div class="grid-2">
+          <div>
+            <p>Substation-rank converts each substation's best daily core score into a within-substation percentile rank. It was tested to make substation behaviour more comparable.</p>
+            <div class="formula">
+              \[
+              F_9(d)=2 \cdot \mathrm{percentile\_rank}_{\mathrm{substation}}
+              \left(\max_{W_d}\mathrm{core}(W_d)\right)-1
+              \]
+            </div>
+            <div class="notation">
+              <strong>Notation:</strong>
+              <ul>
+                <li>\(d\): current substation-day being scored.</li>
+                <li>\(W_d\): a candidate window on day \(d\).</li>
+                <li>\(\mathrm{core}(W_d)\): uncentred core score for candidate window \(W_d\).</li>
+                <li>\(\max_{W_d}\mathrm{core}(W_d)\): best core score on day \(d\).</li>
+                <li>\(\mathrm{percentile\_rank}_{\mathrm{substation}}\): percentile rank of that day within the same substation's unlabelled daily score distribution.</li>
+                <li>\(2 \cdot \mathrm{rank}-1\): rescales percentile rank from 0-1 into -1 to 1.</li>
+                <li>\(F_9(d)\): substation-rank core feature; current C14 weight is 0.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Current C14 decision</h3>
+            <p>The feature separates RPF and non-RPF days in summary statistics, but the C14 weight grid found better held-out Beta performance when its weight was set to zero.</p>
+            <p><span class="tag">tested feature</span><span class="tag">C14 weight 0.0</span><span class="tag">dropped from current best</span></p>
+            <table><tr><th>Beta sure feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th></tr><tr><td>Substation-rank core</td><td class="num">0.6803</td><td class="num">-0.2787</td></tr></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="16. LOSO Experiments">
+      <div class="slide-inner">
+        <div class="kicker">16. Experiments And Key Results</div>
         <h2>A small physical-score weight grid gave the best result without adding black-box complexity</h2>
+        <div class="callout">
+          <strong>LOSO means leave-one-substation-out.</strong> For each Beta fold, one substation is held out for testing. The threshold is tuned on the other Beta substations, optionally with Alpha added, then evaluated on the held-out substation.
+        </div>
         <h3>The experiments compare training regime first, then physical-score variants</h3>
         <div class="grid-2">
-          <table><tr><th>Regime</th><th>Meaning</th></tr><tr><td>R1 Beta LOSO</td><td>Train/tune using seven Beta sites and test on the held-out Beta site.</td></tr><tr><td>R2 Beta LOSO + Alpha</td><td>Same held-out Beta test, but add Alpha to the training/tuning pool.</td></tr><tr><td>R3 Alpha only to Beta</td><td>Use Alpha only for tuning, then transfer to Beta.</td></tr></table>
+          <table><tr><th>Regime</th><th>Meaning</th></tr><tr><td>R1 Beta LOSO</td><td>Train/tune using seven Beta substations and test on the held-out Beta substation.</td></tr><tr><td>R2 Beta LOSO + Alpha</td><td>Same held-out Beta substation test, but add Alpha to the training/tuning pool.</td></tr><tr><td>R3 Alpha only to Beta</td><td>Use Alpha only for tuning, then transfer to Beta.</td></tr></table>
           <table><tr><th>Variant type</th><th>Purpose</th></tr><tr><td>Equal-weight score</td><td>Simple baseline with all physical components included.</td></tr><tr><td>Drop-one ablation</td><td>Set one component weight to zero to test whether it matters.</td></tr><tr><td>Small weight grid</td><td>Adjust a few interpretable weights after ablation.</td></tr></table>
         </div>
       </div>
     </section>
 
-    <section class="slide" data-title="9b. Development Path">
+    <section class="slide" data-title="17. Overall Regime Variant Results">
       <div class="slide-inner">
-        <div class="kicker">9. Experiments And Key Results</div>
-        <h2>The development path narrowed from broad model search to one interpretable physical family</h2>
-        <table>
-          <thead><tr><th>Stage</th><th>Purpose</th><th>Main learning</th></tr></thead>
+        <div class="kicker">17. Experiments And Key Results</div>
+        <h2>The C9 journal ladder showed why M9 became the candidate method family</h2>
+        <div class="callout">
+          <strong>Source:</strong> 2026-07-07 physical-score experiment journal. These C9 ladder numbers compare regimes and variants before the later C14 small-weight-grid refinement shown on the next slide.
+        </div>
+        <table class="compact-table">
+          <thead>
+            <tr><th>Regime</th><th>Variant</th><th class="num">Beta all F1</th><th class="num">Beta sure P</th><th class="num">Beta sure R</th><th class="num">Beta sure F1</th><th class="num">Positive-substation avg F1</th></tr>
+          </thead>
           <tbody>
-            <tr><td>m7/m8 baselines</td><td>Compare deterministic and XGB models under final labels.</td><td>Time-split performance did not transfer well to station/Beta deployment.</td></tr>
-            <tr><td>E1-E3 bridge ladder</td><td>Test simple bridge, roughness proxy, and site-median variants.</td><td>Bridge was the strongest simple signal; site-relative scores helped.</td></tr>
-            <tr><td>E4-E6 v0.3 candidate features</td><td>Add bridge, roughness, and slope-continuity candidate scan.</td><td>Three-feature physical scoring became the practical baseline.</td></tr>
-            <tr><td>E11-E13 duration guards</td><td>Test whether short-window false positives could be removed.</td><td>Hard guards were too blunt; soft physical scoring remained better.</td></tr>
-            <tr><td>C14 small weight grid</td><td>Small interpretable weight search over the physical-score family.</td><td>Best Beta sure day F1 improved from 0.8857 to 0.8994.</td></tr>
-            <tr><td>C17/C18 border-minimum diagnostics</td><td>Test whether true windows have local-minimum borders.</td><td>The hypothesis is real diagnostically, but hard filters did not beat baseline.</td></tr>
+            <tr><td>R1 Beta LOSO</td><td>M9 drop substation-rank</td><td class="num">0.8028</td><td class="num">0.8875</td><td class="num">0.8838</td><td class="num"><strong>0.8857</strong></td><td class="num">0.7440</td></tr>
+            <tr><td>R2 Beta LOSO + Alpha</td><td>M9 drop substation-rank</td><td class="num">0.8031</td><td class="num">0.8825</td><td class="num">0.8880</td><td class="num"><strong>0.8852</strong></td><td class="num">0.8226</td></tr>
+            <tr><td>R1 Beta LOSO</td><td>M10 logistic all 9</td><td class="num">0.7920</td><td class="num">0.8655</td><td class="num">0.8942</td><td class="num">0.8796</td><td class="num">0.7353</td></tr>
+            <tr><td>R2 Beta LOSO + Alpha</td><td>M8 drop substation-centered</td><td class="num">0.7926</td><td class="num">0.8860</td><td class="num">0.8548</td><td class="num">0.8701</td><td class="num">0.8170</td></tr>
+            <tr><td>R1 Beta LOSO</td><td>M0 all equal</td><td class="num">0.7720</td><td class="num">0.8956</td><td class="num">0.8008</td><td class="num">0.8456</td><td class="num">0.8005</td></tr>
+            <tr><td>R3 Alpha only</td><td>M8 drop substation-centered</td><td class="num">0.7548</td><td class="num">0.7427</td><td class="num">0.9461</td><td class="num">0.8321</td><td class="num">0.7147</td></tr>
           </tbody>
         </table>
+        <div class="grid-3">
+          <div class="card"><h3>Best pooled F1</h3><p>R1/M9 had the highest Beta sure-only pooled F1 in the C9 journal ladder.</p></div>
+          <div class="card"><h3>Best balance</h3><p>R2/M9 was effectively tied on pooled F1 and had stronger positive-substation average F1.</p></div>
+          <div class="card"><h3>Interpretation</h3><p>Beta LOSO tuning mattered; Alpha-only transfer and logistic weighting did not beat the simple manual score.</p></div>
+        </div>
       </div>
     </section>
 
-    <section class="slide" data-title="9c. Best Metrics">
+    <section class="slide" data-title="18. Best Metrics">
       <div class="slide-inner">
-        <div class="kicker">9. Experiments And Key Results</div>
+        <div class="kicker">18. Experiments And Key Results</div>
         <h2>The current best model improves both day detection and window quality</h2>
         <table>
           <thead><tr><th>Subset</th><th class="num">Day P</th><th class="num">Day R</th><th class="num">Day F1</th><th class="num">Interval F1</th><th class="num">Energy F1</th><th class="num">Energy IoU</th></tr></thead>
@@ -602,31 +1134,31 @@
       </div>
     </section>
 
-    <section class="slide" data-title="9d. Feature Separation">
+    <section class="slide" data-title="19. Feature Separation">
       <div class="slide-inner">
-        <div class="kicker">9. Experiments And Key Results</div>
+        <div class="kicker">19. Experiments And Key Results</div>
         <h2>The best features match the visual error-review hypotheses</h2>
         <table>
           <thead><tr><th>Feature</th><th class="num">RPF median</th><th class="num">Non-RPF median</th><th class="num">Std. median difference</th></tr></thead>
           <tbody>
             <tr><td>Bridge improvement</td><td class="num">0.8653</td><td class="num">-0.9803</td><td class="num"><strong>2.3591</strong></td></tr>
             <tr><td>N-height ratio</td><td class="num">0.2451</td><td class="num">0.0000</td><td class="num"><strong>1.9933</strong></td></tr>
-            <tr><td>Site-rank core score</td><td class="num">0.6803</td><td class="num">-0.2787</td><td class="num">1.6186</td></tr>
+            <tr><td>Substation-rank core score</td><td class="num">0.6803</td><td class="num">-0.2787</td><td class="num">1.6186</td></tr>
             <tr><td>Roughness improvement</td><td class="num">0.0972</td><td class="num">-0.2210</td><td class="num">1.4282</td></tr>
-            <tr><td>Site-centered core score</td><td class="num">0.2687</td><td class="num">-0.0400</td><td class="num">1.2538</td></tr>
+            <tr><td>Substation-centered core score</td><td class="num">0.2687</td><td class="num">-0.0400</td><td class="num">1.2538</td></tr>
             <tr><td>Slope continuity</td><td class="num">0.6659</td><td class="num">0.7529</td><td class="num">-0.3231</td></tr>
           </tbody>
         </table>
         <div class="grid-2">
-          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig02_beta_site_precision_recall_f1.png" alt="Beta site precision recall F1"><div class="caption">Per-site precision, recall, and F1 show where remaining audit risk sits.</div></div>
+          <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig02_beta_site_precision_recall_f1.png" alt="Beta substation precision recall F1"><div class="caption">Per-substation precision, recall, and F1 show where remaining audit risk sits.</div></div>
           <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C8_key_result_figures/fig03_confidence_coverage_f1.png" alt="Confidence coverage F1 curve"><div class="caption">Confidence coverage connects model performance to review burden.</div></div>
         </div>
       </div>
     </section>
 
-    <section class="slide" data-title="9e. Key Insights">
+    <section class="slide" data-title="20. Key Insights">
       <div class="slide-inner">
-        <div class="kicker">9. Experiments And Key Results</div>
+        <div class="kicker">20. Experiments And Key Results</div>
         <h2>The main finding is that physical interpretability and performance improved together</h2>
         <div class="grid-2">
           <div class="figure"><img src="outputs/260707_physical_score_loso_experiments/C9_all_result_visualisations/fig04_ablation_precision_recall_f1_delta.png" alt="Ablation precision recall F1 delta"><div class="caption">Ablation shows which physical components matter most.</div></div>
@@ -641,42 +1173,57 @@
       </div>
     </section>
 
-    <section class="slide" data-title="10. Paper Outline">
+    <section class="slide" data-title="21. Paper Outline">
       <div class="slide-inner">
-        <div class="kicker">10. Paper Outline</div>
+        <div class="kicker">21. Paper Outline</div>
         <h2>The paper can be framed around the phenomenon, the model, and forecast impact</h2>
         <table>
           <thead><tr><th>Paper part</th><th>Purpose</th><th>Likely evidence</th></tr></thead>
           <tbody>
             <tr><td>Dataset and phenomenon characterisation</td><td>Show when and where RPF sign errors occur, and why they matter.</td><td>Alpha/Beta summaries, seasonal heatmaps, event duration and continuity.</td></tr>
-            <tr><td>Model development and validation</td><td>Introduce m9_pbm and compare against m7/m8 baselines.</td><td>Day, interval, IoU, energy, site-level, and confidence-coverage metrics.</td></tr>
-            <tr><td>Forecast-impact case study</td><td>Quantify how wrong-sign RPF data can produce large forecast errors.</td><td>Gamma site case study, corrected vs uncorrected series, forecast RMSE/MAE.</td></tr>
+            <tr><td>Model development and validation</td><td>Introduce m9_pbm and compare against m7/m8 baselines.</td><td>Day, interval, IoU, energy, substation-level, and confidence-coverage metrics.</td></tr>
+            <tr><td>Forecast-impact case study</td><td>Quantify how wrong-sign RPF data can produce large forecast errors.</td><td>Gamma substation case study, corrected vs uncorrected series, forecast RMSE/MAE.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section class="slide" data-title="11. Next Steps">
+    <section class="slide" data-title="22. Next Steps">
       <div class="slide-inner">
-        <div class="kicker">11. Next Steps</div>
-        <h2>The next step is to lock the baseline and only refine from clear error patterns</h2>
-        <ol class="next-list">
-          <li>Lock current <strong>m9_pbm</strong> candidate as the working baseline.</li>
-          <li>Review high-confidence FP/FN HTML examples.</li>
-          <li>Decide whether any manual labels need correction.</li>
-          <li>Regenerate final Beta/Gamma after label changes.</li>
-          <li>Re-run C14/C16/C17 metric summaries after label updates.</li>
-          <li>Add interval/window IoU reporting to the journal result tables.</li>
-          <li>Prepare final paper figures with current best model only.</li>
-          <li>Decide whether confidence-triage is a main paper contribution or secondary result.</li>
-          <li>Stop broad model searching unless a clear error pattern emerges.</li>
-        </ol>
+        <div class="kicker">22. Next Steps</div>
+        <h2>Finish the model-development loop, then move to paper-ready evidence</h2>
+        <div class="priority-grid">
+          <div class="priority-card must">
+            <h3>Must Do</h3>
+            <ol>
+              <li>Finish model development by this week.</li>
+              <li>Review high-confidence FP/FN examples.</li>
+              <li>Finish any manual-label corrections and regenerate results if needed.</li>
+            </ol>
+          </div>
+          <div class="priority-card should">
+            <h3>Should Do</h3>
+            <ol>
+              <li>Add more Beta data: more substations and longer than one year.</li>
+              <li>Add interval/window IoU reporting to the journal result tables.</li>
+              <li>Prepare final paper figures using the current best model only.</li>
+            </ol>
+          </div>
+          <div class="priority-card could">
+            <h3>Could Do</h3>
+            <ol>
+              <li>Test broader Beta duration/substation coverage after the current paper baseline is stable.</li>
+              <li>Create a standalone HTML artifact for sharing and archiving.</li>
+              <li>Add another feature only if error review shows a repeatable physical pattern.</li>
+            </ol>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="slide" data-title="12. Source Artifacts">
+    <section class="slide" data-title="23. Source Artifacts">
       <div class="slide-inner">
-        <div class="kicker">12. Source Artifacts</div>
+        <div class="kicker">23. Source Artifacts</div>
         <h2>The brief is traceable to existing experiment artifacts</h2>
         <p class="small">This deck is static. It summarises existing artifacts and does not rerun notebooks or experiments.</p>
         <table>
@@ -686,6 +1233,7 @@
             <tr><td><code>C12_multi_model_metric_summary/02_c12_multi_model_metric_summary.csv</code></td><td>m7/m8 deployment baseline metrics under final labels.</td></tr>
             <tr><td><code>C15_feature_distribution_summary/03_c15_feature_separation_summary.csv</code></td><td>Feature separation and component interpretation.</td></tr>
             <tr><td><code>C17_c14_border_minima_diagnostics/03_c17_border_minima_summary.csv</code></td><td>Border-minimum diagnostic findings.</td></tr>
+            <tr><td><code>2026-07-07_experiment_journal_physical_score_loso.html</code></td><td>Regime and variant comparison table from the C9 experiment ladder.</td></tr>
             <tr><td><code>C8_key_result_figures</code> and <code>C9_all_result_visualisations</code></td><td>Existing visual context for comparison, confidence coverage, and ablation.</td></tr>
           </tbody>
         </table>
