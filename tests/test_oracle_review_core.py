@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 WORKFLOW_DIR = (
     Path(__file__).resolve().parents[1]
     / "publication"
@@ -418,7 +417,7 @@ def test_apply_annotation_batch_upserts_and_clears_multiple_days() -> None:
     )
 
     assert len(updated) == 2
-    assert set(zip(updated["substation_id"], updated["date"])) == {
+    assert set(zip(updated["substation_id"], updated["date"], strict=True)) == {
         ("act_D", "2023-10-01"),
         ("act_D", "2023-10-02"),
     }

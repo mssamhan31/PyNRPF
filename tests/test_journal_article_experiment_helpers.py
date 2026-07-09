@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-
 ARTICLE_ROOT = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
 NOTEBOOK_DIR = ARTICLE_ROOT / "notebooks"
 sys.path.insert(0, str(NOTEBOOK_DIR))
@@ -142,16 +141,16 @@ def test_real_data_rankings_match_current_labels() -> None:
     assert beta[["substation_id", "date"]].drop_duplicates().shape[0] == 2_928
     beta_confidence = beta[["substation_id", "date", "confidence"]].drop_duplicates()
     assert beta_confidence["confidence"].value_counts().to_dict() == {
-        "sure": 2363,
-        "unsure": 565,
+        "sure": 2330,
+        "unsure": 598,
     }
     assert gamma["substation_id"].nunique() == 1
     assert gamma["substation_id"].iloc[0] == "beta_B"
     assert len(gamma) == 35_136
     gamma_confidence = gamma[["substation_id", "date", "confidence"]].drop_duplicates()
     assert gamma_confidence["confidence"].value_counts().to_dict() == {
-        "sure": 252,
-        "unsure": 114,
+        "sure": 232,
+        "unsure": 134,
     }
 
 
@@ -359,8 +358,8 @@ def test_beta_confidence_split_metrics_filter_sure_site_days() -> None:
         & (metrics["method"] == "m8_xgb")
         & (metrics["level"] == "day")
     ].iloc[0]
-    assert int(sure_day["support"]) == 2363
-    assert int(sure_day["positive_support"]) == 483
+    assert int(sure_day["support"]) == 2330
+    assert int(sure_day["positive_support"]) == 482
 
 
 def test_correction_pooled_metrics_sum_alpha_loso_counts() -> None:
@@ -463,10 +462,17 @@ def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
     assert "fig04_alpha_site_precision_recall_f1_boxplot" in figures
     assert "fig04_day_of_month_rpf_heatmap_alpha_beta" in figures
     assert "fig05_rpf_events_per_day_doughnut_alpha_beta" in figures
-    assert not any(path.name == "fig01_correction_confusion_matrices.png" for path in figures.values())
-    assert not any(path.name == "fig02_correction_precision_recall_f1.png" for path in figures.values())
+    assert not any(
+        path.name == "fig01_correction_confusion_matrices.png" for path in figures.values()
+    )
+    assert not any(
+        path.name == "fig02_correction_precision_recall_f1.png" for path in figures.values()
+    )
     assert "fig02_gamma_forecast_rmse" in figures
-    assert not any(path.name == "fig02a_gamma_perfect_model_baseline_rmse.png" for path in figures.values())
+    assert not any(
+        path.name == "fig02a_gamma_perfect_model_baseline_rmse.png"
+        for path in figures.values()
+    )
     assert not any(path.name == "fig02b_gamma_forecast_rmse.png" for path in figures.values())
 
 
@@ -529,8 +535,14 @@ def test_gamma_forecast_smoke_rows_cover_placeholder_models_and_conditions() -> 
     baseline_metrics = metrics.loc[metrics["model"] == "perfect_model_baseline"]
     assert len(baseline_metrics) == 3
     assert baseline_metrics["is_placeholder"].eq(False).all()
-    assert metrics.loc[metrics["model"] != "perfect_model_baseline", "is_placeholder"].eq(True).all()
-    manual_baseline = baseline_metrics.loc[baseline_metrics["data_condition"] == "reference_corrected"].iloc[0]
+    assert (
+        metrics.loc[metrics["model"] != "perfect_model_baseline", "is_placeholder"]
+        .eq(True)
+        .all()
+    )
+    manual_baseline = baseline_metrics.loc[
+        baseline_metrics["data_condition"] == "reference_corrected"
+    ].iloc[0]
     assert np.isclose(manual_baseline["rmse_MW"], 0.0)
     assert np.isclose(manual_baseline["mae_MW"], 0.0)
     for condition in metrics["data_condition"].unique():

@@ -1,0 +1,41 @@
+{
+  "model_name": "m9_pbm_physical_score",
+  "cache_name": "physical_score_c14_best",
+  "created_on": "2026-07-09T18:30:37",
+  "regime": "R2_beta_loso_plus_alpha",
+  "variant": "G_b1p0_r1p5_sc0p5",
+  "description": "Pre-overnight best interpretable physical-score model from C14 small weight grid.",
+  "primary_metric": "Beta sure-only day-level F1",
+  "weights": {
+    "F1_bridge_improvement": 1.0,
+    "F2_roughness_improvement": 1.5,
+    "F3_slope_continuity_improvement": 1.0,
+    "F4_duration_plausibility": 1.0,
+    "F5_n_height_ratio": 1.0,
+    "F6_solar_strength_ratio": 1.0,
+    "F7_solar_peak_alignment": 1.0,
+    "F8_site_centered_core_score": 0.5,
+    "F9_site_rank_core_score": 0.0
+  },
+  "threshold_policy": "Per held-out Beta site thresholds selected in C14 under R2_beta_loso_plus_alpha.",
+  "truth_source_for_this_cache": "Current dataset/final/dataset_beta.parquet and refreshed daily feature cache from overnight runner.",
+  "source_experiment": "outputs/260707_physical_score_loso_experiments/C14_small_weight_grid",
+  "important_note": "This cache is a portable decision/debug cache, not the full bulky experiment output folder.",
+  "headline_current_label_metrics": {
+    "regime": "R2_beta_loso_plus_alpha",
+    "variant": "G_b1p0_r1p5_sc0p5",
+    "dataset": "beta",
+    "subset": "beta_sure_only",
+    "summary_scope": "pooled",
+    "substation_id": "",
+    "support": 2330,
+    "positive_support": 482,
+    "tp": 447,
+    "fp": 65,
+    "fn": 35,
+    "tn": 1783,
+    "precision": 0.873046875,
+    "recall": 0.9273858921161826,
+    "f1": 0.8993963782696177
+  }
+}
