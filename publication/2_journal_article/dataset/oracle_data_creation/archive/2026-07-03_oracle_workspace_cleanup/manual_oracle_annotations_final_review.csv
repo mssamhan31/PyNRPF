@@ -8,7 +8,7 @@ act_D,2023-10-06,manual_window,11:30,14:45,sure
 act_D,2023-10-07,manual_window,13:45,14:15,unsure
 act_D,2023-10-08,manual_window,13:15,14:15,unsure
 act_D,2023-10-09,accept_old,,,sure
-act_D,2023-10-10,accept_old,,,sure
+act_D,2023-10-10,accept_old,,,unsure
 act_D,2023-10-11,manual_window,12:45,14:45,sure
 act_D,2023-10-12,manual_window,11:15,13:00,sure
 act_D,2023-10-13,manual_window,10:45,14:45,sure
@@ -27,8 +27,8 @@ act_D,2023-10-25,accept_old,,,sure
 act_D,2023-10-26,accept_old,,,sure
 act_D,2023-10-27,accept_old,,,unsure
 act_D,2023-10-28,accept_old,,,unsure
-act_D,2023-10-29,manual_window,12:00,14:15,sure
-act_D,2023-10-30,manual_window,11:00,13:30,sure
+act_D,2023-10-29,manual_window,12:00,14:15,unsure
+act_D,2023-10-30,manual_window,11:00,13:30,unsure
 act_D,2023-10-31,no_rpf,,,unsure
 act_D,2023-11-01,manual_window,12:30,15:00,unsure
 act_D,2023-11-02,accept_old,,,unsure
@@ -202,7 +202,7 @@ act_D,2024-04-17,no_rpf,,,unsure
 act_D,2024-04-18,accept_old,,,unsure
 act_D,2024-04-19,no_rpf,,,unsure
 act_D,2024-04-20,accept_old,,,sure
-act_D,2024-04-21,accept_old,,,sure
+act_D,2024-04-21,no_rpf,,,unsure
 act_D,2024-04-22,no_rpf,,,unsure
 act_D,2024-04-23,accept_old,,,sure
 act_D,2024-04-24,accept_old,,,sure
@@ -348,7 +348,7 @@ act_D,2024-09-10,accept_old,,,sure
 act_D,2024-09-11,accept_old,,,sure
 act_D,2024-09-12,accept_old,,,unsure
 act_D,2024-09-13,accept_old,,,unsure
-act_D,2024-09-14,manual_window,12:00,13:00,sure
+act_D,2024-09-14,manual_window,12:00,13:00,unsure
 act_D,2024-09-15,accept_old,,,unsure
 act_D,2024-09-16,accept_old,,,sure
 act_D,2024-09-17,accept_old,,,sure
@@ -449,8 +449,8 @@ act_F,2023-12-20,accept_old,,,sure
 act_F,2023-12-21,accept_old,,,sure
 act_F,2023-12-22,manual_window,09:30,16:00,sure
 act_F,2023-12-23,manual_window,09:00,16:15,sure
-act_F,2023-12-24,accept_old,,,sure
-act_F,2023-12-25,no_rpf,,,sure
+act_F,2023-12-24,accept_old,,,unsure
+act_F,2023-12-25,no_rpf,,,unsure
 act_F,2023-12-26,accept_old,,,sure
 act_F,2023-12-27,manual_window,09:15,15:00,unsure
 act_F,2023-12-28,accept_old,,,unsure
@@ -465,7 +465,7 @@ act_F,2024-01-05,accept_old,,,unsure
 act_F,2024-01-06,accept_old,,,unsure
 act_F,2024-01-07,manual_window,09:30,15:45,sure
 act_F,2024-01-08,accept_old,,,sure
-act_F,2024-01-09,accept_old,,,sure
+act_F,2024-01-09,accept_old,,,unsure
 act_F,2024-01-10,accept_old,,,sure
 act_F,2024-01-11,accept_old,,,sure
 act_F,2024-01-12,accept_old,,,sure
@@ -521,7 +521,7 @@ act_F,2024-03-01,accept_old,,,sure
 act_F,2024-03-02,accept_old,,,sure
 act_F,2024-03-03,accept_old,,,sure
 act_F,2024-03-04,accept_old,,,unsure
-act_F,2024-03-05,accept_old,,,sure
+act_F,2024-03-05,accept_old,,,unsure
 act_F,2024-03-06,accept_old,,,sure
 act_F,2024-03-07,accept_old,,,sure
 act_F,2024-03-08,accept_old,,,unsure
@@ -540,7 +540,7 @@ act_F,2024-03-20,no_rpf,,,unsure
 act_F,2024-03-21,accept_old,,,sure
 act_F,2024-03-22,accept_old,,,sure
 act_F,2024-03-23,no_rpf,,,unsure
-act_F,2024-03-24,accept_old,,,sure
+act_F,2024-03-24,accept_old,,,unsure
 act_F,2024-03-25,accept_old,,,sure
 act_F,2024-03-26,accept_old,,,sure
 act_F,2024-03-27,accept_old,,,sure
@@ -628,7 +628,7 @@ act_F,2024-06-16,manual_window,11:30,13:30,sure
 act_F,2024-06-17,accept_old,,,sure
 act_F,2024-06-18,manual_window,10:45,14:00,sure
 act_F,2024-06-19,manual_window,11:00,14:15,sure
-act_F,2024-06-20,manual_window,11:30,13:30,sure
+act_F,2024-06-20,no_rpf,,,sure
 act_F,2024-06-21,accept_old,,,unsure
 act_F,2024-06-22,accept_old,,,sure
 act_F,2024-06-23,accept_old,,,sure
@@ -652,11 +652,11 @@ act_F,2024-07-10,manual_window,11:00,13:45,sure
 act_F,2024-07-11,manual_window,11:00,12:45,sure
 act_F,2024-07-12,manual_window,11:00,13:45,sure
 act_F,2024-07-13,accept_old,,,unsure
-act_F,2024-07-14,manual_window,11:45,13:15,sure
+act_F,2024-07-14,manual_window,11:45,13:15,unsure
 act_F,2024-07-15,manual_window,11:30,14:00,sure
 act_F,2024-07-16,accept_old,,,sure
 act_F,2024-07-17,manual_window,10:45,12:00,sure
-act_F,2024-07-18,accept_old,,,sure
+act_F,2024-07-18,accept_old,,,unsure
 act_F,2024-07-19,manual_window,10:45,14:00,sure
 act_F,2024-07-20,accept_old,,,sure
 act_F,2024-07-21,manual_window,11:15,14:30,sure
@@ -671,7 +671,7 @@ act_F,2024-07-29,manual_window,11:00,15:00,unsure
 act_F,2024-07-30,accept_old,,,sure
 act_F,2024-07-31,accept_old,,,sure
 act_F,2024-08-01,accept_old,,,sure
-act_F,2024-08-02,accept_old,,,sure
+act_F,2024-08-02,accept_old,,,unsure
 act_F,2024-08-03,manual_window,10:45,14:15,sure
 act_F,2024-08-04,accept_old,,,sure
 act_F,2024-08-05,accept_old,,,sure
@@ -824,8 +824,8 @@ act_B,2023-12-29,accept_old,,,sure
 act_B,2023-12-30,accept_old,,,sure
 act_B,2023-12-31,accept_old,,,sure
 act_B,2024-01-01,accept_old,,,sure
-act_B,2024-01-02,accept_old,,,sure
-act_B,2024-01-03,manual_window,10:00,12:30,sure
+act_B,2024-01-02,no_rpf,,,sure
+act_B,2024-01-03,manual_window,10:00,12:30,unsure
 act_B,2024-01-04,no_rpf,,,unsure
 act_B,2024-01-05,no_rpf,,,unsure
 act_B,2024-01-06,manual_window,10:30,16:00,sure
@@ -1270,7 +1270,7 @@ act_G,2024-03-18,accept_old,,,sure
 act_G,2024-03-19,accept_old,,,sure
 act_G,2024-03-20,accept_old,,,sure
 act_G,2024-03-21,accept_old,,,sure
-act_G,2024-03-22,accept_old,,,sure
+act_G,2024-03-22,accept_old,,,unsure
 act_G,2024-03-23,accept_old,,,unsure
 act_G,2024-03-24,accept_old,,,sure
 act_G,2024-03-25,accept_old,,,sure
@@ -1423,9 +1423,9 @@ act_G,2024-08-18,accept_old,,,sure
 act_G,2024-08-19,accept_old,,,sure
 act_G,2024-08-20,accept_old,,,sure
 act_G,2024-08-21,accept_old,,,sure
-act_G,2024-08-22,accept_old,,,sure
+act_G,2024-08-22,accept_old,,,unsure
 act_G,2024-08-23,accept_old,,,sure
-act_G,2024-08-24,accept_old,,,sure
+act_G,2024-08-24,accept_old,,,unsure
 act_G,2024-08-25,accept_old,,,sure
 act_G,2024-08-26,accept_old,,,sure
 act_G,2024-08-27,manual_window,09:00,16:00,sure
@@ -1481,7 +1481,7 @@ act_A,2023-10-15,accept_old,,,sure
 act_A,2023-10-16,no_rpf,,,unsure
 act_A,2023-10-17,accept_old,,,unsure
 act_A,2023-10-18,accept_old,,,sure
-act_A,2023-10-19,accept_old,,,sure
+act_A,2023-10-19,no_rpf,,,unsure
 act_A,2023-10-20,accept_old,,,sure
 act_A,2023-10-21,accept_old,,,sure
 act_A,2023-10-22,accept_old,,,sure
@@ -1861,7 +1861,7 @@ act_E,2023-10-29,accept_old,,,unsure
 act_E,2023-10-30,no_rpf,,,unsure
 act_E,2023-10-31,no_rpf,,,unsure
 act_E,2023-11-01,accept_old,,,sure
-act_E,2023-11-02,accept_old,,,sure
+act_E,2023-11-02,accept_old,,,unsure
 act_E,2023-11-03,accept_old,,,sure
 act_E,2023-11-04,accept_old,,,sure
 act_E,2023-11-05,accept_old,,,sure
@@ -2188,7 +2188,7 @@ act_E,2024-09-20,accept_old,,,sure
 act_E,2024-09-21,accept_old,,,sure
 act_E,2024-09-22,accept_old,,,sure
 act_E,2024-09-23,accept_old,,,sure
-act_E,2024-09-24,accept_old,,,sure
+act_E,2024-09-24,accept_old,,,unsure
 act_E,2024-09-25,accept_old,,,sure
 act_E,2024-09-26,accept_old,,,sure
 act_E,2024-09-27,accept_old,,,sure
