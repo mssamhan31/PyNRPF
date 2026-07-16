@@ -1,0 +1,14 @@
+{
+  "created_at_utc": "2026-07-16T05:23:05.737845+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "02c_m9_pbm_training_regimes",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\02c_m9_pbm_training_regimes\\fig01_regime_precision_recall_f1.png",
+    "outputs\\figures\\02c_m9_pbm_training_regimes\\fig02_thresholds_by_heldout_substation.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\02c_m9_pbm_training_regimes\\fold_thresholds.parquet",
+    "outputs\\figure_sources\\02c_m9_pbm_training_regimes\\pooled_beta_sure_metrics.parquet"
+  ]
+}

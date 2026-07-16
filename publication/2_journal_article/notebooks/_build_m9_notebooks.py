@@ -28,6 +28,35 @@ def code(source: str):
     return nbf.v4.new_code_cell(source.strip())
 
 
+def fast_rerender_cells(slug: str) -> list:
+    return [
+        markdown(
+            """
+## Fast Figure-Only Rerender
+
+Run this cell after the lightweight setup cell whenever only the publication
+figures need to change. It reads persisted results, refreshes validated
+figure-source caches, and does not repeat candidate generation, fitting, or
+evaluation.
+"""
+        ),
+        code(
+            f"""
+from _cached_figure_rendering import render_notebook_figures
+
+RENDER_ONLY = True
+if RENDER_ONLY:
+    RENDERED_FIGURES = render_notebook_figures(
+        ARTICLE_ROOT,
+        {slug!r},
+        refresh_sources=True,
+    )
+    display(pd.Series([str(path) for path in RENDERED_FIGURES], name="rendered_figure"))
+"""
+        ),
+    ]
+
+
 def write_notebook(path: Path, cells: list) -> Path:
     notebook = nbf.v4.new_notebook(cells=cells, metadata=KERNEL_METADATA)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -206,7 +235,7 @@ $$
 | $S(t)$ | Estimated solar generation in MW. |
 | $W$ | One contiguous candidate correction window. |
 | $U_{no}(t)$ | Reconstructed underlying demand if no sign correction is applied. |
-| $U_{corr,W}(t)$ | Reconstructed demand if the sign is corrected only inside $W$. |
+| $U_{corr,W}(t)$ | Underlying demand if the sign is corrected only inside $W$. |
 | $y_{corr,W}(t)$ | Net load written after a positive day decision. |
 """
         ),
@@ -422,7 +451,7 @@ display(
 Panel (a) retains the measurements the method actually sees. Panel (b) changes
 only the demand interpretation inside the candidate window. The bridge is
 anchored outside that window, so it provides a local reference without
-flattening or replacing the reconstructed demand curve.
+flattening or replacing the underlying demand curve.
 """
         ),
         code(
@@ -489,6 +518,7 @@ assert (output_inventory["bytes"] > 0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02a_m9_pbm_method_example"))
     return write_notebook(notebook_dir / "02a_m9_pbm_method_and_example.ipynb", cells)
 
 
@@ -1328,6 +1358,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02c_m9_pbm_training_regimes"))
     return write_notebook(notebook_dir / "02c_m9_pbm_training_regimes.ipynb", cells)
 
 
@@ -1814,6 +1845,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02d_m9_pbm_feature_ablation"))
     return write_notebook(notebook_dir / "02d_m9_pbm_feature_ablation.ipynb", cells)
 
 
@@ -2456,6 +2488,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02e_m9_pbm_weight_optimisation"))
     return write_notebook(notebook_dir / "02e_m9_pbm_weight_optimisation.ipynb", cells)
 
 
@@ -2856,6 +2889,10 @@ regime_labels = {
     "nested_beta_only": "nested Beta",
 }
 figure_data = comparison.loc[comparison["aggregation"].eq("pooled")].copy()
+figure_data = figure_data.loc[
+    figure_data["model"].eq("m9_pbm_optimised_physical")
+    | figure_data["regime"].eq("beta_only")
+].copy()
 figure_data["display_label"] = [
     model_labels[model]
     if model == "m9_pbm_optimised_physical"
@@ -2910,6 +2947,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02f_m9_pbm_ml_comparison"))
     return write_notebook(notebook_dir / "02f_m9_pbm_ml_comparison.ipynb", cells)
 
 
@@ -3524,6 +3562,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("02g_m9_pbm_final_evaluation"))
     return write_notebook(notebook_dir / "02g_m9_pbm_final_evaluation.ipynb", cells)
 
 

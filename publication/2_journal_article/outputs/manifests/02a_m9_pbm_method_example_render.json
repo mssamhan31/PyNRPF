@@ -1,0 +1,12 @@
+{
+  "created_at_utc": "2026-07-16T05:23:03.671279+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "02a_m9_pbm_method_example",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\02a_m9_pbm_method_example\\fig01_m9_pbm_alpha_F_2024-02-17.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\02a_m9_pbm_method_example\\method_example.parquet"
+  ]
+}

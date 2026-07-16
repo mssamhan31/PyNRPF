@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import calendar
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -13,7 +12,16 @@ from typing import Any, Iterable
 import numpy as np
 import pandas as pd
 import yaml
-
+from _journal_figure_style import (
+    BAR_COLORS,
+    COLORS,
+    apply_journal_style,
+    style_axis,
+    style_colorbar,
+)
+from _journal_figure_style import (
+    journal_colormap as shared_journal_colormap,
+)
 
 EXPECTED_COLUMNS = [
     "substation_id",
@@ -28,19 +36,8 @@ CONFIDENCE_COLUMN = "confidence"
 CONFIDENCE_COLUMNS = EXPECTED_COLUMNS + [CONFIDENCE_COLUMN]
 CONFIDENCE_VALUES = {"sure", "unsure"}
 
-JOURNAL_COLORS = {
-    "orange": "#eb932c",
-    "dark_blue": "#22303d",
-    "grey": "#2F4D67",
-    "light_grey": "#5C7D99",
-    "light_white": "#ebe3e3",
-}
-JOURNAL_BAR_COLORS = [
-    JOURNAL_COLORS["dark_blue"],
-    JOURNAL_COLORS["orange"],
-    JOURNAL_COLORS["grey"],
-    JOURNAL_COLORS["light_grey"],
-]
+JOURNAL_COLORS = {key: value for key, value in COLORS.items() if key != "red"}
+JOURNAL_BAR_COLORS = BAR_COLORS
 JOURNAL_LINE_COLORS = {
     "raw": JOURNAL_COLORS["orange"],
     "m8": JOURNAL_COLORS["light_grey"],
@@ -67,6 +64,7 @@ class ArticlePaths:
     metrics: Path
     tables: Path
     figures: Path
+    figure_sources: Path
     manifests: Path
 
 
@@ -111,6 +109,7 @@ def article_paths(article_root: Path, cfg: dict[str, Any]) -> ArticlePaths:
         metrics=output_root / outputs["metrics_dir"],
         tables=output_root / outputs["tables_dir"],
         figures=output_root / outputs["figures_dir"],
+        figure_sources=output_root / outputs["figure_sources_dir"],
         manifests=output_root / outputs["manifests_dir"],
     )
 
@@ -123,6 +122,7 @@ def ensure_output_dirs(paths: ArticlePaths) -> None:
         paths.metrics,
         paths.tables,
         paths.figures,
+        paths.figure_sources,
         paths.manifests,
     ]:
         path.mkdir(parents=True, exist_ok=True)
@@ -134,6 +134,7 @@ def notebook_output_dirs(paths: ArticlePaths, slug: str) -> dict[str, Path]:
         "metrics": paths.metrics / slug,
         "tables": paths.tables / slug,
         "figures": paths.figures / slug,
+        "figure_sources": paths.figure_sources / slug,
     }
     for path in dirs.values():
         path.mkdir(parents=True, exist_ok=True)
@@ -635,17 +636,21 @@ def temporal_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     return pd.concat(summaries, ignore_index=True, sort=False)
 
 
-def rpf_day_of_month_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
+def rpf_daytype_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     site_days = (
         df.groupby(["substation_id", "date"], as_index=False)
         .agg(label_day=("label_interval", "any"))
         .assign(
             month=lambda x: pd.to_datetime(x["date"]).dt.month,
-            day=lambda x: pd.to_datetime(x["date"]).dt.day,
+            daytype=lambda x: np.where(
+                pd.to_datetime(x["date"]).dt.dayofweek.ge(5),
+                "Weekend",
+                "Weekday",
+            ),
         )
     )
     grouped = (
-        site_days.groupby(["month", "day"], as_index=False)
+        site_days.groupby(["month", "daytype"], as_index=False)
         .agg(total_site_days=("label_day", "size"), rpf_site_days=("label_day", "sum"))
         .assign(dataset=dataset_name)
     )
@@ -653,24 +658,17 @@ def rpf_day_of_month_summary(df: pd.DataFrame, dataset_name: str) -> pd.DataFram
         grouped["rpf_site_days"] / grouped["total_site_days"] * 100.0
     )
     grid = pd.MultiIndex.from_product(
-        [range(1, 13), range(1, 32)], names=["month", "day"]
+        [range(1, 13), ["Weekday", "Weekend"]], names=["month", "daytype"]
     ).to_frame(index=False)
-    out = grid.merge(grouped, on=["month", "day"], how="left")
+    out = grid.merge(grouped, on=["month", "daytype"], how="left")
     out["dataset"] = out["dataset"].fillna(dataset_name)
-    out["valid_calendar_day"] = out.apply(
-        lambda row: int(row["day"]) <= calendar.monthrange(2024, int(row["month"]))[1],
-        axis=1,
-    )
     for col in ["total_site_days", "rpf_site_days"]:
-        out.loc[out["valid_calendar_day"] & out[col].isna(), col] = 0
-    out.loc[~out["valid_calendar_day"], ["total_site_days", "rpf_site_days"]] = np.nan
-    out.loc[~out["valid_calendar_day"], "rpf_site_day_pct"] = np.nan
+        out[col] = out[col].fillna(0).astype(int)
     return out[
         [
             "dataset",
             "month",
-            "day",
-            "valid_calendar_day",
+            "daytype",
             "total_site_days",
             "rpf_site_days",
             "rpf_site_day_pct",
@@ -912,10 +910,10 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
         [extract_rpf_events(alpha, "Alpha"), extract_rpf_events(beta, "Beta")],
         ignore_index=True,
     )
-    day_of_month = pd.concat(
+    daytype = pd.concat(
         [
-            rpf_day_of_month_summary(alpha, "Alpha"),
-            rpf_day_of_month_summary(beta, "Beta"),
+            rpf_daytype_summary(alpha, "Alpha"),
+            rpf_daytype_summary(beta, "Beta"),
         ],
         ignore_index=True,
     )
@@ -927,7 +925,7 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
     write_csv(occurrence, dirs["intermediate"] / "02_rpf_occurrence_by_site.csv")
     write_csv(temporal, dirs["intermediate"] / "03_rpf_temporal_summary.csv")
     write_csv(events, dirs["intermediate"] / "04_rpf_event_summary.csv")
-    write_csv(day_of_month, dirs["intermediate"] / "05_rpf_day_of_month_summary.csv")
+    write_csv(daytype, dirs["intermediate"] / "05_rpf_month_daytype_summary.csv")
     write_csv(
         event_count_distribution,
         dirs["intermediate"] / "06_rpf_event_count_by_day_distribution.csv",
@@ -941,7 +939,7 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
         occurrence,
         temporal,
         events,
-        day_of_month,
+        daytype,
         event_count_distribution,
         dirs["figures"],
     )
@@ -966,7 +964,7 @@ def run_characterisation(article_root: Path | None = None) -> dict[str, pd.DataF
         "occurrence": occurrence,
         "temporal": temporal,
         "events": events,
-        "day_of_month": day_of_month,
+        "daytype": daytype,
         "event_count_distribution": event_count_distribution,
         "event_summary": event_summary,
         "figure_paths": figure_paths,
@@ -977,50 +975,30 @@ def _load_matplotlib() -> Any:
     import matplotlib
 
     matplotlib.use("Agg")
-    matplotlib.rcParams.update(
-        {
-            "font.family": "Arial",
-            "axes.edgecolor": JOURNAL_COLORS["dark_blue"],
-            "axes.labelcolor": JOURNAL_COLORS["dark_blue"],
-            "axes.titlecolor": JOURNAL_COLORS["dark_blue"],
-            "xtick.color": JOURNAL_COLORS["dark_blue"],
-            "ytick.color": JOURNAL_COLORS["dark_blue"],
-            "text.color": JOURNAL_COLORS["dark_blue"],
-            "figure.facecolor": "white",
-            "axes.facecolor": "white",
-            "savefig.facecolor": "white",
-            "legend.frameon": False,
-        }
-    )
     import matplotlib.pyplot as plt
 
+    apply_journal_style()
     return plt
 
 
 def journal_colormap(name: str = "journal_heat") -> Any:
-    from matplotlib.colors import LinearSegmentedColormap
-
-    return LinearSegmentedColormap.from_list(
-        name,
-        [
-            JOURNAL_COLORS["light_white"],
-            JOURNAL_COLORS["light_grey"],
-            JOURNAL_COLORS["orange"],
-            JOURNAL_COLORS["dark_blue"],
-        ],
-    )
+    return shared_journal_colormap(name)
 
 
 def style_axis_grid(ax: Any, axis: str = "y") -> None:
-    ax.set_axisbelow(True)
-    ax.grid(axis=axis, color=JOURNAL_COLORS["light_white"], linewidth=0.8, alpha=0.7)
+    style_axis(
+        ax,
+        grid_axis=axis,
+        x_continuous=axis == "x",
+        y_continuous=axis == "y",
+    )
 
 
 def write_characterisation_figures(
     occurrence: pd.DataFrame,
     temporal: pd.DataFrame,
     events: pd.DataFrame,
-    day_of_month: pd.DataFrame,
+    daytype: pd.DataFrame,
     event_count_distribution: pd.DataFrame,
     figures_dir: Path,
 ) -> list[Path]:
@@ -1032,6 +1010,7 @@ def write_characterisation_figures(
         axes,
         ["Alpha", "Beta"],
         [JOURNAL_COLORS["dark_blue"], JOURNAL_COLORS["orange"]],
+        strict=True,
     ):
         plot_df = (
             occurrence.loc[occurrence["dataset"] == dataset]
@@ -1059,12 +1038,12 @@ def write_characterisation_figures(
     fig.suptitle("RPF day percentage by site", fontsize=16)
     fig.tight_layout()
     path = figures_dir / "fig01_site_rpf_day_counts_alpha_beta.png"
-    fig.savefig(path, dpi=200)
+    fig.savefig(path, dpi=300)
     figure_paths.append(path)
     plt.close(fig)
 
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 4), sharey=True)
-    for ax, dataset in zip(axes, ["Alpha", "Beta"]):
+    for ax, dataset in zip(axes, ["Alpha", "Beta"], strict=True):
         month_hour = temporal[
             (temporal["dataset"] == dataset) & (temporal["level"] == "month_hour")
         ]
@@ -1087,10 +1066,9 @@ def write_characterisation_figures(
     axes[0].set_ylabel("Month", fontsize=13)
     fig.suptitle("RPF interval percentage\nby month and hour", fontsize=16, y=1.08)
     colorbar = fig.colorbar(image, ax=axes.ravel().tolist(), label="% intervals")
-    colorbar.ax.tick_params(labelsize=11)
-    colorbar.set_label("% intervals", fontsize=13)
+    style_colorbar(colorbar)
     path = figures_dir / "fig02_month_hour_heatmap_alpha_beta.png"
-    fig.savefig(path, dpi=200, bbox_inches="tight", pad_inches=0.15)
+    fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.15)
     figure_paths.append(path)
     plt.close(fig)
 
@@ -1119,35 +1097,32 @@ def write_characterisation_figures(
         style_axis_grid(ax)
         fig.tight_layout()
         path = figures_dir / "fig03_event_duration_distribution_alpha_beta.png"
-        fig.savefig(path, dpi=200)
+        fig.savefig(path, dpi=300)
         figure_paths.append(path)
         plt.close(fig)
 
-    if not day_of_month.empty:
+    if not daytype.empty:
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 4.8), sharey=True)
         cmap = journal_colormap("rpf_heat").copy()
         cmap.set_bad(color=JOURNAL_COLORS["light_white"])
-        for ax, dataset in zip(axes, ["Alpha", "Beta"]):
-            subset = day_of_month.loc[day_of_month["dataset"] == dataset].copy()
-            heat = subset.pivot(index="month", columns="day", values="rpf_site_day_pct")
-            heat = heat.reindex(index=range(1, 13), columns=range(1, 32))
+        for ax, dataset in zip(axes, ["Alpha", "Beta"], strict=True):
+            subset = daytype.loc[daytype["dataset"] == dataset].copy()
+            heat = subset.pivot(index="month", columns="daytype", values="rpf_site_day_pct")
+            heat = heat.reindex(index=range(1, 13), columns=["Weekday", "Weekend"])
             masked = np.ma.masked_invalid(heat.to_numpy(dtype=float))
             image = ax.imshow(masked, aspect="auto", origin="lower", cmap=cmap, vmin=0)
-            day_ticks = list(range(0, 31, 5))
-            ax.set_xticks(day_ticks)
-            ax.set_xticklabels([str(day + 1) for day in day_ticks], fontsize=10)
+            ax.set_xticks([0, 1], ["Weekday", "Weekend"])
             ax.set_yticks(range(12))
-            ax.set_yticklabels([str(month) for month in range(1, 13)], fontsize=10)
-            ax.set_xlabel("Day of month", fontsize=12)
-            ax.set_title(dataset, fontsize=14)
-            ax.grid(False)
-        axes[0].set_ylabel("Month", fontsize=12)
-        fig.suptitle("RPF site-day percentage by calendar day", fontsize=15, y=1.02)
+            ax.set_yticklabels([str(month) for month in range(1, 13)])
+            ax.set_xlabel("Daytype")
+            ax.set_title(dataset)
+            style_axis(ax, grid_axis=None, y_continuous=False)
+        axes[0].set_ylabel("Month")
+        fig.suptitle("RPF site-day percentage by month and daytype", fontsize=15, y=1.02)
         colorbar = fig.colorbar(image, ax=axes.ravel().tolist(), label="RPF site-days (%)")
-        colorbar.ax.tick_params(labelsize=10)
-        colorbar.set_label("RPF site-days (%)", fontsize=12)
-        path = figures_dir / "fig04_day_of_month_rpf_heatmap_alpha_beta.png"
-        fig.savefig(path, dpi=250, bbox_inches="tight", pad_inches=0.15)
+        style_colorbar(colorbar)
+        path = figures_dir / "fig04_month_daytype_rpf_heatmap_alpha_beta.png"
+        fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.15)
         figure_paths.append(path)
         plt.close(fig)
 
@@ -1161,7 +1136,7 @@ def write_characterisation_figures(
             "#8f5f2a",
         ]
         fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9.2, 4.4))
-        for ax, dataset in zip(axes, ["Alpha", "Beta"]):
+        for ax, dataset in zip(axes, ["Alpha", "Beta"], strict=True):
             subset = event_count_distribution.loc[
                 event_count_distribution["dataset"] == dataset
             ].copy()
@@ -1199,7 +1174,7 @@ def write_characterisation_figures(
 
         handles = [
             Patch(facecolor=colour, label=label)
-            for colour, label in zip(colours, category_order)
+            for colour, label in zip(colours, category_order, strict=True)
         ]
         fig.legend(
             handles=handles,
@@ -1213,7 +1188,7 @@ def write_characterisation_figures(
         fig.suptitle("RPF event-count structure by day", fontsize=15, y=0.98)
         fig.subplots_adjust(left=0.04, right=0.98, top=0.82, bottom=0.25, wspace=0.10)
         path = figures_dir / "fig05_rpf_events_per_day_doughnut_alpha_beta.png"
-        fig.savefig(path, dpi=250, bbox_inches="tight", pad_inches=0.12)
+        fig.savefig(path, dpi=300, bbox_inches="tight", pad_inches=0.12)
         figure_paths.append(path)
         plt.close(fig)
     return figure_paths
@@ -1536,10 +1511,13 @@ def predict_m8_bundle(
     article_root: Path,
 ) -> pd.DataFrame:
     _ensure_package_import(article_root)
-    from pynrpf.plugins.m8_xgb import _align_features
-    from pynrpf.plugins.m8_xgb import _bundle_section
-    from pynrpf.plugins.m8_xgb import _feature_cfg
-    from pynrpf.plugins.m8_xgb import build_xgb1_features, build_xgb2_features
+    from pynrpf.plugins.m8_xgb import (
+        _align_features,
+        _bundle_section,
+        _feature_cfg,
+        build_xgb1_features,
+        build_xgb2_features,
+    )
 
     cols = cfg["columns"]
     m8_cfg = cfg["correction"]["m8_xgb"]
@@ -3162,9 +3140,9 @@ def publication_expected_figures(paths: ArticlePaths) -> dict[str, Path]:
         "fig03_event_duration_distribution_alpha_beta": paths.figures
         / "01_characterisation"
         / "fig03_event_duration_distribution_alpha_beta.png",
-        "fig04_day_of_month_rpf_heatmap_alpha_beta": paths.figures
+        "fig04_month_daytype_rpf_heatmap_alpha_beta": paths.figures
         / "01_characterisation"
-        / "fig04_day_of_month_rpf_heatmap_alpha_beta.png",
+        / "fig04_month_daytype_rpf_heatmap_alpha_beta.png",
         "fig05_rpf_events_per_day_doughnut_alpha_beta": paths.figures
         / "01_characterisation"
         / "fig05_rpf_events_per_day_doughnut_alpha_beta.png",

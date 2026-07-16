@@ -42,6 +42,7 @@ class M9Paths:
     metrics: Path
     tables: Path
     figures: Path
+    figure_sources: Path
     manifests: Path
 
 
@@ -104,6 +105,7 @@ def resolve_paths(
         metrics=output_root / output_cfg["metrics_dir"],
         tables=output_root / output_cfg["tables_dir"],
         figures=output_root / output_cfg["figures_dir"],
+        figure_sources=output_root / output_cfg["figure_sources_dir"],
         manifests=output_root / output_cfg["manifests_dir"],
     )
 
@@ -116,6 +118,7 @@ def output_dirs(paths: M9Paths, slug: str) -> dict[str, Path]:
         "metrics": paths.metrics / slug,
         "tables": paths.tables / slug,
         "figures": paths.figures / slug,
+        "figure_sources": paths.figure_sources / slug,
     }
     for directory in [*result.values(), paths.manifests]:
         directory.mkdir(parents=True, exist_ok=True)

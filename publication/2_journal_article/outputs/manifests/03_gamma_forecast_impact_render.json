@@ -1,0 +1,18 @@
+{
+  "created_at_utc": "2026-07-16T05:23:20.079260+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "03_gamma_forecast_impact",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\03_gamma_forecast_impact\\fig01_gamma_raw_m9_manual_example_week.png",
+    "outputs\\figures\\03_gamma_forecast_impact\\fig02_gamma_data_error_rmse.png",
+    "outputs\\figures\\03_gamma_forecast_impact\\fig03_gamma_forecast_rmse.png",
+    "outputs\\figures\\03_gamma_forecast_impact\\fig04_gamma_forecast_residuals.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\03_gamma_forecast_impact\\data_error_metrics.parquet",
+    "outputs\\figure_sources\\03_gamma_forecast_impact\\forecast_metrics.parquet",
+    "outputs\\figure_sources\\03_gamma_forecast_impact\\forecast_predictions.parquet",
+    "outputs\\figure_sources\\03_gamma_forecast_impact\\gamma_series.parquet"
+  ]
+}

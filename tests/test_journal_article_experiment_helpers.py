@@ -424,27 +424,24 @@ def test_characterisation_new_temporal_event_summaries() -> None:
         ignore_index=True,
     )
 
-    day_summary = pd.concat(
+    daytype_summary = pd.concat(
         [
-            helpers.rpf_day_of_month_summary(alpha, "Alpha"),
-            helpers.rpf_day_of_month_summary(beta, "Beta"),
+            helpers.rpf_daytype_summary(alpha, "Alpha"),
+            helpers.rpf_daytype_summary(beta, "Beta"),
         ],
         ignore_index=True,
     )
     event_counts = helpers.rpf_event_count_by_day(events)
 
-    assert set(day_summary["month"]) == set(range(1, 13))
-    assert set(day_summary["day"]) == set(range(1, 32))
-    assert day_summary.loc[
-        (day_summary["month"] == 4) & (day_summary["day"] == 31),
-        "valid_calendar_day",
-    ].eq(False).all()
-    assert day_summary.loc[
-        (day_summary["month"] == 4) & (day_summary["day"] == 31),
-        "total_site_days",
-    ].isna().all()
+    observed_site_days = sum(
+        len(frame[["substation_id", "date"]].drop_duplicates()) for frame in [alpha, beta]
+    )
+    assert set(daytype_summary["month"]) == set(range(1, 13))
+    assert set(daytype_summary["daytype"]) == {"Weekday", "Weekend"}
+    assert int(daytype_summary["total_site_days"].sum()) == observed_site_days
 
     expected_rpf_site_days = events[["dataset", "substation_id", "date"]].drop_duplicates()
+    assert int(daytype_summary["rpf_site_days"].sum()) == len(expected_rpf_site_days)
     assert int(event_counts["n_rpf_site_days"].sum()) == len(expected_rpf_site_days)
     assert set(event_counts["plot_category"]).issubset({"1", "2", "3", "4", "5+"})
 
@@ -460,7 +457,7 @@ def test_publication_inventory_uses_new_notebook2_figure_names() -> None:
     assert "fig02b_precision_recall_f1_interval" in figures
     assert "fig03_beta_site_precision_recall_f1_boxplot" in figures
     assert "fig04_alpha_site_precision_recall_f1_boxplot" in figures
-    assert "fig04_day_of_month_rpf_heatmap_alpha_beta" in figures
+    assert "fig04_month_daytype_rpf_heatmap_alpha_beta" in figures
     assert "fig05_rpf_events_per_day_doughnut_alpha_beta" in figures
     assert not any(
         path.name == "fig01_correction_confusion_matrices.png" for path in figures.values()

@@ -25,6 +25,34 @@ def code(source: str):
     return nbf.v4.new_code_cell(source.strip())
 
 
+def fast_rerender_cells(slug: str) -> list:
+    return [
+        markdown(
+            """
+## Fast Figure-Only Rerender
+
+Run this cell after the lightweight setup cell whenever only the publication
+figures need to change. It reads persisted results, refreshes validated
+figure-source caches, and does not repeat correction or forecast fitting.
+"""
+        ),
+        code(
+            f"""
+from _cached_figure_rendering import render_notebook_figures
+
+RENDER_ONLY = True
+if RENDER_ONLY:
+    RENDERED_FIGURES = render_notebook_figures(
+        ARTICLE_ROOT,
+        {slug!r},
+        refresh_sources=True,
+    )
+    display(pd.Series([str(path) for path in RENDERED_FIGURES], name="rendered_figure"))
+"""
+        ),
+    ]
+
+
 def write_notebook(path: Path, cells: list) -> Path:
     notebook = nbf.v4.new_notebook(cells=cells, metadata=KERNEL_METADATA)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -492,6 +520,7 @@ assert inventory["exists"].all() and inventory["bytes"].gt(0).all()
 """
         ),
     ]
+    cells.extend(fast_rerender_cells("03_gamma_forecast_impact"))
     return write_notebook(notebook_dir / "03_gamma_forecast_impact.ipynb", cells)
 
 

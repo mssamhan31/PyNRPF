@@ -1,0 +1,19 @@
+{
+  "created_at_utc": "2026-07-16T05:23:17.107038+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "02g_m9_pbm_final_evaluation",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig01_final_confusion_matrices.png",
+    "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig02_window_iou_distribution.png",
+    "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig03_energy_metric_summary.png",
+    "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig04_auto_accept_manual_review_and_errors.png",
+    "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig05_auto_accept_precision_recall_f1.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\02g_m9_pbm_final_evaluation\\coverage_metrics.parquet",
+    "outputs\\figure_sources\\02g_m9_pbm_final_evaluation\\day_metrics.parquet",
+    "outputs\\figure_sources\\02g_m9_pbm_final_evaluation\\energy_metrics.parquet",
+    "outputs\\figure_sources\\02g_m9_pbm_final_evaluation\\window_audit.parquet"
+  ]
+}

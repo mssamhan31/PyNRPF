@@ -55,6 +55,7 @@ outputs:
   metrics_dir: "metrics"
   tables_dir: "tables"
   figures_dir: "figures"
+  figure_sources_dir: "figure_sources"
   manifests_dir: "manifests"
 
 execution:

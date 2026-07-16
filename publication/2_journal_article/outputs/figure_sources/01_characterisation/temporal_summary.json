@@ -1,0 +1,23 @@
+{
+  "columns": [
+    "month",
+    "total_intervals",
+    "rpf_intervals",
+    "dataset",
+    "level",
+    "rpf_interval_pct",
+    "season",
+    "hour",
+    "is_weekend"
+  ],
+  "created_at_utc": "2026-07-16T04:41:27.394767+00:00",
+  "file": "temporal_summary.parquet",
+  "required_columns": [
+    "dataset",
+    "level",
+    "rpf_interval_pct"
+  ],
+  "rows": 660,
+  "schema_version": 1,
+  "sha256": "12e9806b77ffc06250a091c8851359efdab740f5df060523d57d99983d34c1c9"
+}

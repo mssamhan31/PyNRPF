@@ -8,40 +8,15 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-COLORS = {
-    "orange": "#EB932C",
-    "dark_blue": "#22303D",
-    "teal": "#25877D",
-    "grey": "#5C6B73",
-    "light_grey": "#C7D0D5",
-    "light_white": "#F4F1ED",
-    "red": "#B64A4A",
-}
-
-
-def apply_journal_style() -> None:
-    """Apply a compact, print-readable style shared by article figures."""
-
-    plt.rcParams.update(
-        {
-            "figure.facecolor": "white",
-            "axes.facecolor": "white",
-            "axes.edgecolor": COLORS["dark_blue"],
-            "axes.labelcolor": COLORS["dark_blue"],
-            "axes.titlecolor": COLORS["dark_blue"],
-            "axes.grid": True,
-            "grid.color": "#E5E8EA",
-            "grid.linewidth": 0.7,
-            "font.size": 9,
-            "axes.titlesize": 10,
-            "axes.labelsize": 9,
-            "legend.fontsize": 8,
-            "xtick.color": COLORS["dark_blue"],
-            "ytick.color": COLORS["dark_blue"],
-            "savefig.facecolor": "white",
-        }
-    )
+from _journal_figure_style import (
+    COLORS,
+    align_twin_y_axes,
+    apply_journal_style,
+    journal_colormap,
+    style_axes,
+    style_axis,
+    style_colorbar,
+)
 
 
 def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
@@ -57,27 +32,36 @@ def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
 
     start = candidate["timestamp"].min()
     end = candidate["timestamp"].max()
-    fig, axes = plt.subplots(2, 1, figsize=(10.2, 6.8), sharex=True)
+    fig = plt.figure(figsize=(10.2, 8.8))
+    grid = fig.add_gridspec(
+        4,
+        1,
+        height_ratios=(0.30, 1.0, 0.50, 1.0),
+        hspace=0.08,
+    )
+    header_axes = [fig.add_subplot(grid[0]), fig.add_subplot(grid[2])]
+    axes = [fig.add_subplot(grid[1]), fig.add_subplot(grid[3])]
+    axes[1].sharex(axes[0])
+    for header_axis in header_axes:
+        header_axis.set_axis_off()
 
     axes[0].plot(
         data["timestamp"],
         data["observed_net_load_MW"],
-        color=COLORS["orange"],
+        color=COLORS["dark_blue"],
         linewidth=2.0,
         label=r"Observed net load, $y(t)$",
     )
     axes[0].plot(
         data["timestamp"],
         data["solar_generation_MW"],
-        color=COLORS["teal"],
+        color=COLORS["orange"],
         linewidth=1.8,
         label=r"Solar generation, $S(t)$",
     )
     axes[0].axvspan(start, end, color=COLORS["light_grey"], alpha=0.42, label=r"Window, $W$")
     axes[0].axhline(0, color=COLORS["grey"], linewidth=0.8)
     axes[0].set_ylabel("Power (MW)")
-    axes[0].set_title("(a) Observed readings")
-    axes[0].legend(loc="upper left", frameon=False, ncol=3)
 
     axes[1].plot(
         data["timestamp"],
@@ -97,7 +81,7 @@ def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
     axes[1].plot(
         data.loc[bridge, "timestamp"],
         data.loc[bridge, "linear_bridge_MW"],
-        color="black",
+        color=COLORS["grey"],
         linewidth=1.6,
         linestyle="--",
         label=r"Linear bridge, $L_W(t)$",
@@ -107,7 +91,7 @@ def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
         anchors["uncorrected_demand_MW"],
         marker="D",
         s=[42, 68],
-        color=[COLORS["teal"], COLORS["red"]],
+        color=[COLORS["light_grey"], COLORS["orange"]],
         edgecolor="white",
         linewidth=0.8,
         zorder=5,
@@ -124,17 +108,42 @@ def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
             color=COLORS["dark_blue"],
         )
     axes[1].axvspan(start, end, color=COLORS["light_grey"], alpha=0.42)
-    axes[1].set_ylabel("Reconstructed demand (MW)")
+    axes[1].set_ylabel("Underlying demand (MW)")
     axes[1].set_xlabel("Time on 17 February 2024")
-    axes[1].set_title("(b) Two interpretations of underlying demand")
-    axes[1].legend(loc="upper left", frameon=False, ncol=2)
     axes[1].xaxis.set_major_locator(mdates.HourLocator(interval=2))
     axes[1].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 
+    for header_axis, axis, title, columns in zip(
+        header_axes,
+        axes,
+        ["(a) Observed readings", "(b) Two interpretations of underlying demand"],
+        [3, 2],
+        strict=True,
+    ):
+        header_axis.text(
+            0.5,
+            0.98,
+            title,
+            ha="center",
+            va="top",
+            fontsize=15,
+            color=COLORS["dark_blue"],
+        )
+        handles, labels = axis.get_legend_handles_labels()
+        header_axis.legend(
+            handles,
+            labels,
+            loc="lower center",
+            bbox_to_anchor=(0.5, 0.0),
+            frameon=False,
+            ncol=columns,
+        )
+
     for axis in axes:
-        axis.spines[["top", "right"]].set_visible(False)
         axis.margins(x=0)
-    fig.tight_layout(h_pad=1.3)
+    style_axes(axes, x_dates=True, y_continuous=True)
+    axes[0].tick_params(labelbottom=False)
+    fig.subplots_adjust(left=0.11, right=0.98, top=0.98, bottom=0.09)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
@@ -142,7 +151,7 @@ def plot_method_example(plot_data: pd.DataFrame, output_path: Path) -> Path:
 
 
 def plot_regime_metrics(metrics: pd.DataFrame, output_path: Path) -> Path:
-    """Grouped precision/recall/F1 bars for the three training regimes."""
+    """Group precision/recall/F1 with training-regime variants inside each group."""
 
     apply_journal_style()
     data = metrics.copy()
@@ -152,26 +161,30 @@ def plot_regime_metrics(metrics: pd.DataFrame, output_path: Path) -> Path:
         "beta_plus_alpha": "Beta + Alpha",
         "alpha_only": "Alpha only",
     }
-    data["regime_label"] = data["regime"].map(regime_labels)
+    regime_order = ["beta_only", "beta_plus_alpha", "alpha_only"]
+    data = data.set_index("regime").loc[regime_order]
     figure, axis = plt.subplots(figsize=(8.2, 4.5))
-    centers = range(len(data))
+    centers = np.arange(len(score_columns))
     width = 0.23
-    for offset, (score, color) in enumerate(
-        zip(
-            score_columns,
-            [COLORS["dark_blue"], COLORS["orange"], COLORS["teal"]],
-            strict=True,
-        )
+    for offset, (regime, color) in enumerate(
+        zip(regime_order, [COLORS["dark_blue"], COLORS["orange"], COLORS["grey"]], strict=True)
     ):
-        positions = [center + (offset - 1) * width for center in centers]
-        bars = axis.bar(positions, data[score], width=width, color=color, label=score.title())
-        axis.bar_label(bars, fmt="%.3f", padding=2, fontsize=7)
-    axis.set_xticks(list(centers), data["regime_label"])
-    axis.set_ylim(0, 1.08)
+        positions = centers + (offset - 1) * width
+        values = data.loc[regime, score_columns].to_numpy(dtype=float)
+        bars = axis.bar(
+            positions,
+            values,
+            width=width,
+            color=color,
+            label=regime_labels[regime],
+        )
+        axis.bar_label(bars, fmt="%.3f", padding=2, fontsize=9)
+    axis.set_xticks(centers, ["Precision", "Recall", "F1"])
+    axis.set_ylim(0, 1.18)
     axis.set_ylabel("Held-out Beta sure score")
     axis.set_title("Training-regime comparison for equal-weight F1/F3/F4")
     axis.legend(frameon=False, ncol=3, loc="upper center")
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -206,7 +219,7 @@ def plot_regime_thresholds(thresholds: pd.DataFrame, output_path: Path) -> Path:
     axis.set_ylabel(r"Selected threshold, $\tau$")
     axis.set_title("Training-only threshold selected for each outer fold")
     axis.legend(frameon=False, ncol=2)
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -253,8 +266,12 @@ def plot_ablation_by_feature_count(
     axis.set_xlabel("Number of physical features")
     axis.set_ylabel("Held-out Beta sure F1")
     axis.set_title("Self-consistent equal-weight feature ablation")
-    axis.legend(frameon=False)
-    axis.spines[["top", "right"]].set_visible(False)
+    score_min = float(metrics["beta_sure_f1"].min())
+    score_max = float(best_by_count["beta_sure_f1"].max())
+    score_span = max(score_max - score_min, 0.1)
+    axis.set_ylim(score_min - 0.05 * score_span, score_max + 0.22 * score_span)
+    axis.legend(frameon=False, ncol=2, loc="upper center")
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -280,7 +297,7 @@ def plot_top_ablation_subsets(metrics: pd.DataFrame, output_path: Path, top_n: i
     axis.set_xlim(max(0, data["beta_sure_f1"].min() - 0.04), 1.0)
     axis.set_xlabel("Held-out Beta sure F1")
     axis.set_title(f"Top {top_n} equal-weight subsets")
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis, grid_axis="x", x_continuous=True, y_continuous=False)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -293,20 +310,44 @@ def plot_ablation_feature_evidence(feature_table: pd.DataFrame, output_path: Pat
 
     apply_journal_style()
     data = feature_table.sort_values("feature_number")
+    feature_labels = {
+        1: "F1 Bridge",
+        2: "F2 Roughness",
+        3: "F3 Slope continuity",
+        4: "F4 Duration",
+        5: "F5 N-height",
+        6: "F6 Solar strength",
+        7: "F7 Solar alignment",
+        8: "F8 Centered core",
+        9: "F9 Ranked core",
+    }
+    data["feature_label"] = data["feature_number"].map(feature_labels)
     figure, axes = plt.subplots(1, 2, figsize=(9.2, 4.4), sharey=True)
-    axes[0].barh(data["feature_short"], data["top_25_frequency_pct"], color=COLORS["teal"])
+    axes[0].barh(
+        data["feature_label"],
+        data["top_25_frequency_pct"],
+        color=COLORS["light_grey"],
+    )
     axes[0].set_xlabel("Frequency in top 25 subsets (%)")
     axes[0].set_title("Top-subset frequency")
     effect_colors = [
         COLORS["orange"] if value >= 0 else COLORS["red"]
         for value in data["mean_paired_delta_f1"]
     ]
-    axes[1].barh(data["feature_short"], data["mean_paired_delta_f1"], color=effect_colors)
+    axes[1].barh(
+        data["feature_label"],
+        data["mean_paired_delta_f1"],
+        color=effect_colors,
+    )
     axes[1].axvline(0, color=COLORS["grey"], linewidth=0.9)
     axes[1].set_xlabel("Mean paired change in Beta sure F1")
     axes[1].set_title("Marginal effect across matched subsets")
-    for axis in axes:
-        axis.spines[["top", "right"]].set_visible(False)
+    style_axes(
+        axes,
+        grid_axis="x",
+        x_continuous=True,
+        y_continuous=False,
+    )
     figure.tight_layout(w_pad=1.8)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -329,7 +370,7 @@ def plot_weight_simplex(search_results: pd.DataFrame, output_path: Path) -> Path
         data["simplex_x"],
         data["simplex_y"],
         c=data["inner_macro_f1"],
-        cmap="viridis",
+        cmap=journal_colormap("weight_search"),
         s=18,
         alpha=0.75,
         edgecolor="none",
@@ -349,20 +390,37 @@ def plot_weight_simplex(search_results: pd.DataFrame, output_path: Path) -> Path
     axis.annotate(
         "Selected full-Beta weight",
         (best["simplex_x"], best["simplex_y"]),
-        xytext=(10, -12),
-        textcoords="offset points",
-        fontsize=8,
+        xytext=(0.07, 0.74),
+        textcoords="axes fraction",
+        ha="left",
+        va="center",
+        fontsize=10,
         color=COLORS["dark_blue"],
+        bbox={"facecolor": "white", "edgecolor": "none", "pad": 2.5},
+        arrowprops={
+            "arrowstyle": "->",
+            "color": COLORS["dark_blue"],
+            "linewidth": 1.0,
+            "connectionstyle": "arc3,rad=-0.12",
+        },
     )
-    axis.text(-0.02, -0.02, "F1 bridge", ha="right", va="top")
-    axis.text(1.02, -0.02, "F3 slope", ha="left", va="top")
+    axis.text(0.02, -0.02, "F1 bridge", ha="left", va="top")
+    axis.text(0.98, -0.02, "F3 slope", ha="right", va="top")
     axis.text(0.5, np.sqrt(3) / 2 + 0.015, "F4 duration", ha="center", va="bottom")
     axis.set_title("Grid and random weight search on the positive simplex", pad=34)
     axis.set_aspect("equal")
     axis.set_xlim(-0.10, 1.10)
     axis.set_ylim(-0.08, 0.98)
-    axis.axis("off")
-    figure.colorbar(points, ax=axis, shrink=0.72, label="Inner macro-substation F1")
+    axis.set_xticks([])
+    axis.set_yticks([])
+    style_axis(axis, grid_axis=None, y_continuous=False)
+    colorbar = figure.colorbar(
+        points,
+        ax=axis,
+        shrink=0.72,
+        label="Inner macro-substation F1",
+    )
+    style_colorbar(colorbar)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.12)
@@ -382,17 +440,17 @@ def plot_selected_weights(selected: pd.DataFrame, output_path: Path) -> Path:
     for column, label, color in [
         ("weight_F1", "F1 bridge", COLORS["dark_blue"]),
         ("weight_F3", "F3 slope", COLORS["orange"]),
-        ("weight_F4", "F4 duration", COLORS["teal"]),
+        ("weight_F4", "F4 duration", COLORS["grey"]),
     ]:
         values = data[column].to_numpy(dtype=float)
         axis.bar(data["heldout_substation"], values, bottom=bottom, label=label, color=color)
         bottom += values
-    axis.set_ylim(0, 1.0)
+    axis.set_ylim(0, 1.18)
     axis.set_xlabel("Held-out Beta substation")
     axis.set_ylabel("Selected unit-sum weight")
     axis.set_title("Nested inner-LOSO weights used for each outer prediction")
     axis.legend(frameon=False, ncol=3, loc="upper center")
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -405,25 +463,27 @@ def plot_physical_vs_ml(metrics: pd.DataFrame, output_path: Path) -> Path:
 
     apply_journal_style()
     data = metrics.copy().reset_index(drop=True)
-    figure, axis = plt.subplots(figsize=(12.0, 5.2))
+    figure, axis = plt.subplots(figsize=(9.2, 5.2))
     centers = np.arange(len(data))
     width = 0.24
     for offset, (metric, color) in enumerate(
         zip(
             ["precision", "recall", "f1"],
-            [COLORS["dark_blue"], COLORS["orange"], COLORS["teal"]],
+            [COLORS["dark_blue"], COLORS["orange"], COLORS["grey"]],
             strict=True,
         )
     ):
         positions = centers + (offset - 1) * width
         bars = axis.bar(positions, data[metric], width=width, color=color, label=metric.title())
-        axis.bar_label(bars, fmt="%.2f", padding=2, fontsize=6, rotation=90)
-    axis.set_xticks(centers, data["display_label"], rotation=28, ha="right")
+        axis.bar_label(bars, fmt="%.2f", padding=2, fontsize=9, rotation=90)
+    display_labels = data["display_label"].str.replace(" / ", "\n", regex=False)
+    display_labels = display_labels.str.replace("Optimised physical", "Optimised\nphysical")
+    axis.set_xticks(centers, display_labels)
     axis.set_ylim(0, 1.10)
     axis.set_ylabel("Held-out Beta sure score")
-    axis.set_title("Deterministic physical model and three-feature ML comparison")
+    axis.set_title("Physical model and Beta-only ML comparison")
     axis.legend(frameon=False, ncol=3, loc="upper center")
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -447,7 +507,7 @@ def plot_final_confusion_matrices(day_metrics: pd.DataFrame, output_path: Path) 
     ):
         row = pooled.loc[scope]
         matrix = np.array([[row["tn"], row["fp"]], [row["fn"], row["tp"]]])
-        axis.imshow(matrix, cmap="Blues")
+        axis.imshow(matrix, cmap=journal_colormap(f"confusion_{scope}"))
         for row_index in range(2):
             for column_index in range(2):
                 axis.text(
@@ -466,7 +526,7 @@ def plot_final_confusion_matrices(day_metrics: pd.DataFrame, output_path: Path) 
         axis.set_xticks([0, 1], ["Predicted no", "Predicted RPF"])
         axis.set_yticks([0, 1], ["True no", "True RPF"])
         axis.set_title(title)
-        axis.grid(False)
+        style_axis(axis, grid_axis=None, y_continuous=False)
     figure.suptitle("Nested outer-fold day decisions")
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -503,7 +563,7 @@ def plot_window_iou_distribution(window_audit: pd.DataFrame, output_path: Path) 
     axis.set_ylabel("Beta sure substation-days")
     axis.set_title("Localisation of nested outer-fold correction windows")
     axis.legend(frameon=False)
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis, x_continuous=True)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -523,7 +583,12 @@ def plot_energy_summary(energy_metrics: pd.DataFrame, output_path: Path) -> Path
         {"beta_sure": "Beta sure", "beta_all": "Beta all"}
     )
     metrics = ["energy_precision", "energy_recall", "energy_f1", "energy_iou"]
-    colors = [COLORS["dark_blue"], COLORS["orange"], COLORS["teal"], COLORS["grey"]]
+    colors = [
+        COLORS["dark_blue"],
+        COLORS["orange"],
+        COLORS["grey"],
+        COLORS["light_grey"],
+    ]
     figure, axis = plt.subplots(figsize=(7.8, 4.4))
     centers = np.arange(len(data))
     width = 0.19
@@ -536,7 +601,7 @@ def plot_energy_summary(energy_metrics: pd.DataFrame, output_path: Path) -> Path
     axis.set_ylabel("Correction-energy score")
     axis.set_title("Pooled full-day correction-energy agreement")
     axis.legend(frameon=False, ncol=4, loc="upper center")
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -585,8 +650,7 @@ def plot_auto_accept_burden(coverage: pd.DataFrame, output_path: Path) -> Path:
         ncol=3,
         loc="upper center",
     )
-    left_axis.spines["top"].set_visible(False)
-    right_axis.spines["top"].set_visible(False)
+    align_twin_y_axes(left_axis, right_axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -603,7 +667,7 @@ def plot_coverage_scores(coverage: pd.DataFrame, output_path: Path) -> Path:
     for metric, color, marker in [
         ("precision", COLORS["dark_blue"], "o"),
         ("recall", COLORS["orange"], "s"),
-        ("f1", COLORS["teal"], "^"),
+        ("f1", COLORS["grey"], "^"),
     ]:
         axis.plot(
             data["coverage_pct"],
@@ -619,7 +683,7 @@ def plot_coverage_scores(coverage: pd.DataFrame, output_path: Path) -> Path:
     axis.set_ylabel("Score among auto-accepted days")
     axis.set_title("Confidence-margin operating points")
     axis.legend(frameon=False, ncol=3)
-    axis.spines[["top", "right"]].set_visible(False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight", pad_inches=0.08)
@@ -672,7 +736,7 @@ def plot_gamma_example_week(series: pd.DataFrame, output_path: Path) -> Path:
     axis.plot(
         example["timestamp"],
         example["manually_corrected_MW"],
-        color=COLORS["teal"],
+        color=COLORS["dark_blue"],
         linewidth=1.2,
         linestyle="--",
         label="Manually corrected reference",
@@ -683,7 +747,20 @@ def plot_gamma_example_week(series: pd.DataFrame, output_path: Path) -> Path:
     axis.set_ylabel("Net load (MW)")
     axis.xaxis.set_major_locator(mdates.DayLocator())
     axis.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
+    series_min = float(
+        example[["raw_uncorrected_MW", "m9_pbm_corrected_MW", "manually_corrected_MW"]]
+        .min()
+        .min()
+    )
+    series_max = float(
+        example[["raw_uncorrected_MW", "m9_pbm_corrected_MW", "manually_corrected_MW"]]
+        .max()
+        .max()
+    )
+    series_span = max(series_max - series_min, 1.0)
+    axis.set_ylim(series_min - 0.03 * series_span, series_max + 0.28 * series_span)
     axis.legend(frameon=False, ncol=3, loc="upper center")
+    style_axis(axis, x_dates=True)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -723,6 +800,7 @@ def plot_gamma_data_error(data_metrics: pd.DataFrame, output_path: Path) -> Path
     axis.set_ylabel("Data-error RMSE (MW)")
     axis.set_title("Error against the manually corrected Gamma reference")
     axis.legend(frameon=False)
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -731,28 +809,30 @@ def plot_gamma_data_error(data_metrics: pd.DataFrame, output_path: Path) -> Path
 
 
 def plot_gamma_forecast_rmse(metrics: pd.DataFrame, output_path: Path) -> Path:
-    """Plot forecast RMSE for each model and training-data condition."""
+    """Group forecast corrections with model variants inside each group."""
 
     apply_journal_style()
     models = ["seasonal_naive", "linear_regression", "xgboost"]
     conditions = ["raw_uncorrected", "m9_pbm_corrected", "manually_corrected"]
     model_labels = ["Seasonal naive", "Linear regression", "XGBoost"]
     condition_labels = ["Raw uncorrected", "m9_pbm corrected", "Manual reference"]
-    colors = [COLORS["grey"], COLORS["orange"], COLORS["teal"]]
-    x = np.arange(len(models))
+    colors = [COLORS["dark_blue"], COLORS["orange"], COLORS["grey"]]
+    x = np.arange(len(conditions))
     width = 0.24
 
     figure, axis = plt.subplots(figsize=(8.4, 4.5))
-    for index, (condition, label, color) in enumerate(
-        zip(conditions, condition_labels, colors, strict=True)
+    for index, (model, label, color) in enumerate(
+        zip(models, model_labels, colors, strict=True)
     ):
-        subset = metrics.loc[metrics["data_condition"].eq(condition)].set_index("model")
-        values = subset.loc[models, "rmse_MW"]
+        subset = metrics.loc[metrics["model"].eq(model)].set_index("data_condition")
+        values = subset.loc[conditions, "rmse_MW"]
         axis.bar(x + (index - 1) * width, values, width, color=color, label=label)
-    axis.set_xticks(x, model_labels)
+    axis.set_xticks(x, condition_labels)
     axis.set_ylabel("Seven-day-ahead RMSE (MW)")
     axis.set_title("Direct September 2024 point forecasts")
+    axis.set_ylim(0, float(metrics["rmse_MW"].max()) * 1.25)
     axis.legend(frameon=False, ncol=3, loc="upper center")
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -771,7 +851,7 @@ def plot_gamma_forecast_residuals(
     data["residual_MW"] = data["y_pred"] - data["y_reference"]
     models = ["seasonal_naive", "linear_regression", "xgboost"]
     conditions = ["raw_uncorrected", "m9_pbm_corrected", "manually_corrected"]
-    colors = [COLORS["grey"], COLORS["orange"], COLORS["teal"]]
+    colors = [COLORS["grey"], COLORS["orange"], COLORS["dark_blue"]]
     labels = ["Raw", "m9_pbm", "Manual"]
     positions = []
     values = []
@@ -810,6 +890,7 @@ def plot_gamma_forecast_residuals(
         for color, label in zip(colors, labels, strict=True)
     ]
     axis.legend(handles=handles, frameon=False, ncol=3, loc="upper center")
+    style_axis(axis)
     figure.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     figure.savefig(output_path, dpi=300, bbox_inches="tight")

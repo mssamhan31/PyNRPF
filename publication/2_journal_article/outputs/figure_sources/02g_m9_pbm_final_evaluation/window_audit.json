@@ -1,0 +1,21 @@
+{
+  "columns": [
+    "substation_id",
+    "date",
+    "confidence",
+    "true_day",
+    "predicted_day",
+    "window_iou"
+  ],
+  "created_at_utc": "2026-07-16T04:42:35.565676+00:00",
+  "file": "window_audit.parquet",
+  "required_columns": [
+    "confidence",
+    "true_day",
+    "predicted_day",
+    "window_iou"
+  ],
+  "rows": 2928,
+  "schema_version": 1,
+  "sha256": "bd296e47bf07d59ea80be65f32b504e37f8f9b21387052bfa81d382cbead3580"
+}

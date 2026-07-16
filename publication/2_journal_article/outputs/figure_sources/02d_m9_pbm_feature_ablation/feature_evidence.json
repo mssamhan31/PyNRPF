@@ -1,0 +1,24 @@
+{
+  "columns": [
+    "feature_number",
+    "feature",
+    "feature_short",
+    "top_10_frequency_pct",
+    "top_25_frequency_pct",
+    "top_50_frequency_pct",
+    "paired_comparisons",
+    "mean_paired_delta_f1",
+    "median_paired_delta_f1",
+    "positive_paired_delta_pct"
+  ],
+  "created_at_utc": "2026-07-16T04:41:43.996869+00:00",
+  "file": "feature_evidence.parquet",
+  "required_columns": [
+    "feature_number",
+    "top_25_frequency_pct",
+    "mean_paired_delta_f1"
+  ],
+  "rows": 9,
+  "schema_version": 1,
+  "sha256": "862a00f490b1604c7352b91a1975f84ecccae185eb7c2728a9c40207c63b1965"
+}
