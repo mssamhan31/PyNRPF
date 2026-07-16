@@ -1,0 +1,9 @@
+confidence_scope,event_scope,aggregation,substation_id,support_days,mean_iou,median_iou,proportion_iou_at_least_0_50,proportion_iou_at_least_0_70,median_absolute_start_error_minutes,median_absolute_end_error_minutes,metric_family,interval_scope,manual_correction_MWh,predicted_correction_MWh,overlap_correction_MWh,union_correction_MWh,energy_precision,energy_recall,energy_f1,energy_iou
+beta_sure,tp_days_only,pooled,,385.0,0.858192754911869,0.9285714285714286,0.9662337662337662,0.8233766233766234,15.0,15.0,window_iou,,,,,,,,,
+beta_sure,event_days_truth_or_prediction,pooled,,519.0,0.6366169761870318,0.8709677419354839,0.7167630057803468,0.6107899807321773,15.0,15.0,window_iou,,,,,,,,,
+beta_all,tp_days_only,pooled,,469.0,0.8237194025086677,0.9090909090909092,0.9339019189765458,0.7761194029850746,15.0,15.0,window_iou,,,,,,,,,
+beta_all,event_days_truth_or_prediction,pooled,,779.0,0.4959234913691466,0.6470588235294118,0.5622593068035944,0.4672657252888318,15.0,15.0,window_iou,,,,,,,,,
+beta_sure,,pooled,,,,,,,,,correction_energy,full_day,9900.6425385,8678.907037,8074.547292,10505.0022835,0.9303645329505792,0.8155579055198712,0.8691865493496715,0.7686383185925179
+beta_sure,,pooled,,,,,,,,,correction_energy,daytime_06_18,9900.6425385,8678.907037,8074.547291999999,10505.0022835,0.930364532950579,0.8155579055198711,0.8691865493496715,0.7686383185925177
+beta_all,,pooled,,,,,,,,,correction_energy,full_day,11464.1834845,9804.0133975,8702.693117,12565.503765,0.8876663835668733,0.7591201875621028,0.8183762041779278,0.6925860896433387
+beta_all,,pooled,,,,,,,,,correction_energy,daytime_06_18,11464.1834845,9804.0133975,8702.693116999999,12565.503765,0.8876663835668733,0.7591201875621025,0.8183762041779278,0.6925860896433386

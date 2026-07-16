@@ -1,0 +1,60 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "848b25adda09260bd24be0e98e12c69d893a0aeeba76c41d4da105868fdbc8cf",
+  "created_at_utc": "2026-07-15T06:40:56.641453+00:00",
+  "elapsed_seconds": 1096.330142736435,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0a18bd9a588393f6b58b13ffa7f70a19b8a0b23eb8012f38618ea9e800d2c86f"
+    },
+    {
+      "path": "dataset\\final\\dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    },
+    {
+      "path": "dataset\\final\\dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    }
+  ],
+  "local_intermediates": [
+    {
+      "bytes": 187654782,
+      "git_policy": "local_only_reproducible_cache",
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\candidate_feature_cache.parquet"
+    },
+    {
+      "bytes": 113123,
+      "git_policy": "local_only_reproducible_cache",
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\day_input_cache.parquet"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\tables\\02b_m9_pbm_candidate_features\\table01_candidate_counts.csv",
+      "sha256": "5e9689baf030f29b2318733df4b34eb8bdb40e5bc9a5a26e3dbf76751d0d54c1"
+    },
+    {
+      "path": "outputs\\tables\\02b_m9_pbm_candidate_features\\table02_feature_quality_summary.csv",
+      "sha256": "5edc50ebdb8a77ea344541655a0fb11fc2e9452057092a3d2980d1d3cab62e9d"
+    },
+    {
+      "path": "outputs\\tables\\02b_m9_pbm_candidate_features\\table03_dataset_and_label_join_audit.csv",
+      "sha256": "a23f541fe7c3ab3d2433273a4a08c7c7f44bea3ccb9737479b4664b6c204e95b"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "candidate_rows": 9773887,
+    "substation_days": 13571,
+    "substation_partitions": 18
+  },
+  "status": "publication_ready"
+}

@@ -1,0 +1,82 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "8998aef68950bbde0ec0ab0defeb70e98c92039db9f365a292c83c2e6b8a159c",
+  "created_at_utc": "2026-07-15T07:11:52.658579+00:00",
+  "elapsed_seconds": 766.4541687965393,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0be7f08b4942ed372b26dad1de1e4566496252a304d983d7aae99a167081b5d7"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\candidate_feature_cache.parquet",
+      "sha256": "257f137c29ee75d84fb32c7b0f9be609807d35cbf707c243f33c720240c13812"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\day_input_cache.parquet",
+      "sha256": "308c43400ddb40e05a4c849211cfc14dfc742df06a49104ad372f9fbe2e32c6e"
+    }
+  ],
+  "local_intermediates": [
+    "outputs\\intermediate\\02e_m9_pbm_weight_optimisation\\beta_weight_daily_scores.parquet",
+    "outputs\\intermediate\\02e_m9_pbm_weight_optimisation\\nested_outer_predictions.parquet"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\metrics\\02e_m9_pbm_weight_optimisation\\01_grid_search_results.csv",
+      "sha256": "62df6ae492c65cfadcedeac29b5ad828c629d118c6d2a9a0d3ecbbe28e64012b"
+    },
+    {
+      "path": "outputs\\metrics\\02e_m9_pbm_weight_optimisation\\02_random_search_results.csv",
+      "sha256": "6499218da69b41aacf51ec852c8f93272472efc6f1d4e8cdfa075eb36cebc62a"
+    },
+    {
+      "path": "outputs\\metrics\\02e_m9_pbm_weight_optimisation\\03_nested_outer_fold_metrics.csv",
+      "sha256": "5794098ff581f721c74cac56f8bdfb246f77ade662d4d7c0b46f99527aad164a"
+    },
+    {
+      "path": "outputs\\metrics\\02e_m9_pbm_weight_optimisation\\04_selected_weights_and_thresholds.csv",
+      "sha256": "d49a43c0fbc43c8f2751948f4663c539b31c72619ee74e9c39c1c0af5e659e04"
+    },
+    {
+      "path": "outputs\\tables\\02e_m9_pbm_weight_optimisation\\table01_equal_vs_grid_vs_random.csv",
+      "sha256": "234324a97ecce788fe2a988bae502d63ac22913a6dd76627bcf74546e26d93a7"
+    },
+    {
+      "path": "outputs\\tables\\02e_m9_pbm_weight_optimisation\\table02_weight_stability.csv",
+      "sha256": "46d3196e8c40564dc1319b06d966c1e5bbea1908c3272505ae3fc94f2ad2ca1d"
+    },
+    {
+      "path": "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig01_weight_simplex_performance.png",
+      "sha256": "48020d06feb8b1eb5c7fc309e784b06196ff409f7f0bb282e514d327604b4ef9"
+    },
+    {
+      "path": "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig02_selected_weights_by_fold.png",
+      "sha256": "c81e7a2b8a424409709050623046f405d9f69b38b1dc678c6404415253d1063e"
+    },
+    {
+      "path": "outputs\\manifests\\02e_m9_pbm_final_model.json",
+      "sha256": "9be97e2a4b92ef6cfaba1cf9d71fabb1c5f9ec0bada4e315d5bf17d4874a4500"
+    },
+    {
+      "path": "outputs\\manifests\\02e_m9_pbm_beta_B_outer_fold_model.json",
+      "sha256": "903fb6c72d31eefb8f557ac16c772639fd8d69fefb544580d0b546b11bf8127a"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "grid_result_rows": 1539,
+    "outer_predictions": 2928,
+    "outer_selected_models": 32,
+    "random_result_rows": 9000,
+    "weight_vectors": 1172
+  },
+  "status": "publication_ready"
+}

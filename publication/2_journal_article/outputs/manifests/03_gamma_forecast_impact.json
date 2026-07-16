@@ -1,28 +1,93 @@
 {
-  "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
-  "contains_placeholder_forecasts": true,
-  "created_at_utc": "2026-06-23T06:07:21.477995+00:00",
-  "figures": [
-    "fig01_gamma_series_raw_corrected_reference.png",
-    "fig02_gamma_forecast_rmse.png",
-    "fig03_gamma_forecast_residuals.png"
+  "alpha_used": false,
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "3903cb39594216d23b3b68a279d9ba5780df1eb2c34f4f368c08005b745eba18",
+  "contains_placeholder_forecasts": false,
+  "correction_artifact": "02e_m9_pbm_beta_B_outer_fold_model.json",
+  "created_at_utc": "2026-07-15T07:51:07.445836+00:00",
+  "elapsed_seconds": 4.629094362258911,
+  "forecast_models_fit_once_before_test_month": true,
+  "gamma_substation": "beta_B",
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "heldout_labels_used": false,
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "534a3feb97613c9b06bc47534a740208aff1d6bed7a00eb4f4e56cafbc502123"
+    },
+    {
+      "path": "dataset\\final\\dataset_gamma.parquet",
+      "sha256": "7ebeedeab63b1a95059c0f413744230a183bf1d6f6883f5394855b26c229dc78"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\_partitions\\beta_beta_B_candidates.parquet",
+      "sha256": "0c696b69daa2f90b44855209910d15f70483c9143f2eaefada175d5a180c0663"
+    },
+    {
+      "path": "outputs\\manifests\\02e_m9_pbm_beta_B_outer_fold_model.json",
+      "sha256": "903fb6c72d31eefb8f557ac16c772639fd8d69fefb544580d0b546b11bf8127a"
+    }
   ],
-  "gamma_site": "beta_B",
-  "notebook": "03_gamma_forecast_impact.ipynb",
-  "output_subfolders": {
-    "figures": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\figures\\03_gamma_forecast_impact",
-    "intermediate": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\intermediate\\03_gamma_forecast_impact",
-    "metrics": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\metrics\\03_gamma_forecast_impact",
-    "tables": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\tables\\03_gamma_forecast_impact"
+  "local_intermediates": [
+    "outputs\\intermediate\\03_gamma_forecast_impact\\02_train_raw_uncorrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\03_test_raw_uncorrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\02_train_m9_pbm_corrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\03_test_m9_pbm_corrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\02_train_manually_corrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\03_test_manually_corrected.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\04_gamma_forecast_predictions.parquet",
+    "outputs\\intermediate\\03_gamma_forecast_impact\\05_forecast_fit_audit.csv"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\intermediate\\03_gamma_forecast_impact\\01_gamma_series.parquet",
+      "sha256": "aa419fb74346680a6933dc854eac0c9188f5ac171d101ce791e4d34429e761f3"
+    },
+    {
+      "path": "outputs\\metrics\\03_gamma_forecast_impact\\01_gamma_data_error_metrics.csv",
+      "sha256": "eca29e97effdbf07745620294ea6f1ba993a67bc3111c83c9c9e7e2c1c53563f"
+    },
+    {
+      "path": "outputs\\metrics\\03_gamma_forecast_impact\\02_gamma_forecast_metrics.csv",
+      "sha256": "ba99ea3203bb45406fd1ab690722fc2734939a136fad55d1bb104837bf204d2b"
+    },
+    {
+      "path": "outputs\\tables\\03_gamma_forecast_impact\\table01_gamma_data_error_summary.csv",
+      "sha256": "eca29e97effdbf07745620294ea6f1ba993a67bc3111c83c9c9e7e2c1c53563f"
+    },
+    {
+      "path": "outputs\\tables\\03_gamma_forecast_impact\\table02_gamma_forecast_impact.csv",
+      "sha256": "7cc3053f39b64ba103b5f0fae4338831ef066d6f259a0e10881fa58e8f9fc56f"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig01_gamma_raw_m9_manual_example_week.png",
+      "sha256": "feba76554691f014d0d53bfc3e59d2893094aff9c82993994b5ecdc3a1d60e31"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig02_gamma_data_error_rmse.png",
+      "sha256": "3361e5f86c3e462d9b5fd9f77d282a1a1ee0bf919274e9b956f1472c8633ee4d"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig03_gamma_forecast_rmse.png",
+      "sha256": "9a4ab119dcdb54c09473fcc44e188417526f7897a0e713ce01527790bdb68598"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig04_gamma_forecast_residuals.png",
+      "sha256": "f790aa26755a40de6d66080fe82d46f232236c209ee7bb9094752e97118dec92"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
   },
-  "publication_ready": false,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
   "row_counts": {
-    "gamma": 35136
+    "forecast_predictions": 25920,
+    "gamma_days": 366,
+    "gamma_intervals": 35136,
+    "valid_reference_targets": 25884
   },
-  "schema_version": "journal_v2",
-  "status": "placeholder_smoke_only",
-  "tables": [
-    "table01_forecast_impact.csv",
-    "table02_gamma_perfect_model_baseline.csv"
-  ]
+  "status": "publication_ready"
 }

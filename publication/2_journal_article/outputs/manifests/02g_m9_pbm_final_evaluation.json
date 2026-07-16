@@ -1,0 +1,97 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "8998aef68950bbde0ec0ab0defeb70e98c92039db9f365a292c83c2e6b8a159c",
+  "created_at_utc": "2026-07-15T07:39:44.911718+00:00",
+  "elapsed_seconds": 4.776757001876831,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0be7f08b4942ed372b26dad1de1e4566496252a304d983d7aae99a167081b5d7"
+    },
+    {
+      "path": "dataset\\final\\dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    },
+    {
+      "path": "outputs\\intermediate\\02e_m9_pbm_weight_optimisation\\nested_outer_predictions.parquet",
+      "sha256": "925fb0805f97ec384ffd7d63091d05caeb745aaf1564476b053a2986c41d516d"
+    }
+  ],
+  "local_intermediates": [
+    "outputs\\intermediate\\02g_m9_pbm_final_evaluation\\heldout_prediction_audit.parquet"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\metrics\\02g_m9_pbm_final_evaluation\\01_day_metrics.csv",
+      "sha256": "67f9a62596b50da4e3150432007232f7bb3320588305d5c6e7d331347e3bf04e"
+    },
+    {
+      "path": "outputs\\metrics\\02g_m9_pbm_final_evaluation\\02_interval_metrics.csv",
+      "sha256": "e800a9b7ad2601790e3fb52455c9f60d6153f97e9c444eda3e18165db823519c"
+    },
+    {
+      "path": "outputs\\metrics\\02g_m9_pbm_final_evaluation\\03_window_iou_metrics.csv",
+      "sha256": "78cb0e7750bc29f5ffbc03fdca448b5bf30e5a2f3749e9f32eae6d9bea00ef11"
+    },
+    {
+      "path": "outputs\\metrics\\02g_m9_pbm_final_evaluation\\04_energy_metrics.csv",
+      "sha256": "b32389a1875df5e49144c6c6d00e3330345f8d26f617a50ea160488410399c41"
+    },
+    {
+      "path": "outputs\\metrics\\02g_m9_pbm_final_evaluation\\05_confidence_coverage_metrics.csv",
+      "sha256": "5e14f81159c502d3db2a90b45955c4dff495bf18fbe6b071a4f82939c294bb34"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table01_final_headline_metrics.csv",
+      "sha256": "a13b9a7c5f96f7938f30e905d4d105acd8fb9103103c360aa7cf935d91c21a99"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table02_final_metrics_by_substation.csv",
+      "sha256": "bf411cea7fefe412491de9a0e8d432ae86200f6dcf4c6fd3b911ee7c007fbed9"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table03_localisation_and_energy.csv",
+      "sha256": "ee443cc5b1ac0b619637f944b09c13e11be9af7337f68843f797496c2ed0b29d"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table04_recommended_auto_accept_operating_point.csv",
+      "sha256": "2bdeaf684fcb47b76e6acba999fc0169c649099bcda1f7089dd507eb55868c0b"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig01_final_confusion_matrices.png",
+      "sha256": "30a6c38edd821bff57bb02c6d92834a656d158e6ee7281d50a882ec3d3404edf"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig02_window_iou_distribution.png",
+      "sha256": "e64857daf0ad6e173006aa20adcfb731fb60a66488709329dec24cab3a1a76f9"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig03_energy_metric_summary.png",
+      "sha256": "d7e1b960f4d5c40cc5fa06a986f4e0cb4ec7b00226f1260678c3c76a4ed5d9a1"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig04_auto_accept_manual_review_and_errors.png",
+      "sha256": "3dd1d02d938c4f850559a816b7b4780aa200066862192ffbd317223cc7d86d32"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig05_auto_accept_precision_recall_f1.png",
+      "sha256": "9e494f85827ffca945513c68c54aabf3fc70b85fe2593204456b030cefa6a5b7"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "beta_intervals": 280800,
+    "beta_substation_days": 2928,
+    "coverage_levels": 7,
+    "day_metric_rows": 20,
+    "interval_metric_rows": 40
+  },
+  "status": "publication_ready"
+}

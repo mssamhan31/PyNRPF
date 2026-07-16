@@ -350,9 +350,10 @@ def validate_final_dataset(df: pd.DataFrame, dataset_name: str, cfg: dict[str, A
             raise ValueError(f"Beta final dataset expected 2928 site-days, found {site_days}.")
         confidence = df[["substation_id", "date", CONFIDENCE_COLUMN]].drop_duplicates()
         counts = confidence[CONFIDENCE_COLUMN].value_counts().to_dict()
-        if counts.get("sure", 0) != 2_330 or counts.get("unsure", 0) != 598:
+        expected_counts = cfg["datasets"]["expected_confidence_substation_days"]["beta"]
+        if any(counts.get(key, 0) != value for key, value in expected_counts.items()):
             raise ValueError(
-                f"Beta confidence counts expected sure=2330, unsure=598; found {counts}."
+                f"Beta confidence counts expected {expected_counts}; found {counts}."
             )
     if dataset_name == "Gamma":
         if df["substation_id"].nunique() != 1:
@@ -363,9 +364,10 @@ def validate_final_dataset(df: pd.DataFrame, dataset_name: str, cfg: dict[str, A
             raise ValueError(f"Gamma final dataset expected 35136 rows, found {len(df)}.")
         confidence = df[["substation_id", "date", CONFIDENCE_COLUMN]].drop_duplicates()
         counts = confidence[CONFIDENCE_COLUMN].value_counts().to_dict()
-        if counts.get("sure", 0) != 232 or counts.get("unsure", 0) != 134:
+        expected_counts = cfg["datasets"]["expected_confidence_substation_days"]["gamma"]
+        if any(counts.get(key, 0) != value for key, value in expected_counts.items()):
             raise ValueError(
-                f"Gamma confidence counts expected sure=232, unsure=134; found {counts}."
+                f"Gamma confidence counts expected {expected_counts}; found {counts}."
             )
 
 

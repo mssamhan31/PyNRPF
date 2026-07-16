@@ -1,13 +1,10 @@
-data_condition,data_condition_label,model,model_label,n_targets,rmse_MW,mae_MW,is_placeholder,status
-m8_xgb_corrected,m8_xgb-corrected data,linear_regression,Linear regression,2880,2.2713146985231147,1.3110033702094304,True,placeholder_smoke_only
-m8_xgb_corrected,m8_xgb-corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.4766384777622158,0.2024974683588317,False,complete
-m8_xgb_corrected,m8_xgb-corrected data,seasonal_naive,Seasonal naive,2880,4.11318318707007,2.379757133124347,True,placeholder_smoke_only
-m8_xgb_corrected,m8_xgb-corrected data,xgboost,XGBoost,2880,1.736920381470183,1.0027482445212967,True,placeholder_smoke_only
-raw_uncorrected,Uncorrected data,linear_regression,Linear regression,2880,5.207170894029424,3.0629312000252535,True,placeholder_smoke_only
-raw_uncorrected,Uncorrected data,perfect_model_baseline,Perfect-model baseline,2880,4.766384777622158,2.024974683588317,False,complete
-raw_uncorrected,Uncorrected data,seasonal_naive,Seasonal naive,2880,5.3383509509368166,3.1439538138413883,True,placeholder_smoke_only
-raw_uncorrected,Uncorrected data,xgboost,XGBoost,2880,4.966271972488349,2.9211434371020033,True,placeholder_smoke_only
-reference_corrected,Manually corrected data,linear_regression,Linear regression,2880,1.5132220334189397,0.8549084657757384,True,placeholder_smoke_only
-reference_corrected,Manually corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.0,0.0,False,complete
-reference_corrected,Manually corrected data,seasonal_naive,Seasonal naive,2880,4.295647533313533,2.4298542016718914,True,placeholder_smoke_only
-reference_corrected,Manually corrected data,xgboost,XGBoost,2880,1.0414075949793606,0.5903328683746077,True,placeholder_smoke_only
+data_condition,data_condition_label,model,model_label,n_targets_total,n_valid,rmse_MW,mae_MW,status,is_placeholder
+m9_pbm_corrected,m9_pbm corrected,linear_regression,Linear regression,2880,2876,3.1365603316997754,2.0453096115558194,complete,False
+manually_corrected,Manually corrected,linear_regression,Linear regression,2880,2876,3.06855123198523,1.9683934938199532,complete,False
+raw_uncorrected,Raw uncorrected,linear_regression,Linear regression,2880,2876,4.716049607401454,2.745356795364226,complete,False
+m9_pbm_corrected,m9_pbm corrected,seasonal_naive,Seasonal naive,2880,2871,3.8149465349565537,2.107219270985719,complete,False
+manually_corrected,Manually corrected,seasonal_naive,Seasonal naive,2880,2871,3.6669642746462947,2.0054923173110413,complete,False
+raw_uncorrected,Raw uncorrected,seasonal_naive,Seasonal naive,2880,2871,4.808065762366514,2.8202740609543713,complete,False
+m9_pbm_corrected,m9_pbm corrected,xgboost,XGBoost,2880,2876,4.023179011708748,2.722851220093889,complete,False
+manually_corrected,Manually corrected,xgboost,XGBoost,2880,2876,2.6362786578400295,1.727513220336474,complete,False
+raw_uncorrected,Raw uncorrected,xgboost,XGBoost,2880,2876,4.4248775544088454,2.6053591359255956,complete,False

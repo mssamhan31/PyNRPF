@@ -1,0 +1,60 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "8998aef68950bbde0ec0ab0defeb70e98c92039db9f365a292c83c2e6b8a159c",
+  "created_at_utc": "2026-07-15T07:34:39.793818+00:00",
+  "elapsed_seconds": 1018.2352571487427,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0be7f08b4942ed372b26dad1de1e4566496252a304d983d7aae99a167081b5d7"
+    },
+    {
+      "path": "outputs\\intermediate\\02c_m9_pbm_training_regimes\\compact_equal_daily_candidates.parquet",
+      "sha256": "e18ea50de4610aa5cca8dc6f3cf2fdc2796a5d4c55cf51eec86c2d2a6902d7ac"
+    },
+    {
+      "path": "outputs\\intermediate\\02e_m9_pbm_weight_optimisation\\nested_outer_predictions.parquet",
+      "sha256": "925fb0805f97ec384ffd7d63091d05caeb745aaf1564476b053a2986c41d516d"
+    }
+  ],
+  "local_intermediates": [
+    "outputs\\intermediate\\02f_m9_pbm_ml_comparison\\checkpoints"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\metrics\\02f_m9_pbm_ml_comparison\\01_ml_nested_metrics.csv",
+      "sha256": "5e4bc2fb88b472dde5e79020f4b99083c84903e7e779be3096ef38118de5caf6"
+    },
+    {
+      "path": "outputs\\metrics\\02f_m9_pbm_ml_comparison\\02_selected_hyperparameters.csv",
+      "sha256": "381e99423b048e886ea0bc4f54fe69a07f81c3e0797c7b58e1b4cb96f2e09c16"
+    },
+    {
+      "path": "outputs\\tables\\02f_m9_pbm_ml_comparison\\table01_physical_vs_ml.csv",
+      "sha256": "877133e79501dc50bd525c1f30180568b698a869bc4f230a3f7d39286ebe643f"
+    },
+    {
+      "path": "outputs\\tables\\02f_m9_pbm_ml_comparison\\table02_ml_by_substation.csv",
+      "sha256": "9b5d27dd5e92fe13a044b892d0c411aee5af3a58a4e12edcf3c35279fc44d05a"
+    },
+    {
+      "path": "outputs\\figures\\02f_m9_pbm_ml_comparison\\fig01_physical_vs_ml_precision_recall_f1.png",
+      "sha256": "c526aab92cb660a30f43a6cdb9401a9a090e1efb2061cac19f49a49b17701873"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "hyperparameter_definitions": 14,
+    "ml_metric_rows": 180,
+    "ml_outer_decisions": 26352,
+    "selected_hyperparameter_rows": 51
+  },
+  "status": "publication_ready"
+}

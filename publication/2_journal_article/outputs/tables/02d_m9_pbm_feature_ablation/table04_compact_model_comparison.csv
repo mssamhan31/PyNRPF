@@ -1,0 +1,4 @@
+comparison,feature_set,precision,recall,f1,status
+self_consistent_F1_F3_F4,F1_bridge_improvement + F3_slope_continuity_improvement + F4_duration_plausibility,0.7736185383244206,0.921443736730361,0.8410852713178293,primary_recomputed
+best_self_consistent_subset,F1_bridge_improvement + F2_roughness_improvement + F4_duration_plausibility + F6_solar_strength_ratio + F7_solar_peak_alignment,0.84375,0.9171974522292994,0.878942014242116,primary_recomputed
+legacy_fixed_window_F1_F3_F4_anchor,F1_bridge_improvement + F3_slope_continuity_improvement + F4_duration_plausibility,0.856075,0.972399,0.910537,2026-07-15 PRD record of the final-review exploratory cache

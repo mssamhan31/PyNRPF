@@ -13,6 +13,15 @@ __pycache__/
 /outputs/
 publication/2_journal_article/notebooks/99_Misc/outputs/
 publication/2_journal_article/notebooks/99_Misc/*.png
+publication/2_journal_article/outputs/intermediate/02b_m9_pbm_candidate_features/candidate_feature_cache.parquet
+publication/2_journal_article/outputs/intermediate/02b_m9_pbm_candidate_features/day_input_cache.parquet
+publication/2_journal_article/outputs/intermediate/02b_m9_pbm_candidate_features/_partitions/
+publication/2_journal_article/outputs/intermediate/02c_m9_pbm_training_regimes/
+publication/2_journal_article/outputs/intermediate/02d_m9_pbm_feature_ablation/
+publication/2_journal_article/outputs/intermediate/02e_m9_pbm_weight_optimisation/
+publication/2_journal_article/outputs/intermediate/02f_m9_pbm_ml_comparison/
+publication/2_journal_article/outputs/intermediate/02g_m9_pbm_final_evaluation/
+publication/2_journal_article/outputs/intermediate/03_gamma_forecast_impact/
 config/databricks_connect.yaml
 build/
 dist/

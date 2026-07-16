@@ -1,0 +1,65 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "848b25adda09260bd24be0e98e12c69d893a0aeeba76c41d4da105868fdbc8cf",
+  "created_at_utc": "2026-07-15T06:44:04.722941+00:00",
+  "elapsed_seconds": 11.663154125213623,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0a18bd9a588393f6b58b13ffa7f70a19b8a0b23eb8012f38618ea9e800d2c86f"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\candidate_feature_cache.parquet",
+      "sha256": "257f137c29ee75d84fb32c7b0f9be609807d35cbf707c243f33c720240c13812"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\day_input_cache.parquet",
+      "sha256": "308c43400ddb40e05a4c849211cfc14dfc742df06a49104ad372f9fbe2e32c6e"
+    }
+  ],
+  "local_intermediates": [
+    "outputs\\intermediate\\02c_m9_pbm_training_regimes\\compact_equal_daily_candidates.parquet",
+    "outputs\\intermediate\\02c_m9_pbm_training_regimes\\daily_regime_predictions.parquet"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\metrics\\02c_m9_pbm_training_regimes\\01_day_metrics.csv",
+      "sha256": "b6a71106ea01d83a4123a0cf4a48d2dc767f29759a26b6336e838ff156c9a785"
+    },
+    {
+      "path": "outputs\\metrics\\02c_m9_pbm_training_regimes\\02_thresholds_by_fold.csv",
+      "sha256": "7012e13a890bfd961ba31db7e4676eb65a94b1148d174dfe70fdd08b61787661"
+    },
+    {
+      "path": "outputs\\tables\\02c_m9_pbm_training_regimes\\table01_regime_headline_metrics.csv",
+      "sha256": "575c6a3d9b2197f6e0607db1794d7bd2db0161b8d7442b0569494f2a7452de02"
+    },
+    {
+      "path": "outputs\\tables\\02c_m9_pbm_training_regimes\\table02_regime_metrics_by_substation.csv",
+      "sha256": "94cd193916078107017cdbce64dd6b4a20241fb2fd02de4cd007f0005909cec4"
+    },
+    {
+      "path": "outputs\\figures\\02c_m9_pbm_training_regimes\\fig01_regime_precision_recall_f1.png",
+      "sha256": "78b94204c6ca1925f58066c0e4d7a216d59d7da14e9e33155937e3e3afba34da"
+    },
+    {
+      "path": "outputs\\figures\\02c_m9_pbm_training_regimes\\fig02_thresholds_by_heldout_substation.png",
+      "sha256": "c4b8de0624397bea1f69d3ee7902c75c61f005b07b7114ed5ee7071181f49b2f"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "daily_selected_candidates": 13571,
+    "heldout_predictions_per_regime": 2928,
+    "regimes": 3,
+    "threshold_rows": 17
+  },
+  "status": "publication_ready"
+}

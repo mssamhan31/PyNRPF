@@ -1,0 +1,26 @@
+\begin{tabular}{llllrrrrrrrrrr}
+\toprule
+regime & model & confidence_scope & aggregation & substation_id & support & positive_support & tp & fp & fn & tn & precision & recall & f1 \\
+\midrule
+nested_beta_only & m9_pbm_optimised_physical & beta_sure & pooled & NaN & 2310 & 471 & 385 & 48 & 86 & 1791 & 0.8891 & 0.8174 & 0.8518 \\
+nested_beta_only & m9_pbm_optimised_physical & beta_sure & macro_substation & NaN & 2310 & 471 & 385 & 48 & 86 & 1791 & 0.7085 & 0.6852 & 0.6806 \\
+beta_only & dnn & beta_sure & pooled & NaN & 2310 & 471 & 385 & 89 & 86 & 1750 & 0.8122 & 0.8174 & 0.8148 \\
+beta_only & dnn & beta_sure & macro_substation & NaN & 2310 & 471 & 385 & 89 & 86 & 1750 & 0.6288 & 0.6533 & 0.6153 \\
+beta_only & random_forest & beta_sure & pooled & NaN & 2310 & 471 & 405 & 96 & 66 & 1743 & 0.8084 & 0.8599 & 0.8333 \\
+beta_only & random_forest & beta_sure & macro_substation & NaN & 2310 & 471 & 405 & 96 & 66 & 1743 & 0.5536 & 0.6447 & 0.5825 \\
+beta_only & xgboost & beta_sure & pooled & NaN & 2310 & 471 & 367 & 58 & 104 & 1781 & 0.8635 & 0.7792 & 0.8192 \\
+beta_only & xgboost & beta_sure & macro_substation & NaN & 2310 & 471 & 367 & 58 & 104 & 1781 & 0.6209 & 0.5903 & 0.5923 \\
+beta_plus_alpha & dnn & beta_sure & pooled & NaN & 2310 & 471 & 432 & 135 & 39 & 1704 & 0.7619 & 0.9172 & 0.8324 \\
+beta_plus_alpha & dnn & beta_sure & macro_substation & NaN & 2310 & 471 & 432 & 135 & 39 & 1704 & 0.5837 & 0.7391 & 0.6227 \\
+beta_plus_alpha & random_forest & beta_sure & pooled & NaN & 2310 & 471 & 440 & 131 & 31 & 1708 & 0.7706 & 0.9342 & 0.8445 \\
+beta_plus_alpha & random_forest & beta_sure & macro_substation & NaN & 2310 & 471 & 440 & 131 & 31 & 1708 & 0.5608 & 0.7471 & 0.6264 \\
+beta_plus_alpha & xgboost & beta_sure & pooled & NaN & 2310 & 471 & 393 & 85 & 78 & 1754 & 0.8222 & 0.8344 & 0.8282 \\
+beta_plus_alpha & xgboost & beta_sure & macro_substation & NaN & 2310 & 471 & 393 & 85 & 78 & 1754 & 0.6058 & 0.6851 & 0.6264 \\
+alpha_only & dnn & beta_sure & pooled & NaN & 2310 & 471 & 471 & 296 & 0 & 1543 & 0.6141 & 1.0000 & 0.7609 \\
+alpha_only & dnn & beta_sure & macro_substation & NaN & 2310 & 471 & 471 & 296 & 0 & 1543 & 0.4598 & 0.8750 & 0.5737 \\
+alpha_only & random_forest & beta_sure & pooled & NaN & 2310 & 471 & 471 & 340 & 0 & 1499 & 0.5808 & 1.0000 & 0.7348 \\
+alpha_only & random_forest & beta_sure & macro_substation & NaN & 2310 & 471 & 471 & 340 & 0 & 1499 & 0.4354 & 0.8750 & 0.5499 \\
+alpha_only & xgboost & beta_sure & pooled & NaN & 2310 & 471 & 471 & 313 & 0 & 1526 & 0.6008 & 1.0000 & 0.7506 \\
+alpha_only & xgboost & beta_sure & macro_substation & NaN & 2310 & 471 & 471 & 313 & 0 & 1526 & 0.4483 & 0.8750 & 0.5624 \\
+\bottomrule
+\end{tabular}

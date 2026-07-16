@@ -1,4 +1,0 @@
-data_condition,data_condition_label,model,model_label,n_targets,rmse_MW,mae_MW,is_placeholder,status
-m8_xgb_corrected,m8_xgb-corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.4766384777622158,0.2024974683588317,False,complete
-raw_uncorrected,Uncorrected data,perfect_model_baseline,Perfect-model baseline,2880,4.766384777622158,2.024974683588317,False,complete
-reference_corrected,Manually corrected data,perfect_model_baseline,Perfect-model baseline,2880,0.0,0.0,False,complete

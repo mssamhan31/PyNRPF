@@ -141,16 +141,16 @@ def test_real_data_rankings_match_current_labels() -> None:
     assert beta[["substation_id", "date"]].drop_duplicates().shape[0] == 2_928
     beta_confidence = beta[["substation_id", "date", "confidence"]].drop_duplicates()
     assert beta_confidence["confidence"].value_counts().to_dict() == {
-        "sure": 2330,
-        "unsure": 598,
+        "sure": 2310,
+        "unsure": 618,
     }
     assert gamma["substation_id"].nunique() == 1
     assert gamma["substation_id"].iloc[0] == "beta_B"
     assert len(gamma) == 35_136
     gamma_confidence = gamma[["substation_id", "date", "confidence"]].drop_duplicates()
     assert gamma_confidence["confidence"].value_counts().to_dict() == {
-        "sure": 232,
-        "unsure": 134,
+        "sure": 231,
+        "unsure": 135,
     }
 
 
@@ -358,8 +358,8 @@ def test_beta_confidence_split_metrics_filter_sure_site_days() -> None:
         & (metrics["method"] == "m8_xgb")
         & (metrics["level"] == "day")
     ].iloc[0]
-    assert int(sure_day["support"]) == 2330
-    assert int(sure_day["positive_support"]) == 482
+    assert int(sure_day["support"]) == 2310
+    assert int(sure_day["positive_support"]) == 471
 
 
 def test_correction_pooled_metrics_sum_alpha_loso_counts() -> None:
