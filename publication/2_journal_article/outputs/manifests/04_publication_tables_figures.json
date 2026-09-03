@@ -1,0 +1,288 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "3903cb39594216d23b3b68a279d9ba5780df1eb2c34f4f368c08005b745eba18",
+  "created_at_utc": "2026-07-15T07:53:03.776349+00:00",
+  "elapsed_seconds": 1.3515422344207764,
+  "figure_paths": {
+    "02a_method_example": "outputs/figures/02a_m9_pbm_method_example/fig01_m9_pbm_alpha_F_2024-02-17.png",
+    "02c_regime_metrics": "outputs/figures/02c_m9_pbm_training_regimes/fig01_regime_precision_recall_f1.png",
+    "02c_regime_thresholds": "outputs/figures/02c_m9_pbm_training_regimes/fig02_thresholds_by_heldout_substation.png",
+    "02d_ablation_feature_count": "outputs/figures/02d_m9_pbm_feature_ablation/fig01_f1_by_feature_count.png",
+    "02d_ablation_feature_evidence": "outputs/figures/02d_m9_pbm_feature_ablation/fig03_feature_frequency_and_marginal_effect.png",
+    "02d_ablation_top_subsets": "outputs/figures/02d_m9_pbm_feature_ablation/fig02_top_subset_performance.png",
+    "02e_weight_simplex": "outputs/figures/02e_m9_pbm_weight_optimisation/fig01_weight_simplex_performance.png",
+    "02e_weight_stability": "outputs/figures/02e_m9_pbm_weight_optimisation/fig02_selected_weights_by_fold.png",
+    "02f_physical_vs_ml": "outputs/figures/02f_m9_pbm_ml_comparison/fig01_physical_vs_ml_precision_recall_f1.png",
+    "02g_confusion": "outputs/figures/02g_m9_pbm_final_evaluation/fig01_final_confusion_matrices.png",
+    "02g_coverage_scores": "outputs/figures/02g_m9_pbm_final_evaluation/fig05_auto_accept_precision_recall_f1.png",
+    "02g_energy": "outputs/figures/02g_m9_pbm_final_evaluation/fig03_energy_metric_summary.png",
+    "02g_review_burden": "outputs/figures/02g_m9_pbm_final_evaluation/fig04_auto_accept_manual_review_and_errors.png",
+    "02g_window_iou": "outputs/figures/02g_m9_pbm_final_evaluation/fig02_window_iou_distribution.png",
+    "03_gamma_data_error": "outputs/figures/03_gamma_forecast_impact/fig02_gamma_data_error_rmse.png",
+    "03_gamma_forecast_rmse": "outputs/figures/03_gamma_forecast_impact/fig03_gamma_forecast_rmse.png",
+    "03_gamma_residuals": "outputs/figures/03_gamma_forecast_impact/fig04_gamma_forecast_residuals.png",
+    "03_gamma_week": "outputs/figures/03_gamma_forecast_impact/fig01_gamma_raw_m9_manual_example_week.png"
+  },
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "outputs\\tables\\02c_m9_pbm_training_regimes\\table01_regime_headline_metrics.csv",
+      "sha256": "575c6a3d9b2197f6e0607db1794d7bd2db0161b8d7442b0569494f2a7452de02"
+    },
+    {
+      "path": "outputs\\tables\\02d_m9_pbm_feature_ablation\\table01_best_by_feature_count.csv",
+      "sha256": "e01450efe70d9754b709c17da3cde98335776961921718c5bdf056c668b55913"
+    },
+    {
+      "path": "outputs\\tables\\02e_m9_pbm_weight_optimisation\\table01_equal_vs_grid_vs_random.csv",
+      "sha256": "234324a97ecce788fe2a988bae502d63ac22913a6dd76627bcf74546e26d93a7"
+    },
+    {
+      "path": "outputs\\tables\\02f_m9_pbm_ml_comparison\\table01_physical_vs_ml.csv",
+      "sha256": "877133e79501dc50bd525c1f30180568b698a869bc4f230a3f7d39286ebe643f"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table01_final_headline_metrics.csv",
+      "sha256": "a13b9a7c5f96f7938f30e905d4d105acd8fb9103103c360aa7cf935d91c21a99"
+    },
+    {
+      "path": "outputs\\tables\\02g_m9_pbm_final_evaluation\\table03_localisation_and_energy.csv",
+      "sha256": "ee443cc5b1ac0b619637f944b09c13e11be9af7337f68843f797496c2ed0b29d"
+    },
+    {
+      "path": "outputs\\tables\\03_gamma_forecast_impact\\table02_gamma_forecast_impact.csv",
+      "sha256": "7cc3053f39b64ba103b5f0fae4338831ef066d6f259a0e10881fa58e8f9fc56f"
+    },
+    {
+      "path": "outputs\\figures\\02a_m9_pbm_method_example\\fig01_m9_pbm_alpha_F_2024-02-17.png",
+      "sha256": "c18f86665bfcdf836cdacbe826aa34d0796c5cdc77b7770b1c32e2aceb1327c6"
+    },
+    {
+      "path": "outputs\\figures\\02c_m9_pbm_training_regimes\\fig01_regime_precision_recall_f1.png",
+      "sha256": "78b94204c6ca1925f58066c0e4d7a216d59d7da14e9e33155937e3e3afba34da"
+    },
+    {
+      "path": "outputs\\figures\\02c_m9_pbm_training_regimes\\fig02_thresholds_by_heldout_substation.png",
+      "sha256": "c4b8de0624397bea1f69d3ee7902c75c61f005b07b7114ed5ee7071181f49b2f"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig01_f1_by_feature_count.png",
+      "sha256": "661b7d29e4ec6cafa51facd0ae026625862a059698543ba8c1bbe474fac9770b"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig02_top_subset_performance.png",
+      "sha256": "43f5598eb5f598c197c0e8de099675c9b8e98385df746b455447785a5d73d040"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig03_feature_frequency_and_marginal_effect.png",
+      "sha256": "e79692dfddebb166b2972d591b32626fc3544c68f782626e2ba8af08440779d5"
+    },
+    {
+      "path": "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig01_weight_simplex_performance.png",
+      "sha256": "48020d06feb8b1eb5c7fc309e784b06196ff409f7f0bb282e514d327604b4ef9"
+    },
+    {
+      "path": "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig02_selected_weights_by_fold.png",
+      "sha256": "c81e7a2b8a424409709050623046f405d9f69b38b1dc678c6404415253d1063e"
+    },
+    {
+      "path": "outputs\\figures\\02f_m9_pbm_ml_comparison\\fig01_physical_vs_ml_precision_recall_f1.png",
+      "sha256": "c526aab92cb660a30f43a6cdb9401a9a090e1efb2061cac19f49a49b17701873"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig01_final_confusion_matrices.png",
+      "sha256": "30a6c38edd821bff57bb02c6d92834a656d158e6ee7281d50a882ec3d3404edf"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig02_window_iou_distribution.png",
+      "sha256": "e64857daf0ad6e173006aa20adcfb731fb60a66488709329dec24cab3a1a76f9"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig03_energy_metric_summary.png",
+      "sha256": "d7e1b960f4d5c40cc5fa06a986f4e0cb4ec7b00226f1260678c3c76a4ed5d9a1"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig04_auto_accept_manual_review_and_errors.png",
+      "sha256": "3dd1d02d938c4f850559a816b7b4780aa200066862192ffbd317223cc7d86d32"
+    },
+    {
+      "path": "outputs\\figures\\02g_m9_pbm_final_evaluation\\fig05_auto_accept_precision_recall_f1.png",
+      "sha256": "9e494f85827ffca945513c68c54aabf3fc70b85fe2593204456b030cefa6a5b7"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig01_gamma_raw_m9_manual_example_week.png",
+      "sha256": "feba76554691f014d0d53bfc3e59d2893094aff9c82993994b5ecdc3a1d60e31"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig02_gamma_data_error_rmse.png",
+      "sha256": "3361e5f86c3e462d9b5fd9f77d282a1a1ee0bf919274e9b956f1472c8633ee4d"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig03_gamma_forecast_rmse.png",
+      "sha256": "9a4ab119dcdb54c09473fcc44e188417526f7897a0e713ce01527790bdb68598"
+    },
+    {
+      "path": "outputs\\figures\\03_gamma_forecast_impact\\fig04_gamma_forecast_residuals.png",
+      "sha256": "f790aa26755a40de6d66080fe82d46f232236c209ee7bb9094752e97118dec92"
+    },
+    {
+      "path": "outputs\\tables\\02b_m9_pbm_candidate_features\\table02_feature_quality_summary.csv",
+      "sha256": "5edc50ebdb8a77ea344541655a0fb11fc2e9452057092a3d2980d1d3cab62e9d"
+    },
+    {
+      "path": "outputs\\manifests\\02a_m9_pbm_method_example.json",
+      "sha256": "a9f7dbe6bbde7ea1025beee608d26330f6f48aab2a47d40fb7595219db663ad7"
+    },
+    {
+      "path": "outputs\\manifests\\02b_m9_pbm_candidate_features.json",
+      "sha256": "eb6b3439a43c1cd471aa433e3745fe248acd47cbc0264a1e6e3d4653dd9cbb0e"
+    },
+    {
+      "path": "outputs\\manifests\\02c_m9_pbm_training_regimes.json",
+      "sha256": "014e7424a72d7669e01686f1852f112d710d91f3dd85cf92bf1a15d3930d5269"
+    },
+    {
+      "path": "outputs\\manifests\\02d_m9_pbm_feature_ablation.json",
+      "sha256": "1bc391d0be89ccb05a64e5a09630fb9fb3f9988371170cdab4bf3e166bbfda6c"
+    },
+    {
+      "path": "outputs\\manifests\\02e_m9_pbm_weight_optimisation.json",
+      "sha256": "6be6fa3260b63395e78e43869a8567cd98630f9a295ccf09c9184904b31bcb7f"
+    },
+    {
+      "path": "outputs\\manifests\\02f_m9_pbm_ml_comparison.json",
+      "sha256": "117e4601255b70e6b1da4271189d571ecd881f61dfd47f56c20f2d275f478a93"
+    },
+    {
+      "path": "outputs\\manifests\\02g_m9_pbm_final_evaluation.json",
+      "sha256": "b411cd8890ed968848eba18ba4ce226b7ca4e48a259c0aa71b7214dfab1b9dfa"
+    },
+    {
+      "path": "outputs\\manifests\\03_gamma_forecast_impact.json",
+      "sha256": "998161fc284e90d2f08708dfa99edf76f4eaa44b3a2f9fb7456e5563cedb0d54"
+    }
+  ],
+  "missing_upstream_outputs": 0,
+  "outputs": [
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table01_m9_training_regimes.csv",
+      "sha256": "575c6a3d9b2197f6e0607db1794d7bd2db0161b8d7442b0569494f2a7452de02"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table01_m9_training_regimes.md",
+      "sha256": "73c83cd7d6a558c130a4342a3b58f03746f6c042c5fdd64b627d45b3b9e42df4"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table01_m9_training_regimes.tex",
+      "sha256": "3a0e90a3476911e6f6e7f02219c1845ee494b80581c2999c106a2fdc31159557"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table02_m9_ablation_by_feature_count.csv",
+      "sha256": "b530541b0b614fc7aed1887cfa4fd8efb7b5535d8dcb8ca0a3d47d4a8c352713"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table02_m9_ablation_by_feature_count.md",
+      "sha256": "3e7aeaf1072b807bbaddb4ae801b8f58f41823efcb7a1af1481c1fe6e737badc"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table02_m9_ablation_by_feature_count.tex",
+      "sha256": "a59b0af8a74833658ce5784cd112064f5b8e3632b8042a11735ec7cfbdae9218"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table03_m9_weight_optimisation.csv",
+      "sha256": "234324a97ecce788fe2a988bae502d63ac22913a6dd76627bcf74546e26d93a7"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table03_m9_weight_optimisation.md",
+      "sha256": "332a1e8caa8944dbade93e1a660a7c8301fd04da1e37bc267d84d7554ec75a17"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table03_m9_weight_optimisation.tex",
+      "sha256": "752a021f051325ad1cd4469a78d4bb70e2a4d7ec5ddc19ce54b466d6b6be83a9"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table04_m9_physical_vs_ml.csv",
+      "sha256": "e7b2b61d41247fb9531b47285a527b46af27c907297492919daedbe6770c8105"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table04_m9_physical_vs_ml.md",
+      "sha256": "5ee828659f7d33252c9b0a9bd1fee3d5e7d71f39522203ea02d1a4e15e393432"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table04_m9_physical_vs_ml.tex",
+      "sha256": "e37b6f2565d6401c8555e4be565c4ddf69425e8c0ba4e4920e42da298ed11cc2"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table05_m9_final_evaluation.csv",
+      "sha256": "a13b9a7c5f96f7938f30e905d4d105acd8fb9103103c360aa7cf935d91c21a99"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table05_m9_final_evaluation.md",
+      "sha256": "daef4c466ee76e6b4e5522904a1636afc8d2eecd18b4a098678f0f4cc2d6d4a2"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table05_m9_final_evaluation.tex",
+      "sha256": "fabcb6cf6992d442bc116c3121db6d6b8e7aa2d8220f6cdc43c3df844642e8b1"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table06_m9_localisation_and_energy.csv",
+      "sha256": "df69015a31ddc390292936d017e067d5591661ac4f4ec6b01d7231122d1c28a2"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table06_m9_localisation_and_energy.md",
+      "sha256": "adf501505bf06b4abebbda1fb6452bb14dc52df8330d97e1f88c2bcfc92925fb"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table06_m9_localisation_and_energy.tex",
+      "sha256": "684455c73e048e4540df522d736104b7d82aa55447fbef659cd5fda2f92d71fe"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table07_gamma_forecast_impact.csv",
+      "sha256": "058357a0cf10c1546bc253fec533505c75e4513dc97632d038b951d06d03b57d"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table07_gamma_forecast_impact.md",
+      "sha256": "8ad3563cf47440b379a617373bc8c72975ed88583f120964cf51aaaa8a623e20"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table07_gamma_forecast_impact.tex",
+      "sha256": "546314beb2651c168f45e52c203f18493e5cb58f47ad6708334c80f8f134eda3"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table00_upstream_artifact_inventory.csv",
+      "sha256": "007f63875256ee4961b7f4c6f40659fa9d0374670513b07d26cce528263d6799"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table00_upstream_artifact_inventory.md",
+      "sha256": "5077b089e37e3a318d16d6100acdd6da6cd666def7b6edefedfee65fac308a45"
+    },
+    {
+      "path": "outputs\\tables\\04_publication_tables_figures\\table00_upstream_artifact_inventory.tex",
+      "sha256": "a49849c3ddf4d0b8af2d34cefa98a81185f3ffda39c524abee741164da2d708a"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "final_table_families": 7,
+    "final_table_files": 24,
+    "upstream_artifacts": 34,
+    "upstream_figures": 18
+  },
+  "source_notebooks": [
+    "02a",
+    "02b",
+    "02c",
+    "02d",
+    "02e",
+    "02f",
+    "02g",
+    "03"
+  ],
+  "status": "publication_ready"
+}

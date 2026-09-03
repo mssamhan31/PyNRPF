@@ -1,0 +1,39 @@
+{
+  "columns": [
+    "subset_mask",
+    "feature_count",
+    "feature_set",
+    "feature_set_short",
+    "beta_sure_support",
+    "beta_sure_positive_support",
+    "beta_sure_tp",
+    "beta_sure_fp",
+    "beta_sure_fn",
+    "beta_sure_tn",
+    "beta_sure_precision",
+    "beta_sure_recall",
+    "beta_sure_f1",
+    "beta_sure_macro_precision",
+    "beta_sure_macro_recall",
+    "beta_sure_macro_f1",
+    "beta_all_support",
+    "beta_all_positive_support",
+    "beta_all_tp",
+    "beta_all_fp",
+    "beta_all_fn",
+    "beta_all_tn",
+    "beta_all_precision",
+    "beta_all_recall",
+    "beta_all_f1"
+  ],
+  "created_at_utc": "2026-07-16T04:41:43.728648+00:00",
+  "file": "all_subset_metrics.parquet",
+  "required_columns": [
+    "feature_count",
+    "feature_set_short",
+    "beta_sure_f1"
+  ],
+  "rows": 511,
+  "schema_version": 1,
+  "sha256": "458663e9ddbdf775622a83a005c0e802baa68b99242c9eb5ae3212cab8849fcb"
+}

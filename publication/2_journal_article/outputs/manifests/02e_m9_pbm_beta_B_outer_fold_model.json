@@ -1,0 +1,41 @@
+{
+  "alpha_used": false,
+  "candidate_windows": {
+    "anchor_offset_slots": 1,
+    "max_duration_slots": 32,
+    "max_internal_gap_slots": 4,
+    "min_duration_slots": 2,
+    "scan_end_slot": 72,
+    "scan_start_slot": 24,
+    "shoulder_slots": 3,
+    "slot_minutes": 15,
+    "slots_per_day": 96,
+    "solar_peak_radius_slots": 14
+  },
+  "features": [
+    "F1_bridge_improvement",
+    "F3_slope_continuity_improvement",
+    "F4_duration_plausibility"
+  ],
+  "heldout_labels_used": false,
+  "heldout_substation": "beta_B",
+  "model": "m9_pbm_beta_B_outer_fold",
+  "model_family": "deterministic_non_ml",
+  "status": "publication_ready",
+  "threshold": 0.6745930314064026,
+  "training_confidence": "sure_only",
+  "training_substations": [
+    "beta_A",
+    "beta_C",
+    "beta_D",
+    "beta_E",
+    "beta_F",
+    "beta_G",
+    "beta_H"
+  ],
+  "weights": {
+    "F1_bridge_improvement": 0.4544077203861563,
+    "F3_slope_continuity_improvement": 0.17167154441877608,
+    "F4_duration_plausibility": 0.3739207351950676
+  }
+}

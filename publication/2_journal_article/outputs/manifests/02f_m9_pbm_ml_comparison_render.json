@@ -1,0 +1,12 @@
+{
+  "created_at_utc": "2026-07-16T05:23:12.283314+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "02f_m9_pbm_ml_comparison",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\02f_m9_pbm_ml_comparison\\fig01_physical_vs_ml_precision_recall_f1.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\02f_m9_pbm_ml_comparison\\beta_only_model_comparison.parquet"
+  ]
+}

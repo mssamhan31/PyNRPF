@@ -1,0 +1,28 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "created_at_utc": "2026-06-24T03:26:27.383361+00:00",
+  "datasets": [
+    "Alpha",
+    "Beta"
+  ],
+  "figures": [
+    "fig01_site_rpf_day_counts_alpha_beta.png",
+    "fig02_month_hour_heatmap_alpha_beta.png",
+    "fig03_event_duration_distribution_alpha_beta.png",
+    "fig04_day_of_month_rpf_heatmap_alpha_beta.png",
+    "fig05_rpf_events_per_day_doughnut_alpha_beta.png"
+  ],
+  "n_events": 6450,
+  "notebook": "01_characterisation.ipynb",
+  "output_subfolders": {
+    "figures": "outputs\\figures\\01_characterisation",
+    "intermediate": "outputs\\intermediate\\01_characterisation",
+    "metrics": "outputs\\metrics\\01_characterisation",
+    "tables": "outputs\\tables\\01_characterisation"
+  },
+  "schema_version": "journal_v2",
+  "tables": [
+    "table01_rpf_occurrence_summary_alpha_beta.csv",
+    "table02_rpf_event_summary_alpha_beta.csv"
+  ]
+}

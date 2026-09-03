@@ -1,3 +1,12 @@
+"""Schema and interval validation retained from the conference codebase.
+
+Inputs:  a raw interval-level dataframe, the required column names, and the
+         expected interval length in minutes.
+Outputs: a cleaned dataframe and a summary of what was checked and dropped.
+Key steps: confirm required columns exist, parse and optionally strip timezones
+         from timestamps, then enforce interval alignment and key uniqueness.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List

@@ -1,0 +1,2 @@
+dataset,n_rows,n_stations,min_timestamp,max_timestamp,n_dates,null_timestamp,null_net_load_MW,null_solar_MW,duplicate_substation_timestamp_keys,positive_label_interval,positive_label_day_site_days,sure_confidence_site_days,unsure_confidence_site_days
+Reviewed actual oracle,280800,8,2023-10-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,366,0,4394,800,0,12181,630,2310,618

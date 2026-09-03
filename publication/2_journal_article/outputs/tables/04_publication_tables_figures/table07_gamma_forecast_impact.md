@@ -1,0 +1,5 @@
+| model             | model_label       |   raw_rmse_MW |   m9_pbm_corrected_rmse_MW |   manually_corrected_rmse_MW |   m9_rmse_reduction_vs_raw_MW |   m9_rmse_reduction_vs_raw_pct |   remaining_gap_to_manual_rmse_MW |
+|:------------------|:------------------|--------------:|---------------------------:|-----------------------------:|------------------------------:|-------------------------------:|----------------------------------:|
+| linear_regression | Linear regression |        4.7160 |                     3.1366 |                       3.0686 |                        1.5795 |                        33.4918 |                            0.0680 |
+| seasonal_naive    | Seasonal naive    |        4.8081 |                     3.8149 |                       3.6670 |                        0.9931 |                        20.6553 |                            0.1480 |
+| xgboost           | XGBoost           |        4.4249 |                     4.0232 |                       2.6363 |                        0.4017 |                         9.0782 |                            1.3869 |

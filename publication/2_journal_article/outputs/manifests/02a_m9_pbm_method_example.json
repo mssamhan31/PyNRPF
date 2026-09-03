@@ -1,0 +1,39 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "d7e15bee745cecf5b9a4c3e934a39867c8aed8b7845c8fddc64f6b4863168459",
+  "created_at_utc": "2026-07-15T06:16:53.307993+00:00",
+  "elapsed_seconds": 3.685487985610962,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "503a9c2e0e786434fcbd5c39c4b7d97a9dc31a3db8edcb02b0cbeeed205ad9f5"
+    },
+    {
+      "path": "dataset\\final\\dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\tables\\02a_m9_pbm_method_example\\table01_alpha_F_2024-02-17_plot_data.csv",
+      "sha256": "86c1b1e02e51c73e2ea06517d7f4348292808fb51332d50d568fe8f3fd825ea6"
+    },
+    {
+      "path": "outputs\\figures\\02a_m9_pbm_method_example\\fig01_m9_pbm_alpha_F_2024-02-17.png",
+      "sha256": "c18f86665bfcdf836cdacbe826aa34d0796c5cdc77b7770b1c32e2aceb1327c6"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "example_readings": 96,
+    "labelled_intervals": 16
+  },
+  "status": "publication_ready"
+}

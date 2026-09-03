@@ -1,0 +1,26 @@
+{
+  "columns": [
+    "substation_id",
+    "date",
+    "timestamp",
+    "slot",
+    "observed_net_load_MW",
+    "solar_generation_MW",
+    "uncorrected_demand_MW",
+    "corrected_demand_MW",
+    "true_interval",
+    "candidate_window",
+    "bridge_anchor",
+    "linear_bridge_MW"
+  ],
+  "created_at_utc": "2026-07-16T04:41:37.967792+00:00",
+  "file": "method_example.parquet",
+  "required_columns": [
+    "timestamp",
+    "candidate_window",
+    "bridge_anchor"
+  ],
+  "rows": 96,
+  "schema_version": 1,
+  "sha256": "6aa72efc9f95a909493f82f27ece9ee7f486465b945f49a736414934e9e18f2b"
+}

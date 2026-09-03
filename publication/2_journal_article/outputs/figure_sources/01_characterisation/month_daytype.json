@@ -1,0 +1,21 @@
+{
+  "columns": [
+    "dataset",
+    "month",
+    "daytype",
+    "total_site_days",
+    "rpf_site_days",
+    "rpf_site_day_pct"
+  ],
+  "created_at_utc": "2026-07-16T04:41:34.400075+00:00",
+  "file": "month_daytype.parquet",
+  "required_columns": [
+    "dataset",
+    "month",
+    "daytype",
+    "rpf_site_day_pct"
+  ],
+  "rows": 48,
+  "schema_version": 1,
+  "sha256": "eba0be0be31fa912ef4f62fd54deb7e1d943dccaa4ad79080a3adac1e1450807"
+}

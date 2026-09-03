@@ -1,0 +1,32 @@
+{
+  "columns": [
+    "weight_id",
+    "search_origin",
+    "weight_F1",
+    "weight_F3",
+    "weight_F4",
+    "excluded_outer_substation",
+    "inner_substations",
+    "inner_macro_precision",
+    "inner_macro_recall",
+    "inner_macro_f1",
+    "inner_pooled_tp",
+    "inner_pooled_fp",
+    "inner_pooled_fn",
+    "mean_inner_threshold",
+    "minimum_inner_threshold",
+    "maximum_inner_threshold",
+    "selection_context"
+  ],
+  "created_at_utc": "2026-07-16T04:41:46.994802+00:00",
+  "file": "weight_search.parquet",
+  "required_columns": [
+    "weight_F1",
+    "weight_F3",
+    "weight_F4",
+    "inner_macro_f1"
+  ],
+  "rows": 10539,
+  "schema_version": 1,
+  "sha256": "b928155ce4c037cda2ca5e0f19b6e5b59e92946fb8d20c2faff3ec56dadec91a"
+}

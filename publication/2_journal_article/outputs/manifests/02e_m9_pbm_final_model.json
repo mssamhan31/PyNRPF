@@ -1,0 +1,43 @@
+{
+  "alpha_used": false,
+  "candidate_windows": {
+    "anchor_offset_slots": 1,
+    "max_duration_slots": 32,
+    "max_internal_gap_slots": 4,
+    "min_duration_slots": 2,
+    "scan_end_slot": 72,
+    "scan_start_slot": 24,
+    "shoulder_slots": 3,
+    "slot_minutes": 15,
+    "slots_per_day": 96,
+    "solar_peak_radius_slots": 14
+  },
+  "features": [
+    "F1_bridge_improvement",
+    "F3_slope_continuity_improvement",
+    "F4_duration_plausibility"
+  ],
+  "model": "m9_pbm_compact_optimised_physical_score",
+  "model_family": "deterministic_non_ml",
+  "random_seed": 9,
+  "selection_objective": "Beta sure macro-substation F1",
+  "selection_origin": "grid",
+  "status": "publication_ready",
+  "threshold": 0.7703033089637756,
+  "training_confidence": "sure_only",
+  "training_substations": [
+    "beta_A",
+    "beta_B",
+    "beta_C",
+    "beta_D",
+    "beta_E",
+    "beta_F",
+    "beta_G",
+    "beta_H"
+  ],
+  "weights": {
+    "F1_bridge_improvement": 0.25,
+    "F3_slope_continuity_improvement": 0.15000000000000002,
+    "F4_duration_plausibility": 0.6000000000000001
+  }
+}

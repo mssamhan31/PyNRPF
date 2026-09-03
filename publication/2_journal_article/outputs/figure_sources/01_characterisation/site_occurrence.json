@@ -1,0 +1,20 @@
+{
+  "columns": [
+    "dataset",
+    "substation_id",
+    "total_days",
+    "rpf_days",
+    "rpf_day_pct",
+    "rpf_intervals"
+  ],
+  "created_at_utc": "2026-07-16T04:41:27.308742+00:00",
+  "file": "site_occurrence.parquet",
+  "required_columns": [
+    "dataset",
+    "substation_id",
+    "rpf_day_pct"
+  ],
+  "rows": 18,
+  "schema_version": 1,
+  "sha256": "b14003821758e41f9d20cb84ae7587e742221ddef99e50918d8c5797a95bb094"
+}

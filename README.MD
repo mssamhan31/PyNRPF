@@ -1,23 +1,98 @@
-# PyNRPF
+# PyNRPF — Python for Network Reverse Power Flow
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19211355.svg)](https://doi.org/10.5281/zenodo.19211355)
 
-PyNRPF provides an implementation package (`pynrpf`) for reverse power flow
-inference and `m8_xgb` training workflows.
+PyNRPF detects and corrects a wrong reverse power flow (RPF) sign in electricity
+distribution network interval meter data.
 
-## Contributors
+## What problem it solves
 
-- M. Syahman Samhan (contact: m.samhan@unsw.edu.au)
-- Anna Bruce
-- Baran Yildiz
+A distribution substation meter records **net load** — demand minus local
+generation. When rooftop solar output exceeds demand, real power flows backwards
+into the network: a *reverse power flow* event, and net load is genuinely
+negative. Some meters record the magnitude of that flow but not its direction, so
+the reading is stored with the wrong sign — positive where it should be negative.
+
+The reading looks plausible and passes ordinary validation, but it is wrong by
+twice the true value, and it corrupts every minimum-demand study and net load
+forecast built on top of it.
+
+PyNRPF finds the intervals where the sign is wrong and returns a corrected series
+alongside the flags, so the correction is auditable rather than silent.
+
+It is built for distribution network planners and forecasting analysts working
+with interval meter data, and for researchers reproducing the published results
+in [`publication/`](publication/). Two models are available:
+
+- **`m7_dtr`** — a deterministic threshold rule (daytime threshold rule). No
+  training required; runs on any conforming dataset.
+- **`m8_xgb`** — a two-stage gradient-boosted classifier (`xgb1_day` for
+  day-level detection, `xgb2_timestamp` for interval-level). Requires a trained
+  artefact bundle.
 
 ## Install
+
+Requires **Python 3.10 or later**. Continuous integration tests 3.10, 3.11 and 3.12.
+
+For the full repository environment, including tests, journal notebooks, and the
+oracle review Streamlit app:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install --upgrade pip
-pip install -e .[dev]
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
+
+For package-only usage, install just the runtime package:
+
+```powershell
+python -m pip install -e .
+```
+
+## Quick start
+
+Run the deterministic `m7_dtr` model over one day of synthetic readings. This
+needs no trained artefact, so it works immediately after install. Run it from the
+repository root, so that the configuration path resolves.
+
+```python
+import pandas as pd
+from pynrpf import run_inference
+
+# One substation, one day of 15-minute readings. Solar peaks at midday, so true
+# net load goes negative then -- but the meter has recorded it with the wrong sign.
+timestamps = pd.date_range("2024-01-01", periods=96, freq="15min", tz="UTC")
+solar = [max(0.0, 3.0 - abs(i - 48) * 0.12) for i in range(96)]
+readings = pd.DataFrame({
+    "substation_id": "A",
+    "timestamp": timestamps,
+    "net_load_MW": [abs(2.0 - s) for s in solar],  # sign error: never negative
+    "solar_MW": solar,
+})
+
+result = run_inference(readings, "config/pynrpf_inference.yaml")
+scored, summary = result["data"], result["summary"]
+
+print(f"model:             {result['model']}")
+print(f"rows processed:    {summary['rows_processed']}")
+print(f"rows corrected:    {summary['rows_corrected']}")
+print(f"intervals flagged: {int(scored['pynrpf_interval_flag'].sum())}")
+```
+
+After a progress block from the model, this prints:
+
+```text
+model:             m7_dtr
+rows processed:    96
+rows corrected:    15
+intervals flagged: 15
+```
+
+`scored` is the input frame plus the correction columns, chiefly
+`pynrpf_interval_flag`, `pynrpf_day_flag`, `pynrpf_corrected_net_load` and
+`pynrpf_confidence`. For the `m8_xgb` workflow, which needs a trained bundle,
+see the User Journey below.
 
 ## User Journey
 
@@ -32,9 +107,11 @@ pip install -e .[dev]
   - Put it into `pynrpf_inference.artifacts.m8_pretrained_bundle_uri`.
   - Run `run_inference(...)`.
 
-### Step 2: Keep one config file (`pipeline.yaml`)
+### Step 2: Keep one config file
 
-PyNRPF reads only:
+A single pipeline configuration file carries both blocks PyNRPF needs.
+[config/pynrpf_training_m8_xgb.yaml](config/pynrpf_training_m8_xgb.yaml) is a
+worked example. PyNRPF reads only:
 - `pynrpf_inference`
 - `pynrpf_training` (for training)
 
@@ -46,9 +123,11 @@ Other pipeline keys (tables, orchestration, write targets) are ignored by PyNRPF
 import yaml
 from pynrpf import run_inference, train_m8_xgb
 
-with open("config/pipeline.yaml", "r", encoding="utf-8") as f:
+with open("config/pynrpf_training_m8_xgb.yaml", "r", encoding="utf-8") as f:
     cfg = yaml.safe_load(f)
 
+# train_df and score_df are your own labelled interval frames -- see Data below
+# for the expected columns.
 train_out = train_m8_xgb(train_df, cfg)
 
 cfg.setdefault("pynrpf_inference", {}).setdefault("artifacts", {})
@@ -62,234 +141,73 @@ summary = result["summary"]
 If you already have a trained bundle, skip `train_m8_xgb(...)` and set
 `m8_pretrained_bundle_uri` directly in YAML.
 
-## API Classification
+## Repository structure
 
-### Core APIs (most users)
-
-- `run_inference(data, config)`
-- `train_m8_xgb(data, config)`
-- `load_config(config)`
-- `list_models()`
-
-### Additional APIs (advanced/helpers)
-
-- `load_artifact_bundle(location)`
-- `save_artifact_bundle(bundle, location)`
-- `build_pipeline_config(model_id, include_training)`
-- `generate_pipeline_config(output_path, model_id, include_training, overwrite)`
-- `generate_model_scaffold(model_id, output_dir, overwrite, include_tests, include_pipeline_config)`
-
-## Detailed API Function Guide
-
-### Core: `run_inference(data, config)`
-
-What it does:
-- Validates and standardizes input data.
-- Selects model from config (`m7_dtr` or `m8_xgb`).
-- Runs model inference and returns scored data plus operational summary.
-
-Use when:
-- You want corrected net load + flags on new data.
-
-Input:
-- `data`: pandas DataFrame or Spark DataFrame.
-- `config`: mapping or YAML path. Can be:
-  - pure inference config, or
-  - full pipeline config containing `pynrpf_inference`.
-- Required logical columns (configured under `columns`):
-  - `site`, `timestamp`, `net_load`, `solar`.
-
-Output:
-- `data`: same table type as input (pandas in, pandas out; Spark in, Spark out).
-- `summary`: row counts and monitoring stats.
-- `model`: resolved model id.
-- `input_type`: `"pandas"` or `"spark"`.
-- `m7_dtr` note: strict day flags remain threshold-based, while interval
-  corrections and corrected net load use a relaxed, threshold-free minima span,
-  so day and interval flags may diverge.
-
-Common errors:
-- Missing required columns.
-- Unsupported model id.
-- `m8_xgb` without `artifacts.m8_pretrained_bundle_uri`.
-
-### Core: `train_m8_xgb(data, config)`
-
-What it does:
-- Trains both internal models:
-  - `xgb1_day` (day classifier)
-  - `xgb2_timestamp` (interval classifier)
-- Writes a versioned artifact bundle and manifest.
-- Returns artifact URIs + validation metrics.
-
-Use when:
-- You need to create or refresh `m8_xgb` artifacts for inference.
-
-Input:
-- `data`: interval-level pandas/Spark DataFrame containing:
-  - inference columns (`site`, `timestamp`, `net_load`, `solar`)
-  - day label column
-  - interval label column
-- `config`: mapping or YAML path containing:
-  - `pynrpf_inference`
-  - `pynrpf_training`
-
-Output:
-- `bundle`: in-memory artifact dictionary.
-- `bundle_schema`: currently `pynrpf.m8_xgb.bundle.v2`.
-- `artifact_uri`: bundle file URI to use for inference.
-- `artifact_dir_uri`, `manifest_uri`.
-- `validation_metrics` for both stages.
-
-Common errors:
-- Missing day/interval labels.
-- Invalid training split window.
-- Invalid threshold values.
-- Unsupported training model id (currently only `m8_xgb`).
-
-### Core: `load_config(config)`
-
-What it does:
-- Loads and validates inference config.
-- Accepts mapping or YAML path.
-- If full pipeline config is provided, extracts `pynrpf_inference`.
-- Applies defaults and normalizes model selection fields.
-
-Use when:
-- You want to inspect/validate final effective inference config before execution.
-
-### Core: `list_models()`
-
-What it does:
-- Returns currently registered inference model ids.
-
-Use when:
-- You want to see which model names are valid for `selected_model`.
-
-### Additional: `load_artifact_bundle(location)`
-
-What it does:
-- Reads and deserializes a pickle artifact bundle.
-- Supports local paths, `file://`, `dbfs:/`, and `http(s)://` for reads.
-
-Use when:
-- You want to inspect/debug a trained artifact payload.
-
-### Additional: `save_artifact_bundle(bundle, location)`
-
-What it does:
-- Serializes and writes bundle payload to a local or DBFS/Volumes-backed path.
-
-Use when:
-- You need explicit one-file bundle writes outside training API orchestration.
-
-### Additional: `build_pipeline_config(model_id, include_training)`
-
-What it does:
-- Builds an in-memory pipeline-style config dictionary with `pynrpf_inference`.
-- Optionally includes `pynrpf_training` (currently only for `m8_xgb`).
-
-Use when:
-- You want a Python-first config object without writing a file.
-
-### Additional: `generate_pipeline_config(output_path, model_id, include_training, overwrite)`
-
-What it does:
-- Writes a pipeline YAML template to disk using the same schema as `build_pipeline_config(...)`.
-
-Use when:
-- You want a starter config file for Databricks/notebook use.
-
-### Additional: `generate_model_scaffold(model_id, output_dir, overwrite, include_tests, include_pipeline_config)`
-
-What it does:
-- Creates a starter plugin module under `src/pynrpf/plugins/`.
-- Optionally creates a plugin test and pipeline config template.
-- Auto-wires model import/export and registry entries:
-  - `src/pynrpf/plugins/__init__.py`
-  - `src/pynrpf/registry.py`
-
-Use when:
-- You want to add a new model quickly and start editing logic immediately.
-
-## API Input/Output Schemas (Quick View)
-
-Input:
-- `run_inference`:
-  - `data` (pandas/Spark) + config
-- `train_m8_xgb`:
-  - labeled interval data + training/inference config blocks
-
-Output:
-```python
-{
-  "run_inference": {
-    "data": "<same type as input>",
-    "summary": {...},
-    "model": "<model_id>",
-    "input_type": "pandas|spark",
-  },
-  "train_m8_xgb": {
-    "bundle_schema": "pynrpf.m8_xgb.bundle.v2",
-    "artifact_uri": "<base>/m8_xgb/<utc_ts>/bundle.pkl",
-    "validation_metrics": {
-      "xgb1_day": {...},
-      "xgb2_timestamp": {...},
-    },
-  }
-}
+```text
+src/pynrpf/       The installable package: config, validation, model registry,
+                  artefacts, monitoring, and one plugin per model.
+config/           Example inference and training configuration files.
+tests/            Pytest suite.
+docs/             Documentation — see the index below.
+publication/      Frozen conference paper archive, and ongoing journal work.
 ```
 
-## `m8_xgb` Notes
+## Data
 
-`m8_xgb` is a two-stage model family:
-- `xgb1_day` (day-level)
-- `xgb2_timestamp` (interval-level)
+All datasets derive from **anonymised Ausgrid distribution network data**.
+Substation identifiers are replaced with opaque labels, so no site, customer or
+location can be identified from what is published here.
 
-Training consumes one interval-level labeled dataset and internally builds both
-feature schemas.
+The conference dataset is 10 substations at 15-minute resolution, November 2021
+to September 2024, carrying recorded net load in megawatts, estimated solar, and
+a manually reviewed ground truth. The journal work splits into Alpha, Beta and
+Gamma. Full schema, provenance and label process: [docs/data.md](docs/data.md).
 
-Artifact contract details:
-- `docs/m8_xgb_artifact_contract.md`
+## Tests
 
-## Scaffold Helpers
-
-Generate starter model logic/test/config files:
-
-```python
-from pynrpf import generate_model_scaffold
-
-created = generate_model_scaffold("m9_custom", output_dir=".")
-print(created)
+```powershell
+python -m pip install -e .[dev]
+pytest -q
 ```
 
-`generate_model_scaffold(...)` now auto-wires:
-- `src/pynrpf/plugins/__init__.py` import/export list
-- `src/pynrpf/registry.py` model registry entry
+89 tests. Lint with `ruff check src/pynrpf tests`. See
+[docs/development.md](docs/development.md).
 
-Generate only a pipeline config template:
+## Documentation
 
-```python
-from pynrpf import generate_pipeline_config
+| Document | What it covers |
+|---|---|
+| [docs/api-reference.md](docs/api-reference.md) | Every public function: arguments, returns, errors, schemas. |
+| [docs/data.md](docs/data.md) | Dataset provenance, columns, units, and the ground-truth process. |
+| [docs/extending.md](docs/extending.md) | The `m8_xgb` family, and scaffolding a new model plugin. |
+| [docs/m8_xgb_artifact_contract.md](docs/m8_xgb_artifact_contract.md) | The artefact bundle format. |
+| [docs/development.md](docs/development.md) | Environment, tests, lint, and continuous integration. |
 
-generate_pipeline_config(
-    output_path="config/pynrpf_pipeline_m8_xgb.yaml",
-    model_id="m8_xgb",
-    include_training=True,
-    overwrite=True,
-)
-```
+## Conference paper archive
 
-## Conference Publication Archive
+The conference publication artefacts are frozen and self-contained under
+[`publication/1_conference_paper/`](publication/1_conference_paper/README.md),
+which documents how to reproduce the published figures and tables.
 
-Publication artifacts are isolated and frozen under:
-- `publication/1_conference_paper`
+## Licence
 
-Archive run instructions:
-- `publication/1_conference_paper/README.md`
+MIT. See [LICENSE](LICENSE).
 
-## Continuous Integration and Release
+## Acknowledgements
 
-- `ci`: lint, tests, build
-- `release`: publish on version tags (`v*`)
-- `publication_archive_smoke` (nightly): non-blocking publication notebook smoke
+This project is part of Samhan's PhD study, supported by the University International Postgraduate Award (UIPA) Scholarship from UNSW, the Industry Collaboration Project Scholarship from Ausgrid, the RACE for 2030 Scholarship, and the NSW Decarbonisation Innovation Hub (NSW Decarb Hub).
+
+## Contributors
+
+- M. Syahman Samhan (contact: m.samhan@unsw.edu.au)
+- Anna Bruce
+- Baran Yildiz
+
+## Citation
+
+If you use this software, please cite it using the metadata in
+[CITATION.cff](CITATION.cff), or the archived release:
+
+> Samhan, M. S., Bruce, A., & Yildiz, B. (2026). *PyNRPF: Detecting and
+> rectifying wrong reverse power flow readings* (version 0.3.0) [Software].
+> Zenodo. https://doi.org/10.5281/zenodo.19211355

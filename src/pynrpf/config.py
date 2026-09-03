@@ -1,3 +1,14 @@
+"""Load, adapt and validate PyNRPF inference configuration.
+
+Inputs:  a mapping, or a path to a YAML file. Full pipeline configurations
+         containing a ``pynrpf_inference`` block are unwrapped automatically, and
+         older flat-schema files are adapted forward.
+Outputs: a fully populated inference configuration dictionary, with defaults
+         merged in and model selection fields normalised.
+Key steps: read the payload, extract the inference block, adapt the legacy schema
+         if present, deep-merge over the defaults, then validate the result.
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -164,6 +175,22 @@ def _extract_inference_block(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_config(config: ConfigInput) -> dict[str, Any]:
+    """Load and validate an inference configuration.
+
+    Args:
+        config: Mapping, or path to a YAML file. A full pipeline config
+            containing a ``pynrpf_inference`` block is unwrapped, and an older
+            flat-schema config is adapted forward.
+
+    Returns:
+        The effective inference configuration, with defaults merged in and model
+        selection fields normalised.
+
+    Raises:
+        TypeError: If the input is neither a mapping nor a path, or the file does
+            not contain a mapping.
+        FileNotFoundError: If the path does not exist.
+    """
     if isinstance(config, Mapping):
         raw = _extract_inference_block(dict(config))
     elif isinstance(config, (str, Path)):

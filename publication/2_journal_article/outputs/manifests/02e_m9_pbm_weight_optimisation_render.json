@@ -1,0 +1,14 @@
+{
+  "created_at_utc": "2026-07-16T05:35:44.451573+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "02e_m9_pbm_weight_optimisation",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig01_weight_simplex_performance.png",
+    "outputs\\figures\\02e_m9_pbm_weight_optimisation\\fig02_selected_weights_by_fold.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\02e_m9_pbm_weight_optimisation\\selected_weights.parquet",
+    "outputs\\figure_sources\\02e_m9_pbm_weight_optimisation\\weight_search.parquet"
+  ]
+}

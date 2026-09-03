@@ -1,0 +1,6 @@
+check,expected,actual,status
+schema_version,journal_v2,journal_v2,True
+beta_date_range,2023-10-01 to 2024-09-30,2023-10-01 to 2024-09-30,True
+beta_rows,280800,280800,True
+gamma_one_site,one selected Beta site,beta_B,True
+gamma_rows,35136,35136,True

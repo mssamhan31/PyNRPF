@@ -1,0 +1,29 @@
+{
+  "columns": [
+    "strategy",
+    "heldout_substation",
+    "weight_id",
+    "search_origin",
+    "weight_F1",
+    "weight_F3",
+    "weight_F4",
+    "inner_macro_precision",
+    "inner_macro_recall",
+    "inner_macro_f1",
+    "outer_training_substations",
+    "outer_training_confidence",
+    "outer_threshold"
+  ],
+  "created_at_utc": "2026-07-16T04:41:47.124369+00:00",
+  "file": "selected_weights.parquet",
+  "required_columns": [
+    "strategy",
+    "heldout_substation",
+    "weight_F1",
+    "weight_F3",
+    "weight_F4"
+  ],
+  "rows": 32,
+  "schema_version": 1,
+  "sha256": "209fe8e1b985b394da65d9200afaf67017276ec1df7cbf7875aae654651cc6cc"
+}

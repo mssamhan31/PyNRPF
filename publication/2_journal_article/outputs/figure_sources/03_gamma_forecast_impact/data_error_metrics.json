@@ -1,0 +1,24 @@
+{
+  "columns": [
+    "scope",
+    "data_condition",
+    "data_condition_label",
+    "n_valid",
+    "rmse_MW",
+    "mae_MW",
+    "rmse_reduction_vs_raw_MW",
+    "mae_reduction_vs_raw_MW",
+    "rmse_reduction_vs_raw_pct",
+    "mae_reduction_vs_raw_pct"
+  ],
+  "created_at_utc": "2026-07-16T04:42:39.685683+00:00",
+  "file": "data_error_metrics.parquet",
+  "required_columns": [
+    "scope",
+    "data_condition",
+    "rmse_MW"
+  ],
+  "rows": 4,
+  "schema_version": 1,
+  "sha256": "d36a5f725861d0823f3956b4532e8d874ba18562f75cbe4e9399572e61094be5"
+}

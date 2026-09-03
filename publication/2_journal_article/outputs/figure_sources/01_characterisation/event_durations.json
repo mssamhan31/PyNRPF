@@ -1,0 +1,23 @@
+{
+  "columns": [
+    "dataset",
+    "substation_id",
+    "date",
+    "start_timestamp",
+    "end_timestamp",
+    "duration_minutes",
+    "duration_hours",
+    "n_intervals",
+    "min_reference_net_load_MW",
+    "max_raw_net_load_MW"
+  ],
+  "created_at_utc": "2026-07-16T04:41:27.469062+00:00",
+  "file": "event_durations.parquet",
+  "required_columns": [
+    "dataset",
+    "duration_hours"
+  ],
+  "rows": 6450,
+  "schema_version": 1,
+  "sha256": "c91fea47d5c7151f6e7c24a0ad14d2514453e2e9e0254b8dde02ed1201f89a5d"
+}

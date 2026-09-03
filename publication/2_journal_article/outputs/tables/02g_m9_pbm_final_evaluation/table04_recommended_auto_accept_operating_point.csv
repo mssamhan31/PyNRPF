@@ -1,0 +1,2 @@
+qualifying_operating_point_found,minimum_precision,minimum_f1,recommended_coverage_pct,note
+False,0.99,0.95,,No tested coverage level satisfies both development constraints.

@@ -1,0 +1,19 @@
+{
+  "columns": [
+    "dataset",
+    "n_contiguous_events",
+    "n_rpf_site_days",
+    "share_pct",
+    "plot_category"
+  ],
+  "created_at_utc": "2026-07-16T04:41:34.456824+00:00",
+  "file": "event_count_distribution.parquet",
+  "required_columns": [
+    "dataset",
+    "plot_category",
+    "n_rpf_site_days"
+  ],
+  "rows": 11,
+  "schema_version": 1,
+  "sha256": "31a348340a7f38946a7e5baca6e98bd90b4d83b7e8dda3d47108b933d48745c9"
+}

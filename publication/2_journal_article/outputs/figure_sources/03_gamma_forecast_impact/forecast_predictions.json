@@ -1,0 +1,25 @@
+{
+  "columns": [
+    "target_timestamp",
+    "origin_timestamp",
+    "y_condition",
+    "y_reference",
+    "history_observations",
+    "model",
+    "y_pred",
+    "data_condition",
+    "status",
+    "is_placeholder"
+  ],
+  "created_at_utc": "2026-07-16T04:42:39.790220+00:00",
+  "file": "forecast_predictions.parquet",
+  "required_columns": [
+    "model",
+    "data_condition",
+    "y_pred",
+    "y_reference"
+  ],
+  "rows": 25920,
+  "schema_version": 1,
+  "sha256": "a6b61cdf9cb90a89b2b594f0b3faef3e578bed4445815aa1ded8115251fe82df"
+}

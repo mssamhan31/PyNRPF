@@ -1,0 +1,33 @@
+{
+  "columns": [
+    "substation_id",
+    "date",
+    "timestamp",
+    "net_load_MW",
+    "solar_MW",
+    "label_interval",
+    "label_day",
+    "confidence",
+    "slot",
+    "candidate_id",
+    "left_slot",
+    "right_slot",
+    "m9_score",
+    "predicted_day",
+    "predicted_interval",
+    "raw_uncorrected_MW",
+    "m9_pbm_corrected_MW",
+    "manually_corrected_MW"
+  ],
+  "created_at_utc": "2026-07-16T04:42:39.655485+00:00",
+  "file": "gamma_series.parquet",
+  "required_columns": [
+    "timestamp",
+    "raw_uncorrected_MW",
+    "m9_pbm_corrected_MW",
+    "manually_corrected_MW"
+  ],
+  "rows": 35136,
+  "schema_version": 1,
+  "sha256": "aa419fb74346680a6933dc854eac0c9188f5ac171d101ce791e4d34429e761f3"
+}

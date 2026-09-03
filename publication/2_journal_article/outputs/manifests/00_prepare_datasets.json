@@ -1,0 +1,37 @@
+{
+  "alpha_dataset_path": "dataset\\final\\dataset_alpha.parquet",
+  "alpha_loso_sites": [
+    "alpha_F",
+    "alpha_E",
+    "alpha_G",
+    "alpha_C",
+    "alpha_J",
+    "alpha_I",
+    "alpha_B",
+    "alpha_A",
+    "alpha_D",
+    "alpha_H"
+  ],
+  "beta_dataset_path": "dataset\\final\\dataset_beta.parquet",
+  "beta_review_status": "final_review_2026-07-06",
+  "config_path": "config\\experiment_config.yaml",
+  "created_at_utc": "2026-07-07T03:33:28.547731+00:00",
+  "gamma_dataset_path": "dataset\\final\\dataset_gamma.parquet",
+  "gamma_override_used": false,
+  "gamma_ranking_metric": "data_error_rmse_MW",
+  "gamma_selection_mode": "auto",
+  "gamma_site": "beta_B",
+  "notebook": "00_prepare_datasets.ipynb",
+  "output_subfolders": {
+    "figures": "outputs\\figures\\00_prepare_datasets",
+    "intermediate": "outputs\\intermediate\\00_prepare_datasets",
+    "metrics": "outputs\\metrics\\00_prepare_datasets",
+    "tables": "outputs\\tables\\00_prepare_datasets"
+  },
+  "row_counts": {
+    "alpha": 1011264,
+    "beta": 280800,
+    "gamma": 35136
+  },
+  "schema_version": "journal_v2"
+}

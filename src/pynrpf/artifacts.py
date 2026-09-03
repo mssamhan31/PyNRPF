@@ -1,3 +1,14 @@
+"""Read and write ``m8_xgb`` artefact bundles across local and remote stores.
+
+Inputs:  a bundle dictionary to save, or a location to read one from. Locations
+         may be local paths, ``file://``, ``dbfs:/`` or, for reads only,
+         ``http(s)://``.
+Outputs: the deserialised bundle, or the URIs a versioned save wrote to.
+Key steps: resolve the location scheme, pickle or unpickle the payload, and for
+         versioned saves build a timestamped directory holding the bundle and its
+         JSON manifest.
+"""
+
 from __future__ import annotations
 
 import json
@@ -82,6 +93,17 @@ def _join_location(base: Location, *parts: str) -> str:
 
 
 def load_artifact_bundle(location: Location) -> Dict[str, Any]:
+    """Read and deserialise an artefact bundle.
+
+    Args:
+        location: Local path, ``file://``, ``dbfs:/`` or ``http(s)://`` URI.
+
+    Returns:
+        The bundle dictionary.
+
+    Raises:
+        TypeError: If the payload does not deserialise to a dictionary.
+    """
     payload = _read_bytes(location)
     bundle = pickle.loads(payload)
     if not isinstance(bundle, dict):
@@ -90,6 +112,18 @@ def load_artifact_bundle(location: Location) -> Dict[str, Any]:
 
 
 def save_artifact_bundle(bundle: Dict[str, Any], location: Location) -> str:
+    """Serialise a bundle and write it to one file.
+
+    Args:
+        bundle: The bundle dictionary to pickle.
+        location: Local path, ``file://`` or ``dbfs:/`` destination.
+
+    Returns:
+        The resolved path written to.
+
+    Raises:
+        ValueError: If an HTTP or HTTPS URI is given, which is read-only.
+    """
     loc = str(location)
     if _is_http_url(loc):
         raise ValueError("Saving to HTTP/HTTPS URI is not supported. Use a local or DBFS path.")
@@ -104,6 +138,19 @@ def save_versioned_artifact_bundle(
     manifest: Dict[str, Any] | None = None,
     timestamp_utc: str | None = None,
 ) -> Dict[str, str]:
+    """Write a bundle and its manifest into a timestamped directory.
+
+    Args:
+        bundle: The bundle dictionary to save.
+        base_location: Directory under which the versioned folder is created.
+        model_name: Model id, used as the directory level above the timestamp.
+        manifest: Manifest payload written alongside the bundle. Optional.
+        timestamp_utc: Override for the ``%Y%m%dT%H%M%SZ`` version stamp, which
+            otherwise comes from the current UTC time.
+
+    Returns:
+        Dict of ``artifact_dir_uri``, ``artifact_uri`` and ``manifest_uri``.
+    """
     ts = timestamp_utc or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     artifact_dir_uri = _join_location(base_location, model_name, ts)
     artifact_uri = _join_location(artifact_dir_uri, "bundle.pkl")

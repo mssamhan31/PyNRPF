@@ -1,0 +1,229 @@
+schema_version: "journal_v2"
+
+paths:
+  alpha_dataset_path: "dataset/final/dataset_alpha.parquet"
+  beta_dataset_path: "dataset/final/dataset_beta.parquet"
+  gamma_dataset_path: "dataset/final/dataset_gamma.parquet"
+  output_base_dir: "outputs"
+
+source_paths:
+  alpha_processed_path: "dataset/processed/synthetic_pynrpf_dataset.parquet"
+  beta_processed_path: "dataset/oracle_data_creation/actual_pynrpf_dataset_reflagged.parquet"
+
+columns:
+  site: "substation_id"
+  date: "date"
+  timestamp: "timestamp"
+  net_load: "net_load_MW"
+  solar: "solar_MW"
+  label_interval: "label_interval"
+  label_day: "label_day"
+
+datasets:
+  alpha_name: "Alpha"
+  beta_name: "Beta"
+  gamma_name: "Gamma"
+  beta_review_status: "final_review_2026-07-06"
+  expected_substation_days:
+    alpha: 10643
+    beta: 2928
+  expected_confidence_substation_days:
+    beta:
+      sure: 2310
+      unsure: 618
+    gamma:
+      sure: 231
+      unsure: 135
+
+gamma:
+  selection_mode: "auto"
+  ranking_metric: "data_error_rmse_MW"
+  manual_site: null
+
+windows:
+  train_start: "2021-11-01"
+  train_end: "2023-09-30"
+  test_start: "2023-10-01"
+  test_end: "2024-09-30"
+  beta_start: "2023-10-01"
+  beta_end: "2024-09-30"
+  gamma_forecast_test_start: "2024-09-01"
+  gamma_forecast_test_end: "2024-09-30"
+
+outputs:
+  intermediate_dir: "intermediate"
+  metrics_dir: "metrics"
+  tables_dir: "tables"
+  figures_dir: "figures"
+  figure_sources_dir: "figure_sources"
+  manifests_dir: "manifests"
+
+execution:
+  run_full_correction_validation: true
+  run_full_forecast: true
+  reuse_correction_prediction_files: false
+  overwrite_outputs: true
+  resume_validated_intermediates: true
+  random_seed: 9
+
+input_hashes:
+  dataset_alpha.parquet: "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+  dataset_beta.parquet: "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+  dataset_gamma.parquet: "7ebeedeab63b1a95059c0f413744230a183bf1d6f6883f5394855b26c229dc78"
+
+m9_pbm:
+  example:
+    substation_id: "alpha_F"
+    date: "2024-02-17"
+  candidate_windows:
+    slots_per_day: 96
+    slot_minutes: 15
+    scan_start_slot: 24
+    scan_end_slot: 72
+    min_duration_slots: 2
+    max_duration_slots: 32
+    shoulder_slots: 3
+    anchor_offset_slots: 1
+    solar_peak_radius_slots: 14
+    max_internal_gap_slots: 4
+  features:
+    names:
+      - "F1_bridge_improvement"
+      - "F2_roughness_improvement"
+      - "F3_slope_continuity_improvement"
+      - "F4_duration_plausibility"
+      - "F5_n_height_ratio"
+      - "F6_solar_strength_ratio"
+      - "F7_solar_peak_alignment"
+      - "F8_substation_centered_core_score"
+      - "F9_substation_rank_core_score"
+    compact_names:
+      - "F1_bridge_improvement"
+      - "F3_slope_continuity_improvement"
+      - "F4_duration_plausibility"
+    epsilon: 1.0e-9
+    duration_saturation_hours: 1.5
+    robust_bound_scale: 3.0
+  regimes:
+    primary: "beta_only"
+    definitions:
+      beta_only:
+        alpha_training: false
+        beta_training: "other_substations_sure_only"
+      beta_plus_alpha:
+        alpha_training: true
+        beta_training: "other_substations_sure_only"
+        dataset_balanced: true
+      alpha_only:
+        alpha_training: true
+        beta_training: false
+  threshold_selection:
+    objective: "macro_substation_f1"
+    tie_breaks:
+      - "macro_precision"
+      - "macro_recall"
+      - "higher_threshold"
+  ablation:
+    regime: "beta_plus_alpha"
+    include_all_nonempty_subsets: true
+    weights: "equal"
+    legacy_fixed_window_compact_anchor:
+      source: "2026-07-15 PRD record of the final-review exploratory cache"
+      precision: 0.856075
+      recall: 0.972399
+      f1: 0.910537
+  weight_optimisation:
+    regime: "beta_only"
+    grid_step: 0.05
+    minimum_weight: 0.05
+    random_samples: 1000
+    random_seed: 9
+    weights_sum_to: 1.0
+  ml_comparison:
+    features:
+      - "F1_bridge_improvement"
+      - "F3_slope_continuity_improvement"
+      - "F4_duration_plausibility"
+    random_seed: 9
+    random_forest:
+      n_estimators: [200]
+      max_depth: [4, 8, null]
+      min_samples_leaf: [1, 5]
+    dnn:
+      hidden_layer_sizes: [[16, 8], [32, 16]]
+      alpha: [0.0001, 0.001]
+      max_iter: 500
+    xgboost:
+      n_estimators: [200]
+      max_depth: [3, 5]
+      learning_rate: [0.05, 0.1]
+      subsample: 0.8
+      colsample_bytree: 0.8
+  confidence_coverage:
+    levels_pct: [50, 60, 70, 80, 90, 95, 100]
+    minimum_precision: 0.99
+    minimum_f1: 0.95
+
+correction:
+  methods:
+    - "m8_xgb"
+    - "m7_dtr"
+  alpha_top_n_loso_sites: 10
+  interval_daytime_start_hour: 6
+  interval_daytime_end_hour: 18
+  m7_threshold:
+    solar_peak_tiebreak_time: "12:30"
+    peak_window_minutes: 150
+    min_threshold: 0.05
+    min_threshold_both: 0.25
+    apply_polarity_filter: false
+  m8_xgb:
+    noon_hour_start: 6
+    noon_hour_end: 18
+    holiday_country: "AU"
+    holiday_subdivision: "NSW"
+    xgb1_day:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.585985
+    xgb2_timestamp:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.892234
+      score_all_days_for_review: false
+
+forecast:
+  horizon_days: 7
+  lookback_days: 14
+  roll_frequency: "15min"
+  models:
+    - "seasonal_naive"
+    - "linear_regression"
+    - "xgboost"
+  xgboost:
+    objective: "reg:squarederror"
+    tree_method: "hist"
+    eta: 0.05
+    n_estimators: 300
+    max_depth: 4
+    subsample: 0.8
+    colsample_bytree: 0.8
+    seed: 9

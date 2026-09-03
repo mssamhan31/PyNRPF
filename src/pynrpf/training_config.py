@@ -1,3 +1,13 @@
+"""Load and validate the ``pynrpf_training`` configuration block.
+
+Inputs:  a mapping, or a path to a YAML file, containing a ``pynrpf_training``
+         block alongside the inference block.
+Outputs: a validated training configuration with labels, split window, feature
+         pipeline, thresholds, random seed and artefact output location.
+Key steps: extract the training block, apply defaults, then check that the split
+         dates are ordered and the thresholds lie within the unit interval.
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -91,6 +101,22 @@ def _validate_threshold(name: str, value: Any) -> float:
 
 
 def load_training_config(config: ConfigInput) -> dict[str, Any]:
+    """Load and validate the training configuration block.
+
+    Args:
+        config: Mapping, or path to a YAML file, carrying a ``pynrpf_training``
+            block.
+
+    Returns:
+        The effective training configuration: model id, day and interval label
+        column names, train and validation split dates, feature pipeline,
+        per-stage decision thresholds, random seed and artefact output location.
+
+    Raises:
+        TypeError: If the input is neither a mapping nor a path.
+        ValueError: If a required field is empty, the split dates are out of
+            order, or a threshold falls outside the unit interval.
+    """
     if isinstance(config, Mapping):
         raw = _extract_training_block(dict(config))
     elif isinstance(config, (str, Path)):

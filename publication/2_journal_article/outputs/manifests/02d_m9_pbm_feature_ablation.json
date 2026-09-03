@@ -1,0 +1,75 @@
+{
+  "config_path": "config\\experiment_config.yaml",
+  "config_sha256": "8998aef68950bbde0ec0ab0defeb70e98c92039db9f365a292c83c2e6b8a159c",
+  "created_at_utc": "2026-07-15T06:55:11.070152+00:00",
+  "elapsed_seconds": 157.0254888534546,
+  "git_commit": "bc828bcea7f059b656834f29bfa494e51771f533",
+  "inputs": [
+    {
+      "path": "config\\experiment_config.yaml",
+      "sha256": "0be7f08b4942ed372b26dad1de1e4566496252a304d983d7aae99a167081b5d7"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\candidate_feature_cache.parquet",
+      "sha256": "257f137c29ee75d84fb32c7b0f9be609807d35cbf707c243f33c720240c13812"
+    },
+    {
+      "path": "outputs\\intermediate\\02b_m9_pbm_candidate_features\\day_input_cache.parquet",
+      "sha256": "308c43400ddb40e05a4c849211cfc14dfc742df06a49104ad372f9fbe2e32c6e"
+    }
+  ],
+  "local_intermediates": [
+    "outputs\\intermediate\\02d_m9_pbm_feature_ablation\\all_subset_daily_scores.parquet"
+  ],
+  "outputs": [
+    {
+      "path": "outputs\\metrics\\02d_m9_pbm_feature_ablation\\01_all_511_subset_metrics.csv",
+      "sha256": "1aa374c78452020f1e679acb06c5032bac205529abeac4f444493ed0102c665e"
+    },
+    {
+      "path": "outputs\\metrics\\02d_m9_pbm_feature_ablation\\02_thresholds_by_subset_and_fold.csv",
+      "sha256": "c72a6521e827981866722bbe6da3609397e09406568d9dce2346c6853ea40ae0"
+    },
+    {
+      "path": "outputs\\tables\\02d_m9_pbm_feature_ablation\\table01_best_by_feature_count.csv",
+      "sha256": "e01450efe70d9754b709c17da3cde98335776961921718c5bdf056c668b55913"
+    },
+    {
+      "path": "outputs\\tables\\02d_m9_pbm_feature_ablation\\table02_feature_frequency.csv",
+      "sha256": "d5b89d055edc1e870169eee168f8b0114f34ef2b3895ca78ace7267fa8811883"
+    },
+    {
+      "path": "outputs\\tables\\02d_m9_pbm_feature_ablation\\table03_paired_marginal_effects.csv",
+      "sha256": "5d80690991fe0ef40996697a3b6a7fe4df316987b72e10093509442ba56efdbd"
+    },
+    {
+      "path": "outputs\\tables\\02d_m9_pbm_feature_ablation\\table04_compact_model_comparison.csv",
+      "sha256": "af58646e25147902c5f87e84fccba17242e6e61ba61d05a504fd6e25fe9db7aa"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig01_f1_by_feature_count.png",
+      "sha256": "661b7d29e4ec6cafa51facd0ae026625862a059698543ba8c1bbe474fac9770b"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig02_top_subset_performance.png",
+      "sha256": "43f5598eb5f598c197c0e8de099675c9b8e98385df746b455447785a5d73d040"
+    },
+    {
+      "path": "outputs\\figures\\02d_m9_pbm_feature_ablation\\fig03_feature_frequency_and_marginal_effect.png",
+      "sha256": "e79692dfddebb166b2972d591b32626fc3544c68f782626e2ba8af08440779d5"
+    }
+  ],
+  "package_versions": {
+    "numpy": "2.4.2",
+    "pandas": "2.3.3"
+  },
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.3 (tags/v3.12.3:f6650f9, Apr  9 2024, 14:05:25) [MSC v.1938 64 bit (AMD64)]",
+  "random_seed": 9,
+  "row_counts": {
+    "daily_subset_scores": 6934781,
+    "feature_subsets": 511,
+    "outer_folds": 4088
+  },
+  "status": "publication_ready"
+}

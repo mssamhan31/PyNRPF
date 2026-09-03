@@ -1,0 +1,5 @@
+scope,data_condition,data_condition_label,n_valid,rmse_MW,mae_MW,rmse_reduction_vs_raw_MW,mae_reduction_vs_raw_MW,rmse_reduction_vs_raw_pct,mae_reduction_vs_raw_pct
+full_gamma,raw_uncorrected,Raw uncorrected,34893,2.266361371046581,0.6119783415584787,0.0,0.0,0.0,0.0
+full_gamma,m9_pbm_corrected,m9_pbm corrected,34893,1.2733622968277793,0.24407223231020553,0.9929990742188015,0.3679061092482732,43.81468405280158,60.11750486322027
+forecast_test_month,raw_uncorrected,Raw uncorrected,2876,4.7650540378500175,2.007530382475661,0.0,0.0,0.0,0.0
+forecast_test_month,m9_pbm_corrected,m9_pbm corrected,2876,1.3260656509394453,0.23422629763560499,3.438988386910572,1.7733040848400559,72.17102596515855,88.3326150537876

@@ -1,3 +1,14 @@
+"""The ``m8_xgb`` two-stage gradient-boosted model.
+
+Inputs:  a validated interval-level frame in megawatts, the ``model.m8_xgb``
+         configuration block, and for inference a trained artefact bundle.
+Outputs: the frame with day and interval RPF flags, corrected net load in
+         megawatts and per-interval confidence; for training, an artefact bundle
+         holding both fitted models and their feature schemas.
+Key steps: build calendar and shape features, score or fit ``xgb1_day`` to select
+         candidate days, then score or fit ``xgb2_timestamp`` within those days.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone

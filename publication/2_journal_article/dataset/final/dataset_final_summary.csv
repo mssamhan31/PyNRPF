@@ -1,0 +1,4 @@
+dataset,n_rows,n_stations,min_timestamp,max_timestamp,n_dates,null_timestamp,null_net_load_MW,null_solar_MW,duplicate_substation_timestamp_keys,positive_label_interval,positive_label_day_site_days,source_stage,source_file,sure_confidence_site_days,unsure_confidence_site_days
+Alpha,1011264,10,2021-11-01 00:15:00+00:00,2024-09-30 00:00:00+00:00,1065,0,3000,1040,0,47980,3423,final,dataset/final/dataset_alpha.parquet,,
+Beta,280800,8,2023-10-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,366,0,4394,800,0,12181,630,final,dataset/final/dataset_beta.parquet,2310.0,618.0
+Gamma,35136,1,2023-10-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,366,0,243,100,0,3222,152,final,dataset/final/dataset_gamma.parquet,231.0,135.0

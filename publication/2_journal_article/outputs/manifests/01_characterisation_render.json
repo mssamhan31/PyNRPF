@@ -1,0 +1,20 @@
+{
+  "created_at_utc": "2026-07-16T05:23:01.362216+00:00",
+  "mode": "figure_only",
+  "notebook_slug": "01_characterisation",
+  "refresh_sources": false,
+  "figures": [
+    "outputs\\figures\\01_characterisation\\fig01_site_rpf_day_counts_alpha_beta.png",
+    "outputs\\figures\\01_characterisation\\fig02_month_hour_heatmap_alpha_beta.png",
+    "outputs\\figures\\01_characterisation\\fig03_event_duration_distribution_alpha_beta.png",
+    "outputs\\figures\\01_characterisation\\fig04_month_daytype_rpf_heatmap_alpha_beta.png",
+    "outputs\\figures\\01_characterisation\\fig05_rpf_events_per_day_doughnut_alpha_beta.png"
+  ],
+  "figure_sources": [
+    "outputs\\figure_sources\\01_characterisation\\event_count_distribution.parquet",
+    "outputs\\figure_sources\\01_characterisation\\event_durations.parquet",
+    "outputs\\figure_sources\\01_characterisation\\month_daytype.parquet",
+    "outputs\\figure_sources\\01_characterisation\\site_occurrence.parquet",
+    "outputs\\figure_sources\\01_characterisation\\temporal_summary.parquet"
+  ]
+}

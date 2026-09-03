@@ -1,0 +1,3 @@
+dataset,n_rows,n_stations,min_timestamp,max_timestamp,n_dates,null_timestamp,null_net_load_MW,null_solar_MW,duplicate_substation_timestamp_keys,positive_label_interval,positive_label_day_site_days
+actual,815320,8,2021-11-01 00:15:00+00:00,2024-09-30 23:45:00+00:00,1065,0,13083,836,0,19617,1092
+synthetic,1011264,10,2021-11-01 00:15:00+00:00,2024-09-30 00:00:00+00:00,1065,0,3000,1040,0,47980,3423
