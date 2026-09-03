@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-
 OUTPUT_FOLDER_NAME = "12_v03_concept_visuals"
 SLOTS_PER_DAY = 96
 SLOTS_PER_HOUR = 4

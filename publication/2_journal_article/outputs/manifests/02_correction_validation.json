@@ -1,5 +1,5 @@
 {
-  "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
+  "config_path": "config\\experiment_config.yaml",
   "contains_placeholder_metrics": false,
   "created_at_utc": "2026-06-24T03:55:30.006252+00:00",
   "figures": [
@@ -12,10 +12,10 @@
   ],
   "notebook": "02_correction_validation.ipynb",
   "output_subfolders": {
-    "figures": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\figures\\02_correction_validation",
-    "intermediate": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\intermediate\\02_correction_validation",
-    "metrics": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\metrics\\02_correction_validation",
-    "tables": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\tables\\02_correction_validation"
+    "figures": "outputs\\figures\\02_correction_validation",
+    "intermediate": "outputs\\intermediate\\02_correction_validation",
+    "metrics": "outputs\\metrics\\02_correction_validation",
+    "tables": "outputs\\tables\\02_correction_validation"
   },
   "publication_ready": true,
   "row_counts": {

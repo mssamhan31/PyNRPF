@@ -26,6 +26,11 @@ dev = [
   "pytest>=8,<10",
   "ruff>=0.9,<1",
   "build>=1.2,<2",
+  # The journal-article tests import plotting and parquet helpers from
+  # publication/2_journal_article/notebooks, so the test suite needs these two
+  # even though the heavier journal extras (plotly, streamlit) are not required.
+  "matplotlib>=3.7,<4",
+  "pyarrow>=14,<23",
 ]
 journal = [
   "pyarrow>=14,<23",

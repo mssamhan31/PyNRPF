@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 SLOTS_PER_DAY = 96
 DAYTIME_START = 24
 DAYTIME_END = 72

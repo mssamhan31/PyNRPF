@@ -1,3 +1,15 @@
+"""Public entry points for reverse power flow (RPF) detection and correction.
+
+Inputs:  an interval-level pandas or Spark DataFrame of substation net load, plus
+         an inference (and for training, a training) configuration block.
+Outputs: for inference, the scored frame with RPF flags and corrected net load in
+         megawatts, plus an operational summary; for training, a versioned
+         artefact bundle on disk and its validation metrics.
+Key steps: load and validate the configuration, coerce the input to pandas and
+         validate its schema, dispatch to the selected model plugin, then rebuild
+         the caller's frame type and summarise the run.
+"""
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -21,6 +33,26 @@ def _require_strict_validation_for_m8(cfg: dict[str, Any], operation: str) -> No
 
 
 def run_inference(data: Any, config: ConfigInput) -> Dict[str, Any]:
+    """Score interval net load readings for reverse power flow and correct them.
+
+    Args:
+        data: Interval-level pandas or Spark DataFrame. Must carry the four
+            columns named under the config's ``columns`` block: site, timestamp,
+            net load in megawatts, and solar generation in megawatts.
+        config: Mapping, or path to a YAML file. A full pipeline config
+            containing a ``pynrpf_inference`` block is also accepted.
+
+    Returns:
+        Dict with ``data`` (the scored frame, same type as the input, carrying
+        the RPF interval and day flags, corrected net load in megawatts and a
+        confidence score), ``summary`` (row counts and monitoring statistics),
+        ``model`` (the resolved model id) and ``input_type`` (``"pandas"`` or
+        ``"spark"``).
+
+    Raises:
+        ValueError: If ``m8_xgb`` is selected while strict validation is off.
+        KeyError: If the configured model id is not registered.
+    """
     cfg = load_config(config)
     model_name = cfg["model"]["selected_model"]
     if model_name == "m8_xgb":
@@ -43,6 +75,30 @@ def run_inference(data: Any, config: ConfigInput) -> Dict[str, Any]:
 
 
 def train_m8_xgb(data: Any, config: ConfigInput) -> Dict[str, Any]:
+    """Train both stages of the ``m8_xgb`` model and write a versioned bundle.
+
+    Trains ``xgb1_day`` (day-level classifier) and ``xgb2_timestamp``
+    (interval-level classifier) from one labelled interval dataset, then saves
+    the pair as a single pickle bundle with a JSON manifest alongside it.
+
+    Args:
+        data: Labelled interval-level pandas or Spark DataFrame, carrying the
+            four inference columns plus the day and interval label columns named
+            in the training config.
+        config: Mapping, or path to a YAML file, containing both a
+            ``pynrpf_inference`` and a ``pynrpf_training`` block.
+
+    Returns:
+        Dict with ``bundle`` (the in-memory artefact), ``bundle_schema``,
+        ``artifact_uri`` (the bundle path to feed back into inference),
+        ``artifact_dir_uri``, ``manifest_uri`` and ``validation_metrics`` for
+        both stages.
+
+    Raises:
+        ValueError: If strict validation is off, or the training split window or
+            threshold values are invalid.
+        KeyError: If a required label column is missing from the config.
+    """
     inference_cfg = load_config(config)
     training_cfg = load_training_config(config)
     _require_strict_validation_for_m8(inference_cfg, "training")

@@ -1,5 +1,5 @@
 artifact,path,exists,size_bytes
-table01_dataset_summary.csv,C:\Users\samha\Documents\PyNRPF\publication\2_journal_article\outputs\tables\04_publication_tables_figures\table01_dataset_summary.csv,True,532
-table02_characterisation_summary.csv,C:\Users\samha\Documents\PyNRPF\publication\2_journal_article\outputs\tables\04_publication_tables_figures\table02_characterisation_summary.csv,True,164
-table03_correction_metrics.csv,C:\Users\samha\Documents\PyNRPF\publication\2_journal_article\outputs\tables\04_publication_tables_figures\table03_correction_metrics.csv,True,11096
-table04_forecast_impact.csv,C:\Users\samha\Documents\PyNRPF\publication\2_journal_article\outputs\tables\04_publication_tables_figures\table04_forecast_impact.csv,True,1734
+table01_dataset_summary.csv,outputs\tables\04_publication_tables_figures\table01_dataset_summary.csv,True,532
+table02_characterisation_summary.csv,outputs\tables\04_publication_tables_figures\table02_characterisation_summary.csv,True,164
+table03_correction_metrics.csv,outputs\tables\04_publication_tables_figures\table03_correction_metrics.csv,True,11096
+table04_forecast_impact.csv,outputs\tables\04_publication_tables_figures\table04_forecast_impact.csv,True,1734
