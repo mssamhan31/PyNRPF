@@ -1,3 +1,12 @@
+"""The interface every PyNRPF model plugin implements.
+
+Inputs:  a validated interval-level pandas frame, the resolved configuration and
+         the logical-to-physical column mapping.
+Outputs: the scored frame, and for trainable models an artefact bundle.
+Key steps: define the abstract ``run_inference`` and ``train`` methods that the
+         registry dispatches to, so a new model needs no changes to the API layer.
+"""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

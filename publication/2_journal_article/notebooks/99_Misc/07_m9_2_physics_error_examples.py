@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 
-
 ARTICLE_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_ROOT = Path(__file__).resolve().parent / "outputs" / "07_m9_2_physics_counterfactual_ranker"
 SOURCE_CSV_DIR = OUTPUT_ROOT / "csv"

@@ -5,7 +5,6 @@ from textwrap import dedent
 
 import nbformat as nbf
 
-
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOKS_DIR = ROOT / "notebooks"
 NB2_PATH = NOTEBOOKS_DIR / "02_publication_figures.ipynb"

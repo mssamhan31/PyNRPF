@@ -1,11 +1,17 @@
-from __future__ import annotations
+"""m7_threshold -- Deterministic Threshold Rule (DTR) for reverse power flow (RPF) detection.
 
-"""m7_threshold -- Deterministic Threshold Rule (DTR) for RPF detection.
-
-Live package behavior keeps the original threshold-based day detection, while
+Live package behaviour keeps the original threshold-based day detection, while
 using a relaxed, threshold-free interval correction path. As a result, strict
 day flags and interval corrections can diverge on the same site-day.
+
+Inputs:  an interval-level frame of net load and solar in megawatts, and the
+         ``m7_threshold`` configuration block.
+Outputs: the frame with strict day flags and relaxed interval corrections.
+Key steps: find the solar peak window per site-day, apply the threshold gates,
+         then correct the minima span within each flagged day.
 """
+
+from __future__ import annotations
 
 from datetime import time as dt_time
 from typing import Any, Dict, Optional

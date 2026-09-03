@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 MODEL_NAME = "m9.2_bridge_score"
 
 ARTICLE_ROOT = Path(__file__).resolve().parents[2]

@@ -142,11 +142,25 @@ def notebook_output_dirs(paths: ArticlePaths, slug: str) -> dict[str, Path]:
     return dirs
 
 
+def relative_to_article(path: Path) -> str:
+    """Render a path relative to the journal article root.
+
+    Manifests and inventories are committed to git, so an absolute path in one
+    would publish the machine and account it was generated on. Falls back to the
+    plain string when the path lies outside the article tree.
+    """
+    resolved = Path(path).resolve()
+    for parent in [resolved, *resolved.parents]:
+        if parent.name == "2_journal_article":
+            return str(resolved.relative_to(parent))
+    return str(path)
+
+
 def write_manifest(paths: ArticlePaths, name: str, payload: dict[str, Any]) -> Path:
     ensure_output_dirs(paths)
     out = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "config_path": str(paths.config_path),
+        "config_path": relative_to_article(paths.config_path),
         **payload,
     }
     path = paths.manifests / name
@@ -818,7 +832,7 @@ def final_dataset_validation_summary(
 
 
 def output_dir_manifest_payload(dirs: dict[str, Path]) -> dict[str, str]:
-    return {name: str(path) for name, path in dirs.items()}
+    return {name: relative_to_article(path) for name, path in dirs.items()}
 
 
 def run_prepare_datasets(
@@ -858,9 +872,15 @@ def run_prepare_datasets(
             "notebook": "00_prepare_datasets.ipynb",
             "schema_version": cfg["schema_version"],
             "output_subfolders": output_dir_manifest_payload(dirs),
-            "alpha_dataset_path": str(article_path(root, cfg["paths"]["alpha_dataset_path"])),
-            "beta_dataset_path": str(article_path(root, cfg["paths"]["beta_dataset_path"])),
-            "gamma_dataset_path": str(article_path(root, cfg["paths"]["gamma_dataset_path"])),
+            "alpha_dataset_path": relative_to_article(
+                article_path(root, cfg["paths"]["alpha_dataset_path"])
+            ),
+            "beta_dataset_path": relative_to_article(
+                article_path(root, cfg["paths"]["beta_dataset_path"])
+            ),
+            "gamma_dataset_path": relative_to_article(
+                article_path(root, cfg["paths"]["gamma_dataset_path"])
+            ),
             "alpha_loso_sites": alpha_sites,
             "gamma_site": gamma_site,
             "gamma_selection_mode": cfg.get("gamma", {}).get("selection_mode", "auto"),
@@ -2208,7 +2228,6 @@ def write_correction_figures(
 def correction_validation_preflight(article_root: Path | None = None) -> dict[str, pd.DataFrame]:
     root = find_article_root(article_root)
     cfg = load_config(root)
-    paths = article_paths(root, cfg)
     alpha = load_dataset(root, cfg, "alpha")
     beta = load_dataset(root, cfg, "beta")
     alpha_sites = alpha_loso_sites(alpha, cfg)
@@ -3120,7 +3139,7 @@ def inventory_existing(paths_to_check: dict[str, Path]) -> pd.DataFrame:
         [
             {
                 "artifact": name,
-                "path": str(path),
+                "path": relative_to_article(path),
                 "exists": path.exists(),
                 "size_bytes": path.stat().st_size if path.exists() else 0,
             }

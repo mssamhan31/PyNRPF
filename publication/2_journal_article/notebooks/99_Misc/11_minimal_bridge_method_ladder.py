@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 OUTPUT_FOLDER_NAME = "11_minimal_bridge_method_ladder"
 SITE_MEDIAN_WEIGHT = 0.425
 SLOTS_PER_DAY = 96

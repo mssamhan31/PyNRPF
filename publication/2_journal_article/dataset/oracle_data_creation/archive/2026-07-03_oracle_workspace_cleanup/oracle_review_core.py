@@ -10,7 +10,6 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
-
 EXPECTED_COLUMNS = [
     "substation_id",
     "date",

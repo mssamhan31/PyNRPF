@@ -1,3 +1,14 @@
+"""Generate starter configuration files and new model plugin modules.
+
+Inputs:  a model identifier and an output directory, plus flags selecting whether
+         to emit a training block, a test file and a pipeline configuration.
+Outputs: a pipeline YAML template, and for a scaffold, a plugin module under
+         ``src/pynrpf/plugins/`` wired into the package exports and the registry.
+Key steps: build the config dictionary from the shared defaults, write the files,
+         then edit ``plugins/__init__.py`` and ``registry.py`` so the new model is
+         importable and selectable without further manual work.
+"""
+
 from __future__ import annotations
 
 import re
@@ -162,6 +173,20 @@ def build_pipeline_config(
     model_id: str = "m8_xgb",
     include_training: bool = True,
 ) -> dict[str, Any]:
+    """Build a pipeline configuration dictionary in memory.
+
+    Args:
+        model_id: Model the config selects for inference.
+        include_training: Whether to add a ``pynrpf_training`` block. Only
+            ``m8_xgb`` is trainable.
+
+    Returns:
+        A dict carrying a ``pynrpf_inference`` block and, when requested, a
+        ``pynrpf_training`` block.
+
+    Raises:
+        ValueError: If the model id is not registered.
+    """
     model = _validate_model_id(model_id)
 
     inference_cfg = deepcopy(DEFAULT_CONFIG)
@@ -193,6 +218,21 @@ def generate_pipeline_config(
     include_training: bool = True,
     overwrite: bool = False,
 ) -> str:
+    """Write a pipeline configuration template to a YAML file.
+
+    Args:
+        output_path: Destination file path.
+        model_id: Model the config selects for inference.
+        include_training: Whether to include a ``pynrpf_training`` block.
+        overwrite: Permit replacing an existing file.
+
+    Returns:
+        The path written to.
+
+    Raises:
+        FileExistsError: If the file exists and overwrite is False.
+        ValueError: If the model id is not registered.
+    """
     config_payload = build_pipeline_config(model_id=model_id, include_training=include_training)
     path = Path(output_path)
     if path.exists() and not overwrite:
@@ -214,6 +254,26 @@ def generate_model_scaffold(
     include_tests: bool = True,
     include_pipeline_config: bool = True,
 ) -> Dict[str, str]:
+    """Create a starter plugin module for a new model and wire it in.
+
+    Writes the plugin under ``src/pynrpf/plugins/``, then edits
+    ``plugins/__init__.py`` and ``registry.py`` so the model is importable and
+    selectable without further manual work.
+
+    Args:
+        model_id: Identifier for the new model.
+        output_dir: Repository root to write into.
+        overwrite: Permit replacing existing files.
+        include_tests: Also write a starter test module.
+        include_pipeline_config: Also write a pipeline config template.
+
+    Returns:
+        Dict mapping each created artefact to the path written.
+
+    Raises:
+        FileExistsError: If a target file exists and overwrite is False.
+        ValueError: If the model id is not a valid identifier.
+    """
     model = _validate_model_id(model_id)
     root = Path(output_dir)
     created: Dict[str, str] = {}

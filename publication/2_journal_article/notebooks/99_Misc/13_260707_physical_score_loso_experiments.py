@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 OUTPUT_FOLDER_NAME = "260707_physical_score_loso_experiments"
 SLOTS_PER_DAY = 96
 DAYTIME_START = 24

@@ -2,6 +2,13 @@ cff-version: 1.2.0
 title: "PyNRPF: Detecting and rectifying wrong reverse power flow readings"
 message: "If you use this software, please cite it."
 type: software
+abstract: >-
+  PyNRPF (Python for Network Reverse Power Flow) detects and corrects a wrong
+  reverse power flow sign in distribution network interval meter data. This project
+  is part of Samhan's PhD study, supported by the University International
+  Postgraduate Award (UIPA) Scholarship from UNSW, the Industry Collaboration
+  Project Scholarship from Ausgrid, the RACE for 2030 Scholarship, and the NSW
+  Decarbonisation Innovation Hub (NSW Decarb Hub).
 authors:
   - family-names: "Samhan"
     given-names: "M. Syahman"

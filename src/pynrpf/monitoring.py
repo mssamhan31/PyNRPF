@@ -1,3 +1,13 @@
+"""Summarise an inference run for operational monitoring.
+
+Inputs:  the scored frame returned by a model plugin, the resolved configuration,
+         the model identifier, and the data-quality summary from validation.
+Outputs: a dictionary of row counts, predicted positive days and intervals, and
+         optional confidence and drift summaries.
+Key steps: count corrections and positive predictions, then add the confidence
+         and drift blocks that the ``monitoring`` config section enables.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -62,6 +72,19 @@ def build_operational_summary(
     model_name: str,
     data_quality_summary: dict[str, Any],
 ) -> dict[str, Any]:
+    """Summarise a scored frame for operational monitoring.
+
+    Args:
+        df: The scored frame returned by a model plugin.
+        cfg: The resolved inference configuration.
+        model_name: Model id that produced the frame.
+        data_quality_summary: Summary emitted by validation.
+
+    Returns:
+        Dict carrying the model id, rows processed, rows corrected, predicted
+        positive days and intervals, the data-quality block, and confidence and
+        drift blocks where the ``monitoring`` config section enables them.
+    """
     cols = cfg["columns"]
     site_col = cols["site"]
     ts_col = cols["timestamp"]

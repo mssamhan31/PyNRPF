@@ -1,5 +1,5 @@
 {
-  "alpha_dataset_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\final\\dataset_alpha.parquet",
+  "alpha_dataset_path": "dataset\\final\\dataset_alpha.parquet",
   "alpha_loso_sites": [
     "alpha_F",
     "alpha_E",
@@ -12,21 +12,21 @@
     "alpha_D",
     "alpha_H"
   ],
-  "beta_dataset_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\final\\dataset_beta.parquet",
+  "beta_dataset_path": "dataset\\final\\dataset_beta.parquet",
   "beta_review_status": "final_review_2026-07-06",
-  "config_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\config\\experiment_config.yaml",
+  "config_path": "config\\experiment_config.yaml",
   "created_at_utc": "2026-07-07T03:33:28.547731+00:00",
-  "gamma_dataset_path": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\dataset\\final\\dataset_gamma.parquet",
+  "gamma_dataset_path": "dataset\\final\\dataset_gamma.parquet",
   "gamma_override_used": false,
   "gamma_ranking_metric": "data_error_rmse_MW",
   "gamma_selection_mode": "auto",
   "gamma_site": "beta_B",
   "notebook": "00_prepare_datasets.ipynb",
   "output_subfolders": {
-    "figures": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\figures\\00_prepare_datasets",
-    "intermediate": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\intermediate\\00_prepare_datasets",
-    "metrics": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\metrics\\00_prepare_datasets",
-    "tables": "C:\\Users\\samha\\Documents\\PyNRPF\\publication\\2_journal_article\\outputs\\tables\\00_prepare_datasets"
+    "figures": "outputs\\figures\\00_prepare_datasets",
+    "intermediate": "outputs\\intermediate\\00_prepare_datasets",
+    "metrics": "outputs\\metrics\\00_prepare_datasets",
+    "tables": "outputs\\tables\\00_prepare_datasets"
   },
   "row_counts": {
     "alpha": 1011264,

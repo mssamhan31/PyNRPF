@@ -13,24 +13,23 @@ publication/1_conference_paper/
     sha256.txt
   notebooks/
     01_reproduce_key_numbers.ipynb
-    01_reproduce_key_numbers.executed.ipynb
     02_publication_figures.ipynb
-    02_publication_figures.executed.ipynb
     03_publication_tables.ipynb
-    03_publication_tables.executed.ipynb
     04_hyperparameter_search.ipynb
-    04_hyperparameter_search.executed.ipynb
-  models/
-    xgb1_day.pkl
-    xgb2_timestamp.pkl
   outputs/
     metrics__local_dev.json
     metrics__local_dev.yaml
+    xgb1_day.pkl              written by notebook 01, read by notebook 04
+    xgb2_timestamp.pkl        written by notebook 01, read by notebook 04
     publication_figures/
     publication_tables/
   src/
   requirements.txt
 ```
+
+Notebooks are committed without outputs. Running them writes
+`*.executed.ipynb` copies alongside the sources; those are local artefacts and
+are gitignored, not part of the archive.
 
 ## Run (standalone inside archive)
 

@@ -7,7 +7,6 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-
 SLOTS_PER_DAY = 96
 DAYTIME_START = 24
 DAYTIME_END = 72

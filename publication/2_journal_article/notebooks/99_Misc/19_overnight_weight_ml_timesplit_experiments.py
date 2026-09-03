@@ -13,7 +13,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-
 SCRIPT_DIR = Path(__file__).resolve().parent
 BASE_SCRIPT = SCRIPT_DIR / "13_260707_physical_score_loso_experiments.py"
 OUTPUT_FOLDER_NAME = "19_overnight_weight_ml_timesplit_experiments"

@@ -28,3 +28,6 @@ dist/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+.ai/
+tmp_review_artifacts/
+*.executed.ipynb

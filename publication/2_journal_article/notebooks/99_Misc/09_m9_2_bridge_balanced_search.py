@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 MODEL_NAME = "m9.2_bridge_balanced_search"
 
 MISC_DIR = Path(__file__).resolve().parent

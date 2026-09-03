@@ -1,3 +1,13 @@
+"""The ``m7_dtr`` daytime threshold rule for reverse power flow detection.
+
+Inputs:  a validated interval-level frame of net load and solar in megawatts, and
+         the ``model.m7_threshold`` configuration block.
+Outputs: the frame with day and interval RPF flags and a corrected net load
+         series in megawatts.
+Key steps: locate the solar peak window per site-day, apply the strict threshold
+         gates to flag days, then correct the minima span within flagged days.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict
