@@ -31,3 +31,9 @@ dist/
 .ai/
 tmp_review_artifacts/
 *.executed.ipynb
+
+# m9_dev: run artefacts are large and regenerable; summaries are kept
+publication/2_journal_article/m9_dev/runs/*/*
+!publication/2_journal_article/m9_dev/runs/*/summary_*.csv
+!publication/2_journal_article/m9_dev/runs/*/predictions_*.csv
+!publication/2_journal_article/m9_dev/runs/*/config.json

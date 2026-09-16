@@ -1,0 +1,19 @@
+{
+  "run": "r1a_fullday",
+  "variant": "sq",
+  "p_exp": 1.0,
+  "sigma_mode": "fullday",
+  "c": 0.7,
+  "scan": [
+    24,
+    72
+  ],
+  "code_sha256": "d177eafce7e3401d8180544ec0108ce02d19d37e579b44eb450fbc1ec6fb3f03",
+  "data_sha256": {
+    "dataset_alpha.parquet": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6",
+    "dataset_beta.parquet": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+  },
+  "sigma_floor_alpha": 1.400908788973254e-07,
+  "sigma_floor_beta": 8.03130184579004e-09,
+  "elapsed_s": 83.5
+}

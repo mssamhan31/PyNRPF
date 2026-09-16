@@ -1,0 +1,27 @@
+
+=== r3b_llr_mask: pooled ===
+cohort              group  n_days  n_rpf  energy_iou  energy_precision  day_f1  day_precision  day_recall  sure_day_recall  sure_day_uncertain_rate  rate_auto_correct  rate_uncertain    ece
+ alpha           headline   10425   3381      0.8644            0.8811  0.9448         0.9745      0.9169           0.9169                   0.0322             0.3051          0.0175 0.0232
+  beta           headline    2305    470      0.8672            0.9250  0.9097         0.9555      0.8681           0.8681                   0.0681             0.1852          0.0464 0.0139
+  beta unsure_sensitivity     617    159      0.4036            0.5709  0.5361         0.5909      0.4906              NaN                      NaN             0.2139          0.1718    NaN
+
+=== r3b_llr_mask: per station (headline days only) ===
+cohort station  n_days  n_rpf  required_mwh  energy_iou  energy_precision  sure_day_recall  sure_day_uncertain_rate  day_precision  day_f1  rate_auto_correct
+ alpha alpha_A    1039      0         0.000       0.000               NaN              NaN                      NaN            NaN   0.000              0.000
+ alpha alpha_B    1055     27        29.610       0.393             0.402            0.667                    0.148          0.857   0.750              0.020
+ alpha alpha_C    1055    627      3752.316       0.841             0.861            0.907                    0.043          0.964   0.935              0.559
+ alpha alpha_D    1035      0         0.000       0.000               NaN              NaN                      NaN            NaN   0.000              0.000
+ alpha alpha_E    1035    700      6326.578       0.890             0.906            0.930                    0.017          0.986   0.957              0.638
+ alpha alpha_F    1033    842     13356.830       0.880             0.893            0.942                    0.026          0.992   0.966              0.773
+ alpha alpha_G    1037    650      5828.545       0.863             0.884            0.940                    0.022          0.961   0.950              0.613
+ alpha alpha_H    1039      0         0.000       0.000               NaN              NaN                      NaN            NaN   0.000              0.000
+ alpha alpha_I    1042    148      1199.691       0.767             0.782            0.872                    0.047          0.970   0.918              0.128
+ alpha alpha_J    1055    387      1542.087       0.799             0.825            0.850                    0.059          0.962   0.903              0.324
+  beta  beta_A     337     26       754.997       0.918             0.975            0.885                    0.000          1.000   0.939              0.068
+  beta  beta_B     231    125      4769.172       0.867             0.933            0.840                    0.104          1.000   0.913              0.455
+  beta  beta_C     339      0         0.000       0.000               NaN              NaN                      NaN            NaN   0.000              0.000
+  beta  beta_D     188     45       475.144       0.678             0.963            0.511                    0.156          1.000   0.676              0.122
+  beta  beta_E     306     21        87.115       0.916             0.929            1.000                    0.000          1.000   1.000              0.069
+  beta  beta_F     286    164      1578.026       0.923             0.941            0.951                    0.043          0.951   0.951              0.573
+  beta  beta_G     283     85      2201.513       0.859             0.879            0.929                    0.035          0.878   0.903              0.318
+  beta  beta_H     335      4        30.180       0.171             0.775            0.250                    0.500          1.000   0.400              0.003

@@ -1,0 +1,21 @@
+{
+  "run": "r5_llr_p05",
+  "variant": "sq",
+  "p_exp": 0.5,
+  "sigma_mode": "overnight",
+  "c": 0.7,
+  "stat": "llr",
+  "missing": "mask_windows",
+  "scan": [
+    24,
+    72
+  ],
+  "code_sha256": "77797f535846ba7041531d7646022c62bf3d19c9af430f80f679e546a037d892",
+  "data_sha256": {
+    "dataset_alpha.parquet": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6",
+    "dataset_beta.parquet": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+  },
+  "sigma_floor_alpha": 1.400908788973254e-07,
+  "sigma_floor_beta": 8.03130184579004e-09,
+  "elapsed_s": 61.3
+}
