@@ -163,6 +163,25 @@ def test_nearest_anchor_reaches_a_window_beside_a_missing_block():
     assert r["input_ok"] and r["best_score"] > 0 and r["best_start"] <= 45 and r["best_end"] >= 57
 
 
+def test_edge_rule_snaps_to_cusps_and_exempts_gaps():
+    # Revision 2: edges must be local minima (inward one-slot tolerance). A planted
+    # window's true edges are cusps of |y|, so it stays admissible; a window whose
+    # start sits two slots before the cusp on the descending limb is excluded.
+    y_true, s = synthetic_day(demand_level=4.0, solar_peak=6.0)
+    neg = np.flatnonzero(y_true < 0)
+    a, b = int(neg[0]), int(neg[-1])
+    y = plant_error(y_true, a, b)
+    r = scored(y, s, missing="mask_windows", edges="inwardx")
+    assert r["best_score"] > 0 and a <= r["best_start"] <= a + 1 and b - 1 <= r["best_end"] <= b
+    m = ms.local_minimum_edges(y)
+    assert not m[a - 2] and not m[b + 2]
+    # Gap exemption: with the slot before the window missing, the start is still admissible.
+    y2 = y.copy()
+    y2[a - 1] = np.nan
+    r2 = scored(y2, s, missing="mask_windows", edges="inwardx")
+    assert r2["input_ok"] and r2["best_score"] > 0 and r2["best_start"] <= a + 1
+
+
 def test_mask_windows_rule_abstains_when_nothing_is_scorable():
     y, s = synthetic_day()
     y[ms.SCAN_START - 1 : ms.SCAN_END + 1] = np.nan

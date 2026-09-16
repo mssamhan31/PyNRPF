@@ -37,3 +37,4 @@ publication/2_journal_article/m9_dev/runs/*/*
 !publication/2_journal_article/m9_dev/runs/*/summary_*.csv
 !publication/2_journal_article/m9_dev/runs/*/predictions_*.csv
 !publication/2_journal_article/m9_dev/runs/*/config.json
+publication/2_journal_article/m9_dev/runs/*.log

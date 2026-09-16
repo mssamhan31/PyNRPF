@@ -87,6 +87,29 @@ def admissible_windows(y: np.ndarray, s: np.ndarray) -> np.ndarray:
     return (n_bad == 0) & (b >= a) & has_left & has_right
 
 
+def local_minimum_edges(y: np.ndarray, tolerance: int = 0) -> np.ndarray:
+    """Boolean per slot: recorded net load is at a local minimum (plateaus count).
+
+    A sign flip reflects the true trace about zero, so at each true edge the recorded
+    net load reaches a cusp minimum at the crossing. Requiring window edges to sit at
+    such minima constrains the candidate set on physical grounds and forbids the
+    one-slot edge extension where net load is already rising away from the cusp.
+    tolerance = 1 also accepts the slot either side of a minimum (15-minute
+    discretisation). Comparisons with missing neighbours are False.
+    """
+    m = np.zeros(SLOTS, dtype=bool)
+    with np.errstate(invalid="ignore"):
+        m[1:-1] = (y[1:-1] <= y[:-2]) & (y[1:-1] <= y[2:])
+    m &= np.isfinite(y)
+    if tolerance > 0:
+        d = m.copy()
+        for k in range(1, tolerance + 1):
+            d[k:] |= m[:-k]
+            d[:-k] |= m[k:]
+        m = d
+    return m
+
+
 def reconstruct_uncorrected(y: np.ndarray, s: np.ndarray) -> np.ndarray:
     """Underlying demand if the recorded sign is kept: U0 = s + y, MW."""
     return s + y
@@ -363,7 +386,7 @@ def corrected_series(y: np.ndarray, cand: Candidate) -> np.ndarray:
     return out
 
 
-def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str = "sq", p_exp: float = 1.0, sigma: float | None = None, scale: str = "overnight", stat: str = "gain", missing: str = "abstain_day") -> dict:
+def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str = "sq", p_exp: float = 1.0, sigma: float | None = None, scale: str = "overnight", stat: str = "gain", missing: str = "abstain_day", edges: str = "any") -> dict:
     """Score one site-day end to end, without calibration.
 
     Args:
@@ -381,6 +404,33 @@ def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str
         the raw evidence r_best (0.0 when the null wins).
     """
     adm = admissible_windows(y, s)
+    if edges != "any":
+        # Window edges must sit at local minima of recorded net load ("minima" strict,
+        # "minima1" within one slot). Applied to the candidate set, not the score.
+        # A trailing "x" (minimax, minima1x) exempts an edge whose outside neighbour is missing:
+        # a cusp cannot be observed against a gap, so the test is not applicable there.
+        if edges.startswith("inward"):
+            # Asymmetric one-slot tolerance: the start may sit one slot AFTER a cusp and
+            # the end one slot BEFORE one, so discretisation jitter is absorbed inward
+            # while outward extension past the cusp stays forbidden.
+            m0 = local_minimum_edges(y, tolerance=0)
+            em_start = m0.copy()
+            em_start[1:] |= m0[:-1]
+            em_end = m0.copy()
+            em_end[:-1] |= m0[1:]
+        else:
+            em_start = em_end = local_minimum_edges(y, tolerance=1 if "1" in edges else 0)
+        if edges.endswith("x"):
+            finite = np.isfinite(y) & np.isfinite(s)
+            gap_left = np.zeros(SLOTS, dtype=bool)
+            gap_right = np.zeros(SLOTS, dtype=bool)
+            gap_left[1:] = ~finite[:-1]    # slot k has a missing reading just before it
+            gap_right[:-1] = ~finite[1:]   # slot k has a missing reading just after it
+            start_ok = (em_start | gap_left)[SCAN_START:SCAN_END]
+            end_ok = (em_end | gap_right)[SCAN_START:SCAN_END]
+        else:
+            start_ok, end_ok = em_start[SCAN_START:SCAN_END], em_end[SCAN_START:SCAN_END]
+        adm = adm & start_ok[:, None] & end_ok[None, :]
     ok = input_ok(y, s) if missing == "abstain_day" else bool(adm.any())
     if not ok:
         return dict(input_ok=False, n_admissible=int(adm.sum()), sigma=np.nan, best_start=-1, best_end=-1, best_score=np.nan,

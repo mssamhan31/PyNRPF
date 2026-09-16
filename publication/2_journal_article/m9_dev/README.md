@@ -38,7 +38,8 @@ From the repository root, with the project environment active:
 ```powershell
 pytest publication/2_journal_article/m9_dev/tests -q
 python publication/2_journal_article/m9_dev/m9_eval.py --run phase2_baseline                 # original recommendation
-python publication/2_journal_article/m9_dev/m9_eval.py --run final --stat llr --p 0 --missing mask_windows   # frozen method
+python publication/2_journal_article/m9_dev/m9_eval.py --run final --stat llr --p 0 --missing mask_windows                  # revision 1
+python publication/2_journal_article/m9_dev/m9_eval.py --run final --stat llr --p 0 --missing mask_windows --edges inwardx  # revision 2 (current)
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --variant abs      # Candidate B
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --variant tv       # Candidate C
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --sigma station    # station-level scale
@@ -57,4 +58,4 @@ failures.
 | 2 — baseline | `runs/phase2_baseline/` |
 | 3 — failure-driven rounds | six: rounds 2–4 adopted (2 confirmed by Samhan), 1 and 5 rejected, 6 probed and not run — `notes/round_*.md` |
 | 4 — screen A / B / C | A retained — `runs/p4b_abs_nearest`, `runs/p4_tv_llr_mask` |
-| 5 — freeze and final run | `decisions/frozen_method.md`, `runs/phase5_final/` |
+| 5 — freeze and final run | rev 1: `decisions/frozen_method.md`, `runs/phase5_final/`; **rev 2 (edge rule, round 7): `decisions/frozen_method_rev2.md`, `runs/phase5_final_rev2/`** |

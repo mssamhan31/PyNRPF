@@ -90,7 +90,7 @@ def station_scale(days: list[dict], floor: float, day_scale: str) -> dict[str, f
     return {k: float(np.median(v)) for k, v in out.items()}
 
 
-def score_cohort(days: list[dict], floor: float, variant: str, p_exp: float, sigma_mode: str, stat: str = "gain", missing: str = "abstain_day") -> pd.DataFrame:
+def score_cohort(days: list[dict], floor: float, variant: str, p_exp: float, sigma_mode: str, stat: str = "gain", missing: str = "abstain_day", edges: str = "any") -> pd.DataFrame:
     """Score every site-day; returns one row per day with windows, evidence and energies."""
     per_station = sigma_mode.startswith("station_")
     day_scale = sigma_mode.split("_")[-1]  # overnight | fullday
@@ -98,7 +98,7 @@ def score_cohort(days: list[dict], floor: float, variant: str, p_exp: float, sig
     rows = []
     for d in days:
         sig = scales.get(d["station"]) if per_station else None
-        r = ms.score_siteday(d["y"], d["s"], floor, variant=variant, p_exp=p_exp, sigma=sig, scale=day_scale, stat=stat, missing=missing)
+        r = ms.score_siteday(d["y"], d["s"], floor, variant=variant, p_exp=p_exp, sigma=sig, scale=day_scale, stat=stat, missing=missing, edges=edges)
         p_mwh, req, c_mwh = mx.energy_terms(d["y"], d["truth"], r["best_start"], r["best_end"])
         idx = np.flatnonzero(d["truth"])
         rows.append(dict(cohort=d["cohort"], station=d["station"], date=d["date"], confidence=d["confidence"],
@@ -129,11 +129,11 @@ def loso(scores: pd.DataFrame, c: float) -> tuple[pd.DataFrame, list[dict]]:
     return pd.concat(out, ignore_index=True), fits
 
 
-def run(run_name: str, variant: str, p_exp: float, sigma_mode: str, c: float, stat: str = "gain", missing: str = "abstain_day") -> None:
+def run(run_name: str, variant: str, p_exp: float, sigma_mode: str, c: float, stat: str = "gain", missing: str = "abstain_day", edges: str = "any") -> None:
     out_dir = RUNS / run_name
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    config = dict(run=run_name, variant=variant, p_exp=p_exp, sigma_mode=sigma_mode, c=c, stat=stat, missing=missing,
+    config = dict(run=run_name, variant=variant, p_exp=p_exp, sigma_mode=sigma_mode, c=c, stat=stat, missing=missing, edges=edges,
                   scan=[ms.SCAN_START, ms.SCAN_END], code_sha256=sha256_file(HERE / "m9_scorer.py"),
                   data_sha256={f"dataset_{k}.parquet": sha256_file(DATA / f"dataset_{k}.parquet") for k in COHORTS})
     pooled, stations, fits_all = [], [], []
@@ -142,7 +142,7 @@ def run(run_name: str, variant: str, p_exp: float, sigma_mode: str, c: float, st
         floor = sigma_floor(days)
         config[f"sigma_floor_{cohort}"] = floor
         cache = out_dir / f"scores_{cohort}.parquet"
-        scores = score_cohort(days, floor, variant, p_exp, sigma_mode, stat, missing)
+        scores = score_cohort(days, floor, variant, p_exp, sigma_mode, stat, missing, edges)
         scores.to_parquet(cache, index=False)
         pred, fits = loso(scores, c)
         pred.to_csv(out_dir / f"predictions_{cohort}.csv", index=False)
@@ -187,9 +187,10 @@ if __name__ == "__main__":
     ap.add_argument("--c", type=float, default=0.7, help="public confidence control")
     ap.add_argument("--stat", default="gain", choices=["gain", "llr"], help="evidence statistic")
     ap.add_argument("--missing", default="abstain_day", choices=["abstain_day", "mask_windows"])
+    ap.add_argument("--edges", default="any", choices=["any", "minima", "minima1", "minimax", "minima1x", "inwardx"], help="window edges must be local minima of net load")
     ap.add_argument("--report-only", action="store_true")
     a = ap.parse_args()
     if a.report_only:
         report(RUNS / a.run)
     else:
-        run(a.run, a.variant, a.p, a.sigma, a.c, a.stat, a.missing)
+        run(a.run, a.variant, a.p, a.sigma, a.c, a.stat, a.missing, a.edges)

@@ -4,7 +4,7 @@ Purpose: show what M9 does on real days, one panel per site-day, covering all fo
 decision outcomes against the reviewer's labels. Beta 'sure' days only, so every
 panel is a real error or a real non-error that a reviewer was confident about.
 
-Inputs:  runs/phase5_final/predictions_beta.csv; dataset/final/dataset_beta.parquet.
+Inputs:  runs/<run>/predictions_beta.csv (run name as first argument; default phase5_final_rev2); dataset/final/dataset_beta.parquet.
 Outputs: figures/samples_TP.png (9), samples_FN.png (6), samples_FP.png (6),
          samples_TN.png (6), and figures/samples_index.csv listing every panel.
 Selection (seeded, reproducible): TP = 3 largest corrected MWh + 3 closest to the
@@ -18,6 +18,7 @@ Each panel: recorded net load, solar, underlying demand if the sign is kept
 from __future__ import annotations
 
 import pathlib
+import sys
 
 import matplotlib
 import numpy as np
@@ -27,7 +28,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 HERE = pathlib.Path(__file__).resolve().parent
-RUN = HERE / "runs" / "phase5_final"
+RUN = HERE / "runs" / (sys.argv[1] if len(sys.argv) > 1 else "phase5_final_rev2")
 DATA = HERE.parent / "dataset" / "final" / "dataset_beta.parquet"
 OUT = HERE / "figures"
 C = 0.7
@@ -85,7 +86,7 @@ def grid(rows: pd.DataFrame, kind: str, days: pd.DataFrame, name: str, ncol: int
         axes[k // ncol, k % ncol].axis("off")
     h, lbl = axes[0, 0].get_legend_handles_labels()
     fig.legend(h, lbl, loc="lower center", ncol=6, fontsize=8, frameon=False)
-    fig.suptitle(f"M9 frozen method — {kind} samples, Beta 'sure' days, c = {C}", fontsize=11)
+    fig.suptitle(f"M9 revision 2 — {kind} samples, Beta 'sure' days, c = {C}", fontsize=11)
     fig.tight_layout(rect=(0, 0.04, 1, 0.97))
     fig.savefig(OUT / f"samples_{name}.png", dpi=120)
     plt.close(fig)
