@@ -1,0 +1,90 @@
+{
+  "code_sha256": "c4dfb87227050ec932a017fcc4a58d2d7dcdc84bafc50aacb98f9f873b81b51d",
+  "config": {
+    "bytes": 5722,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "9ee28b3a0a538bbcb182748f79572ba44b232db8cd8bddb28af3d6e7fc810430"
+  },
+  "created_utc": "2026-09-16T06:08:30+00:00",
+  "elapsed_s": 44.3,
+  "gate": {
+    "alpha_energy_precision_ceiling": 0.904,
+    "complete": true,
+    "decision": "M9 is the default method",
+    "energy_precision_min": 0.9,
+    "gated_cohort": "beta",
+    "m9_default": true,
+    "methods": {
+      "m7": {
+        "alpha_energy_precision": 0.3175164851414568,
+        "alpha_gate_pass": false,
+        "alpha_vs_ceiling": -0.5864835148585432,
+        "beta_energy_precision": 0.31976469872847296,
+        "beta_gate_pass": false,
+        "combined_energy_iou": 0.29858852627578164
+      },
+      "m8": {
+        "alpha_energy_precision": 0.9589239926161742,
+        "alpha_gate_pass": true,
+        "alpha_vs_ceiling": 0.0549239926161742,
+        "beta_energy_precision": 0.9318681472673687,
+        "beta_gate_pass": true,
+        "combined_energy_iou": 0.7322498593682089
+      },
+      "m9": {
+        "alpha_energy_precision": 0.8885742368962344,
+        "alpha_gate_pass": false,
+        "alpha_vs_ceiling": -0.015425763103765644,
+        "beta_energy_precision": 0.940667717682573,
+        "beta_gate_pass": true,
+        "combined_energy_iou": 0.8749280329595823
+      }
+    },
+    "strongest_combined_energy_iou": "m9"
+  },
+  "inputs": [
+    {
+      "bytes": 1826779,
+      "path": "outputs/01_final_evaluation/06_site_days/site_days.parquet",
+      "sha256": "bcdc7e83144317937aa535d33ce9cb030a1a1a049dc8181ea499fe599cde3fa2"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 4521,
+      "path": "outputs/01_final_evaluation/07_metrics/pooled.csv",
+      "sha256": "2a5d78a1828813f78e8e9e9791b0a68580ada9e17ddfca35989ed72062606595"
+    },
+    {
+      "bytes": 19890,
+      "path": "outputs/01_final_evaluation/07_metrics/stations.csv",
+      "sha256": "b2fcf02007cb82cbca4c248c95442d361c2099148bcdd0d84bd2ccbdcff80c0f"
+    },
+    {
+      "bytes": 3107,
+      "path": "outputs/01_final_evaluation/07_metrics/bootstrap.csv",
+      "sha256": "ee94066a2e71a61ed1f335d07dcce238f955d430d8c432fbad94394960b6a024"
+    },
+    {
+      "bytes": 4155,
+      "path": "outputs/01_final_evaluation/07_metrics/coverage.csv",
+      "sha256": "b8a196c79fb927f69426334d048bc9146d3d75ad55e9944fd1451fe70625bf42"
+    },
+    {
+      "bytes": 3019,
+      "path": "outputs/01_final_evaluation/07_metrics/sensitivity.csv",
+      "sha256": "f56e69635b31932d9c47cde522fc70749f43fdfa4f19a0ec7fdd3e2cbbaba21f"
+    },
+    {
+      "bytes": 202,
+      "path": "outputs/01_final_evaluation/07_metrics/calibration_reliability.csv",
+      "sha256": "584a2345aca57e81129ed2c2f945ba796381ea68dddb8bb0ac2d500bc1bf841a"
+    },
+    {
+      "bytes": 1119,
+      "path": "outputs/01_final_evaluation/07_metrics/gate.json",
+      "sha256": "bed610ae5f5de78b5e1016bc3fd6c4abb311f0f09b418ab38edadb8c55efa340"
+    }
+  ],
+  "stage": "07_metrics"
+}

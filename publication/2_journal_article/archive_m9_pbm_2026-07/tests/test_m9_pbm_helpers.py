@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ARTICLE_ROOT = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
+ARTICLE_ROOT = Path(__file__).resolve().parents[1]  # the archive root
 NOTEBOOK_DIR = ARTICLE_ROOT / "notebooks"
 sys.path.insert(0, str(NOTEBOOK_DIR))
 

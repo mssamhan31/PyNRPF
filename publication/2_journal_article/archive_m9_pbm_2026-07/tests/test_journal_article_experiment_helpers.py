@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-ARTICLE_ROOT = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
+ARTICLE_ROOT = Path(__file__).resolve().parents[1]  # the archive root
 NOTEBOOK_DIR = ARTICLE_ROOT / "notebooks"
 sys.path.insert(0, str(NOTEBOOK_DIR))
 
@@ -80,13 +80,13 @@ def test_config_paths_and_schema_resolve() -> None:
 
 
 def test_misc_diagnostics_outputs_are_ignored_but_summary_is_tracked() -> None:
-    gitignore = (ARTICLE_ROOT.parents[1] / ".gitignore").read_text(encoding="utf-8")
+    gitignore = (ARTICLE_ROOT.parents[2] / ".gitignore").read_text(encoding="utf-8")
     summary_path = (
         NOTEBOOK_DIR / "99_Misc" / "2026-06-24_beta_m8_diagnostics_summary.md"
     )
     summary = summary_path.read_text(encoding="utf-8")
 
-    assert "publication/2_journal_article/notebooks/99_Misc/outputs/" in gitignore
+    assert "publication/2_journal_article/archive_m9_pbm_2026-07/notebooks/99_Misc/outputs/" in gitignore
     assert summary_path.exists()
     assert "site-specific" in summary
     assert "normalisation" in summary

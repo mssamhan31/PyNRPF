@@ -1,0 +1,119 @@
+{
+  "code_sha256": "9b736e242cfecbac256427e1f58b4b033d039d78a353cb4b647c39632b7400ab",
+  "config": {
+    "bytes": 5722,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "9ee28b3a0a538bbcb182748f79572ba44b232db8cd8bddb28af3d6e7fc810430"
+  },
+  "created_utc": "2026-09-16T06:50:47+00:00",
+  "elapsed_s": 205.3,
+  "inputs": [
+    {
+      "bytes": 1826779,
+      "path": "outputs/01_final_evaluation/06_site_days/site_days.parquet",
+      "sha256": "bcdc7e83144317937aa535d33ce9cb030a1a1a049dc8181ea499fe599cde3fa2"
+    },
+    {
+      "bytes": 5917,
+      "path": "outputs/01_final_evaluation/01_folds/fold_manifest.csv",
+      "sha256": "13e955168a0366b4504fe10acb256dbcfa88b58a0427a35851e6db4c33cec763"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 59711,
+      "path": "outputs/01_final_evaluation/10_operating_points/frontier.csv",
+      "sha256": "3e92b482507ee9a0c8f1aeaca39b06451cc4c94a8d8a08811f7eb2bb6cfb1253"
+    },
+    {
+      "bytes": 20595,
+      "path": "outputs/01_final_evaluation/10_operating_points/heatmap.csv",
+      "sha256": "fc10b84981d5065b556bceec875041792a66effe78963ad6a5fb46d719069156"
+    },
+    {
+      "bytes": 12115,
+      "path": "outputs/01_final_evaluation/10_operating_points/targets.csv",
+      "sha256": "a0775d5ebae5233f4acdcd0b8a4c9a5130eed9d5f96bf89bd2b606f2d4d968be"
+    },
+    {
+      "bytes": 40697,
+      "path": "outputs/01_final_evaluation/10_operating_points/selections.csv",
+      "sha256": "49ed34dc854abee4f07e8b2c23e39d163289254979168e47479a748d6ae6805a"
+    },
+    {
+      "bytes": 15574,
+      "path": "outputs/01_final_evaluation/10_operating_points/bootstrap.csv",
+      "sha256": "0359c3a87df23b978a6c27937a017d6f4fec210e28378f67235d7e831ad2dc07"
+    },
+    {
+      "bytes": 7703,
+      "path": "outputs/01_final_evaluation/10_operating_points/stations.csv",
+      "sha256": "41457e48537f746d20fdc5a89fd5912a6f28376249f2cd55ec8b920ae06a9374"
+    },
+    {
+      "bytes": 145604,
+      "path": "outputs/01_final_evaluation/10_operating_points/figA_precision_recall_frontier_beta.png",
+      "sha256": "9b802af97b6ddfb18f2c71ea1054001af1f5774eab54e97e6756a289792ad469"
+    },
+    {
+      "bytes": 159413,
+      "path": "outputs/01_final_evaluation/10_operating_points/figB_target_vs_achieved_beta.png",
+      "sha256": "a1640868ecaf5ab4dc148193e38f3501529c102eb7acede72da1359cec19bc20"
+    },
+    {
+      "bytes": 142981,
+      "path": "outputs/01_final_evaluation/10_operating_points/figC_cost_of_precision_target_beta.png",
+      "sha256": "859b88d9c8d1f8ec8f8545cccd1e049f1b8a197f19afd950801945a7ad830c0c"
+    },
+    {
+      "bytes": 151626,
+      "path": "outputs/01_final_evaluation/10_operating_points/figD_review_side_heatmaps_beta.png",
+      "sha256": "d9098b0c2254c7db254646ac428b0053753446b793f42f83532351340bb7ea8b"
+    },
+    {
+      "bytes": 77047,
+      "path": "outputs/01_final_evaluation/10_operating_points/figE_per_station_operating_points_beta.png",
+      "sha256": "e95c8a40cb42974c8f5a9b033dde9e3b42e7d75cbcd2737b72a4119f4aa76e06"
+    },
+    {
+      "bytes": 105786,
+      "path": "outputs/01_final_evaluation/10_operating_points/figF_ausgrid_one_pager_beta.png",
+      "sha256": "088bad427155636a43125c2cd9e2908ba796e6264b966aac15a8d4417be5db73"
+    },
+    {
+      "bytes": 127309,
+      "path": "outputs/01_final_evaluation/10_operating_points/figA_precision_recall_frontier_alpha.png",
+      "sha256": "24f0f3865cb71acb8f1a1ad664570161450b9980c06a89a66ecf201bfd4f6d2a"
+    },
+    {
+      "bytes": 132308,
+      "path": "outputs/01_final_evaluation/10_operating_points/figB_target_vs_achieved_alpha.png",
+      "sha256": "67f61836ebc2528618536c2427d414aad5c5f9ab7698696531275c2038e14c53"
+    },
+    {
+      "bytes": 105887,
+      "path": "outputs/01_final_evaluation/10_operating_points/figC_cost_of_precision_target_alpha.png",
+      "sha256": "1c797518fdac866a3e5ae74000ed3a76e3b4ccc04874fd78626e178eb26a1a90"
+    },
+    {
+      "bytes": 149148,
+      "path": "outputs/01_final_evaluation/10_operating_points/figD_review_side_heatmaps_alpha.png",
+      "sha256": "063d74ff8ba36901420de483318cd21ff539c457373ca7a4b4333c2758d580b9"
+    },
+    {
+      "bytes": 77326,
+      "path": "outputs/01_final_evaluation/10_operating_points/figE_per_station_operating_points_alpha.png",
+      "sha256": "b8ef8057f123df021a752255fcd7306cd44b1b3866ef94c5be46b9eef8b95a6e"
+    },
+    {
+      "bytes": 73990,
+      "path": "outputs/01_final_evaluation/10_operating_points/figF_ausgrid_one_pager_alpha.png",
+      "sha256": "61348784a182e541071849a5e1418bb837c63c2a2b5c136faffaea148507117f"
+    }
+  ],
+  "paper_figures": [
+    "figA_precision_recall_frontier_beta",
+    "figC_cost_of_precision_target_beta"
+  ],
+  "stage": "10_operating_points"
+}

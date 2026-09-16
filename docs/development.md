@@ -22,7 +22,7 @@ extra adds the heavier notebook and Streamlit dependencies.
 pytest -q
 ```
 
-89 tests, covering:
+66 tests, covering:
 
 | Area | Files |
 |---|---|
@@ -30,7 +30,8 @@ pytest -q
 | Artefact bundle round-trips | `test_artifacts.py`, `test_training_m8_xgb.py` |
 | Model behaviour | `test_m7_dtr_behavior.py`, `test_m8_xgb_behavior.py` |
 | Scaffold generation | `test_scaffold.py` |
-| Journal article helpers and figure rendering | `test_journal_article_experiment_helpers.py`, `test_m9_pbm_helpers.py`, `test_journal_figure_rendering.py` |
+| Phase 3 final evaluation (folds, energy fixtures, release files) | `test_final_eval_folds.py`, `test_final_eval_impact.py`, `test_final_eval_release.py`, `test_final_eval_operating_points.py` |
+| Journal article (legacy, archived) | moved to `publication/2_journal_article/archive_m9_pbm_2026-07/tests/`, not collected by CI |
 | Oracle review workflow | `test_oracle_review_core.py` |
 
 The journal and oracle tests import helper modules from `publication/` by path,

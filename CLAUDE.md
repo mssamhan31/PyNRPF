@@ -33,7 +33,7 @@ making a partial edit.
   alone. Do not flag them as leakage or propose gitignoring them.
 - **`publication/` is outside CI's lint scope**, and `src/pynrpf/_legacy` is
   excluded from ruff. Experiment and archive code is held to a looser standard.
-- **`99_Misc/` notebooks are working material**, judged more leniently than the
+- **`archive_m9_pbm_2026-07/` under `publication/2_journal_article/` is the frozen legacy pipeline** (M9-PBM, June–July 2026), kept for provenance; its `99_Misc/` notebooks are working material, judged more leniently than the
   numbered publication notebooks.
 
 ## Commands
@@ -44,7 +44,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 
-pytest -q                                    # 89 tests
+pytest -q                                    # 66 tests
 pytest tests/test_api.py -q                  # one file
 pytest tests/test_api.py::test_run_inference_m7_pandas_dataframe -q   # one test
 ruff check src/pynrpf tests                  # CI's lint scope
@@ -107,7 +107,7 @@ notebook — RPF included, each notebook separately.
 
 **Manifests and inventories must not carry absolute paths.** Machine account
 names leaked into committed manifests once. Use `relative_to_article()` in
-`_experiment_helpers.py`, or `relative_to(paths.article)` as `_m9_pbm_data.py`
+the archived `_experiment_helpers.py`, and the same rule in `final_eval/manifest.py`; every manifest path is `relative_to` the article root as `_m9_pbm_data.py`
 does. Anything written into `outputs/manifests/` or an inventory CSV is
 repository-relative.
 

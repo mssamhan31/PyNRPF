@@ -1,0 +1,2 @@
+station,gamma_days,days_with_m9_decision,days_without_decision_kept_raw,days_auto_corrected,days_uncertain,held_out_fold
+beta_B,366,366,0,137,35,beta_beta_B
