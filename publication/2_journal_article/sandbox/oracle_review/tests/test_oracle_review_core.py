@@ -5,15 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-WORKFLOW_DIR = (
-    Path(__file__).resolve().parents[1]
-    / "publication"
-    / "2_journal_article"
-    / "dataset"
-    / "oracle_data_creation"
-    / "archive"
-    / "2026-07-03_oracle_workspace_cleanup"
-)
+# The review tooling sits one level up from this tests folder, inside the sandbox.
+WORKFLOW_DIR = Path(__file__).resolve().parents[1] / "2026-07-03_oracle_workspace_cleanup"
 sys.path.insert(0, str(WORKFLOW_DIR))
 
 import oracle_review_core as core  # noqa: E402

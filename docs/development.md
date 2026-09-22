@@ -2,57 +2,48 @@
 
 ## Environment
 
-Requires Python 3.10 or later. Continuous integration tests 3.10, 3.11 and 3.12.
+Python 3.10 or later; continuous integration tests 3.10, 3.11 and 3.12.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -e .[dev,paper]
 ```
-
-`requirements.txt` installs the package in editable mode with the `dev` and
-`journal` extras. The `dev` extra carries the test and lint toolchain, plus
-`matplotlib` and `pyarrow`, which the journal article tests need. The `journal`
-extra adds the heavier notebook and Streamlit dependencies.
 
 ## Tests
 
 ```powershell
 pytest -q
+ruff check src/pynrpf tests publication/2_journal_article/paper
 ```
 
-66 tests, covering:
-
-| Area | Files |
+| tests | what they protect |
 |---|---|
-| Package API, config and training validation | `test_api.py`, `test_config.py`, `test_training_config.py` |
-| Artefact bundle round-trips | `test_artifacts.py`, `test_training_m8_xgb.py` |
-| Model behaviour | `test_m7_dtr_behavior.py`, `test_m8_xgb_behavior.py` |
-| Scaffold generation | `test_scaffold.py` |
-| Phase 3 final evaluation (folds, energy fixtures, release files) | `test_final_eval_folds.py`, `test_final_eval_impact.py`, `test_final_eval_release.py`, `test_final_eval_operating_points.py` |
-| Journal article (legacy, archived) | moved to `publication/2_journal_article/archive_m9_pbm_2026-07/tests/`, not collected by CI |
-| Oracle review workflow | `test_oracle_review_core.py` |
+| `test_m9_steps.py` | each step of the method on planted days: admissibility, the edge rule with a gap, the bridge, the misfit, the evidence sign and floor, the tie order |
+| `test_m9_reference.py` | the whole chain reproduces the reference run to the last digit on committed slices of two stations (`tests/fixtures/`) |
+| `test_calibration_decision_impact.py` | the release numbers, the intercept refit, the decision bands, the energy and minimum-demand numbers |
+| `test_run_cli_spark.py` | the pandas entry point, the column mapping, incomplete days, refused inputs, the command line, the Spark adapter (skipped without pyspark) |
+| `test_paper_*.py` | the paper code: folds and leakage guards, reference terms, metrics, operating points, and that `results/` matches its manifests |
 
-The journal and oracle tests import helper modules from `publication/` by path,
-so they need the `dev` extra installed rather than the runtime package alone.
+`tests/fixtures/make_fixtures.py` rebuilds the reference slices from the datasets and
+`results/`; run it only when the reference run changes.
 
-## Lint
+## Documentation
 
 ```powershell
-ruff check src/pynrpf tests
+mkdocs serve          # local preview at http://127.0.0.1:8000
+mkdocs build --strict
 ```
 
-Configured in `pyproject.toml`: line length 100, rules `E`, `F`, `I`, `B`, with
-`src/pynrpf/_legacy` excluded. Code under `publication/` is outside the linted
-scope — it is experiment and archive material held to a looser standard.
+The site is built locally only; it is not published.
 
-## Continuous integration and release
+## Continuous integration
 
-Three workflows under `.github/workflows/`:
+`ci.yml` lints, tests and builds the package on every push; `release.yml` publishes to PyPI
+when a `v*` tag is pushed; a nightly workflow smoke-tests the conference paper archive.
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | every push and pull request | Builds under setuptools 69 for compatibility, then lints, tests and builds across Python 3.10, 3.11 and 3.12. |
-| `release.yml` | version tags matching `v*` | Lints, tests, builds, and publishes to PyPI via OpenID Connect. |
-| `publication_archive_smoke.yml` | nightly | Executes conference notebooks 01 to 03 with nbconvert and uploads the outputs as a workflow artefact. Non-blocking. |
+## Releasing
+
+Bump `version` in `pyproject.toml`, `__version__` in `src/pynrpf/__init__.py` and
+`CITATION.cff`; add the entry to `CHANGELOG.md`; tag `vX.Y.Z` on `main`.

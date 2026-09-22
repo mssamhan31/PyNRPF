@@ -3,126 +3,94 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 PyNRPF (Python for Network Reverse Power Flow) detects and corrects a wrong reverse
-power flow (RPF) sign in distribution network interval meter data. See
-[README.MD](README.MD) for what it does and [docs/](docs/) for the API reference.
+power flow (RPF) sign in fifteen-minute substation net-load data with one method, M9.
+See [README.MD](README.MD) for what it does and [docs/](docs/) for the method, the API and
+the paper.
 
-## The red line: results are the author's
+## The red line: the reference run is the paper's
 
-`publication/` holds research results, not build artefacts. Committed
-figures, tables, metrics and manifests are numbers that go into a paper.
+`publication/2_journal_article/results/` is the reference run every number in the journal
+paper traces to, with a manifest per stage (repository-relative paths, SHA-256 hashes).
+Regenerate it only through the notebooks or `paper.stages`, and only when asked; then
+confirm the manifests reproduce (`pytest tests/test_paper_results.py`). Never edit a
+committed result value by hand. Changing a model, metric, feature set, split,
+hyperparameter, transformation or tolerance is methodology: propose it, do not do it.
 
-**The journal evaluation is provisional until the journal freeze.** Re-running a
-stage of `final_eval` is allowed in the current round, but a changed number must
-be traceable to the run that produced it: the manifest, the config and the
-sandbox or output folder it was written to. Never edit a committed result value
-by hand. The Phase 3 release of 16 September 2026 is kept unchanged under
-`publication/2_journal_article/sandbox/2026-09-16_phase3_release/`. Fixing
-formatting, documentation, structure and dead code is fine anywhere. Changing a
-model, metric, feature set, split, hyperparameter, transformation or tolerance
-is methodology — propose it, do not do it silently.
-
-If a fix needs a methodology change to be correct, stop and say so rather than
-making a partial edit.
+If a fix needs a methodology change to be correct, stop and say so rather than making a
+partial edit.
 
 ## Things that look wrong but are deliberate
 
-- **`publication/1_conference_paper/` is a frozen archive** with its own forked
-  copy of the package under `src/`. The duplication is the point: it is the code
-  that produced the published paper. Do not refactor it, deduplicate it against
-  `src/pynrpf/`, or tidy it.
-- **Large datasets are committed on purpose** — `.parquet` and `.csv` files over
-  10 MB under `publication/*/dataset/`. They are anonymised Ausgrid data,
-  cleared for publication, and committed so the results reproduce from the repo
-  alone. Do not flag them as leakage or propose gitignoring them.
-- **`publication/` is outside CI's lint scope**, and `src/pynrpf/_legacy` is
-  excluded from ruff. Experiment and archive code is held to a looser standard.
-- **`archive_m9_pbm_2026-07/` under `publication/2_journal_article/` is the frozen legacy pipeline** (M9-PBM, June–July 2026), kept for provenance; its `99_Misc/` notebooks are working material, judged more leniently than the
-  numbered publication notebooks.
+- `publication/1_conference_paper/` is a self-contained archive with its own forked
+  copy of the old package under `src/`. The duplication is the point: it is the code that
+  produced the published conference paper. Do not refactor it, deduplicate it, or tidy it.
+- Large datasets are committed on purpose (`.parquet` and `.csv` over 10 MB under
+  `publication/*/dataset/`). They are anonymised Ausgrid data, cleared for publication,
+  committed so the results reproduce from the repository alone. Do not flag them as
+  leakage or propose gitignoring them.
+- `publication/2_journal_article/sandbox/` is development history and dated studies. It is
+  not maintained, not linted, not cited, and may carry process wording. Nothing outside
+  `sandbox/` may reference it except the sandbox README.
+- The M8 bundles under `results/02_baselines/bundles/` are gitignored: they are regenerated
+  by notebook 02 and their hashes live in the fold manifests.
 
 ## Commands
 
 ```powershell
-# Full environment (tests, notebooks, Streamlit review app)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -e .[dev,paper]
 
-pytest -q                                    # 66 tests
-pytest tests/test_api.py -q                  # one file
-pytest tests/test_api.py::test_run_inference_m7_pandas_dataframe -q   # one test
-ruff check src/pynrpf tests                  # CI's lint scope
+pytest -q                                                   # package and paper tests
+pytest tests/test_m9_reference.py -q                        # one file
+ruff check src/pynrpf tests publication/2_journal_article/paper
 python -m build --sdist --wheel
+mkdocs build --strict                                       # docs, built locally only
 ```
 
-`ci.yml` installs `.[dev]` only. The `dev` extra therefore carries `matplotlib`
-and `pyarrow` as well as the test toolchain, because the journal and oracle tests
-import helper modules from `publication/` by `sys.path` manipulation. If you add
-a test that reaches into `publication/`, check its imports are satisfied by `dev`
-alone, or CI will fail at collection.
+`ci.yml` installs `.[dev,paper]`; the paper tests import `publication/2_journal_article/paper`
+by `sys.path`, so a new test that reaches into it must be satisfied by those extras.
 
 ## Architecture
 
-One dispatch path, worth tracing once. `src/pynrpf/api.py` is the only public
-entry point; everything else is called from it.
+The package is read in the order of the method. `src/pynrpf/m9/` holds one module per step
+(`stories`, `windows`, `edges`, `bridge`, `misfit`, `evidence`, `winner`, `calibration`,
+`decision`), composed by `score_siteday` in `m9/__init__.py`. `run.py` validates a frame
+(`validate.py`), scores every site-day, calibrates, decides, computes the energy and
+minimum-demand impact (`impact.py`) and returns the two tables of `schemas.py`. `spark.py`
+runs `run` per site through `applyInPandas`; `cli.py` wraps it for a CSV.
 
-```
-run_inference(data, config)
-  config.load_config        unwrap pynrpf_inference, adapt legacy schema, merge DEFAULT_CONFIG
-  validation.to_pandas_input    pandas or Spark in, remember which
-  validation.validate_dataframe schema, interval alignment, key uniqueness
-  registry.get_model            model id -> plugin instance
-  <plugin>.run_inference        the only model-specific step
-  monitoring.build_operational_summary
-  validation.from_pandas_output restore the caller's frame type
-```
+Released constants live where they are used: `RELEASE_PHI` in `m9/evidence.py`,
+`RELEASE_CALIBRATION` in `m9/calibration.py`, each with its provenance. Changing either is
+methodology.
 
-`train_m8_xgb` follows the same shape, adding `training_config.load_training_config`
-and ending at `artifacts.save_versioned_artifact_bundle`, which writes a
-timestamped `bundle.pkl` plus `manifest.json`.
-
-**Adding a model means adding a plugin, not touching `api.py`.** Subclass
-`BaseModelPlugin` in `plugins/base.py` — `run_inference` is abstract, `train` is
-optional and raises by default — then register it in `registry.py`. Do not
-hand-write the wiring: `generate_model_scaffold(model_id)` creates the module, a
-test and a config template, and edits `plugins/__init__.py` and `registry.py` for
-you. See [docs/extending.md](docs/extending.md).
-
-Config is a single resolved dictionary. `columns` maps logical names (`site`,
-`timestamp`, `net_load`, `solar`) to physical column names, and plugins receive
-that mapping rather than hardcoding column names. A full pipeline config with a
-`pynrpf_inference` block is accepted anywhere an inference config is, so
-Databricks pipeline files work unchanged.
-
-`src/pynrpf/_legacy/` holds feature building, validation and the m7 threshold
-rule carried over from the conference codebase. The conference results depend on
-it, so it stays.
+The paper's code is `publication/2_journal_article/paper/`, a local package the notebooks
+call; it imports `pynrpf` for M9 and adds the M7 and M8 baselines, the station-held-out
+folds, the reference-side metrics, the operating-point and Gamma studies, and the figure
+and table registries. It has no public API and no version.
 
 ## Conventions
 
-**Australian spelling** in all prose — README, docstrings, comments, notebook
-markdown. American spelling stays in code identifiers and library interfaces
-(`color=`, `normalize=`).
+Australian spelling in all prose: README, docstrings, comments, notebook markdown.
+American spelling stays in code identifiers and library interfaces (`color=`).
 
-**Notebooks are committed without outputs**, uniformly. `*.executed.ipynb` is
-gitignored. Every notebook opens with a markdown cell giving purpose, inputs,
-outputs and approximate runtime, and expands abbreviations on first use in that
-notebook — RPF included, each notebook separately.
+No process wording outside `sandbox/`: no "Phase", "round", "revision", "frozen", "locked",
+"Track". Say "release", "reference run", "development history".
 
-**Manifests and inventories must not carry absolute paths.** Machine account
-names leaked into committed manifests once. Use `relative_to_article()` in
-the archived `_experiment_helpers.py`, and the same rule in `final_eval/manifest.py`; every manifest path is `relative_to` the article root as `_m9_pbm_data.py`
-does. Anything written into `outputs/manifests/` or an inventory CSV is
-repository-relative.
+Notebooks are committed without outputs. Every notebook opens with a markdown cell giving
+purpose, inputs, outputs and approximate runtime, and expands abbreviations on first use,
+RPF included.
 
-**Docstrings**: every module opens with purpose, inputs, outputs, key steps.
-Every public function documents arguments, returns and units — MW, MWh, minutes,
-15-minute intervals.
+Manifests must not carry absolute paths: every path written under `results/` is relative
+to `publication/2_journal_article/`.
+
+Docstrings: every module opens with purpose, inputs, outputs and key steps; every public
+function documents arguments, returns and units (MW, MWh, slots of fifteen minutes).
 
 ## Branches and releases
 
-`main` is the released, Zenodo-archived version; a `v*` tag triggers
-`release.yml`, which publishes to PyPI. Work happens on `dev` and on feature
-branches off `dev`. Do not merge working branches into `main` — that decision is
-a release decision.
+`main` is the released, Zenodo-archived version; a `v*` tag triggers `release.yml`, which
+publishes to PyPI. Work happens on `dev` and feature branches. Do not merge working
+branches into `main`; that is a release decision. Do not commit or push unless asked.
 
 `.ai/` and `planning/` are gitignored working directories.
