@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 ARTICLE = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
-OUT = ARTICLE / "sandbox" / "2026-09-16_phase3_release" / "outputs"
+OUT = ARTICLE / "results"
 sys.path.insert(0, str(ARTICLE))
 
 from final_eval import folds as fl  # noqa: E402
@@ -46,7 +46,9 @@ def test_m9_port_reproduces_frozen_run():
     frozen = pd.read_csv(
         _need(ARTICLE / "m9_dev" / "runs" / "phase5_final_rev2" / "summary_pooled.csv")
     )
-    for cohort in ("alpha", "beta"):
+    # The reference run calibrates every station on Beta only, so only the Beta cohort is
+    # comparable with the development run (which calibrated Alpha on Alpha).
+    for cohort in ("beta",):
         new = pooled[(pooled["method"] == "m9") & (pooled["group"] == cohort)].iloc[0]
         old = frozen[(frozen["cohort"] == cohort) & (frozen["group"] == "headline")].iloc[0]
         for key in (

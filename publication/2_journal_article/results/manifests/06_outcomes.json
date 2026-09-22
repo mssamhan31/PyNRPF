@@ -1,0 +1,46 @@
+{
+  "code_sha256": "85a7b278df62c283070f33cf9c2b347b4dfb433f2fb14d34b6029721328ccb28",
+  "config": {
+    "bytes": 6663,
+    "path": "sandbox/2026-09-22_beta_only_eval/config.yaml",
+    "sha256": "977901957af84c15c12fd83b880849a980e055253e45c39b61c3ed07687a3bd2"
+  },
+  "created_utc": "2026-09-22T00:28:50+00:00",
+  "elapsed_s": 42.9,
+  "inputs": [
+    {
+      "bytes": 3860228,
+      "path": "results/03_m7/intervals_m7.parquet",
+      "sha256": "28ebe318004b9d5431dba5e8a9dde71cc0dc5fdcaa546723c5d14ad0200d56a0"
+    },
+    {
+      "bytes": 4867808,
+      "path": "results/04_m8/intervals_m8.parquet",
+      "sha256": "1c864ad30adce44cb967c013bc751dc589a8be6ac1e23879d381c0fe7a3a5bcb"
+    },
+    {
+      "bytes": 3981859,
+      "path": "results/05_m9/intervals_m9.parquet",
+      "sha256": "cff76c0b55646a35d7f38adbde3c24270b067b27dd7dd4fe1ffc9a34cff7a34f"
+    }
+  ],
+  "methods": [
+    "m7",
+    "m8",
+    "m9"
+  ],
+  "n_site_days_per_method": 13347,
+  "outputs": [
+    {
+      "bytes": 1769173,
+      "path": "results/06_site_days/site_days.parquet",
+      "sha256": "2e3879993542879d492a1d575ebe5ee9cb142de6dd33b3ed351da6348cc8a96e"
+    },
+    {
+      "bytes": 5467319,
+      "path": "results/06_site_days/site_day_decisions.csv",
+      "sha256": "1efd0ada2c60819733548ab43ca63df11a5cf06c5b6afafe6111061d426835a0"
+    }
+  ],
+  "stage": "06_outcomes"
+}

@@ -1,0 +1,4 @@
+data_condition,training_examples,training_target_start,training_target_end,test_examples,test_target_start,test_target_end,fit_count_per_learned_model,maximum_test_observation_timestamp
+raw_uncorrected,30006,2023-10-22 00:00:00+00:00,2024-08-31 23:45:00+00:00,2880,2024-09-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,1,2024-09-23 23:45:00+00:00
+m9_corrected,30006,2023-10-22 00:00:00+00:00,2024-08-31 23:45:00+00:00,2880,2024-09-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,1,2024-09-23 23:45:00+00:00
+manually_corrected,30006,2023-10-22 00:00:00+00:00,2024-08-31 23:45:00+00:00,2880,2024-09-01 00:00:00+00:00,2024-09-30 23:45:00+00:00,1,2024-09-23 23:45:00+00:00

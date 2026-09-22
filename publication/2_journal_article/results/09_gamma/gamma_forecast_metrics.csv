@@ -1,0 +1,10 @@
+data_condition,data_condition_label,model,model_label,n_targets_total,n_valid,rmse_MW,mae_MW
+m9_corrected,M9 corrected,linear_regression,Linear regression,2880,2876,3.115496529798218,2.031347700483371
+manually_corrected,Manually corrected,linear_regression,Linear regression,2880,2876,3.06855123198523,1.9683934938199532
+raw_uncorrected,Raw uncorrected,linear_regression,Linear regression,2880,2876,4.716049607401454,2.745356795364226
+m9_corrected,M9 corrected,seasonal_naive,Seasonal naive,2880,2871,3.610191918125474,1.9793935893416927
+manually_corrected,Manually corrected,seasonal_naive,Seasonal naive,2880,2871,3.6669642746462947,2.0054923173110413
+raw_uncorrected,Raw uncorrected,seasonal_naive,Seasonal naive,2880,2871,4.808065762366514,2.8202740609543713
+m9_corrected,M9 corrected,xgboost,XGBoost,2880,2876,2.71505658709625,1.8597085090931713
+manually_corrected,Manually corrected,xgboost,XGBoost,2880,2876,2.6362786578400295,1.727513220336474
+raw_uncorrected,Raw uncorrected,xgboost,XGBoost,2880,2876,4.4248775544088454,2.6053591359255956

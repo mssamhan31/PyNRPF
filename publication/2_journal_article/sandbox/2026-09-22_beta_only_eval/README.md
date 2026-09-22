@@ -1,3 +1,5 @@
+> The outputs of this run were promoted to `publication/2_journal_article/results/` on 22 September 2026 (with the Gamma stage added); this folder keeps the config and the results note.
+
 # Sandbox: Beta-only-trained evaluation (22 September 2026)
 
 Question: what do M7, M8 and M9 score when every fitted quantity is learnt from Beta alone
