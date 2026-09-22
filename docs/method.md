@@ -83,7 +83,7 @@ unknown variance, fit the variance under each story, and the log-likelihood diff
 exactly `(L/2) log(RSS_u / RSS_c)`; evidence sustained over more slots counts for more. Why
 the floor: two perfect fits must tie (`log 1 = 0`), and a floor on one side only would send
 the ratio to infinity. `φ` is the smallest non-zero overnight demand step over the release
-population; it only guards perfectly flat readings, and it is frozen (`RELEASE_PHI`) so a
+population; it only guards perfectly flat readings, and it is fixed (`RELEASE_PHI`) so a
 day scores the same in any batch.
 
 ## Step 7, the winner (`winner`)

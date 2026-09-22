@@ -5,8 +5,8 @@
     "path": "config/evaluation.yaml",
     "sha256": "b99ad367eb6f81ba049d7442c03adacb08087668147d1ceab6ac7ec01bed7b45"
   },
-  "created_utc": "2026-09-22T06:55:54+00:00",
-  "elapsed_s": 189.6,
+  "created_utc": "2026-09-22T07:12:16+00:00",
+  "elapsed_s": 175.8,
   "gate": {
     "alpha_energy_precision_ceiling": 0.904,
     "complete": true,

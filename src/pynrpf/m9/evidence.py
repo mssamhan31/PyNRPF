@@ -13,7 +13,7 @@ The floor ``lambda_L`` keeps a near-perfect fit finite and gives ``r = 0`` when 
 fit perfectly; it scales with the window length and with the units, like RSS.
 
 ``phi`` is the smallest non-zero overnight step of demand across the population the method
-was released on. It only guards perfectly flat readings and is frozen so that a day scores
+was released on. It only guards perfectly flat readings and is fixed so that a day scores
 the same in any batch.
 
 Inputs:  the RSS and length matrices of step 5, ``phi`` in MW, the admissible matrix of steps 2 and 3.

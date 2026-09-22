@@ -10,7 +10,7 @@ The package now ships one method, M9, and nothing else.
 - The method lives in `pynrpf.m9`, one module per step: stories, windows, edges, bridge,
   misfit, evidence, winner, calibration, decision.
 - Release calibration fitted on eight Ausgrid substations with reviewed real errors, and a
-  frozen evidence floor, both recorded with their provenance; `fit_calibration` refits the
+  fixed evidence floor, both recorded with their provenance; `fit_calibration` refits the
   intercept for a new population from reviewed days with the slope kept.
 - Dependencies reduced to numpy and pandas; scikit-learn, pyspark and the paper toolchain
   are optional extras.

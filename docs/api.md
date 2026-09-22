@@ -11,7 +11,7 @@ Everything public is importable from `pynrpf`.
 | `Calibration(intercept, slope, provenance="")` | step 8; `probability(evidence)`, `evidence_at(p)` |
 | `RELEASE_CALIBRATION` | the Beta-8 pair, intercept −4.590, slope 2.162 |
 | `RELEASE_PHI` | the evidence floor, 8.03e-9 MW |
-| `fit_calibration(evidence, labels, slope=None, provenance="")` | fit the intercept with the slope frozen, or both numbers (needs scikit-learn) |
+| `fit_calibration(evidence, labels, slope=None, provenance="")` | fit the intercept with the slope fixed, or both numbers (needs scikit-learn) |
 | `pynrpf.spark.run_per_site(sdf, ...)` | the same run on a Spark frame; see [Spark](spark.md) |
 | `pynrpf.schemas.SITE_DAYS`, `INTERVALS` | the output tables as `(name, dtype, spark type, meaning)` tuples |
 

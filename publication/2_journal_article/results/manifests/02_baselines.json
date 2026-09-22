@@ -5,8 +5,8 @@
     "path": "config/evaluation.yaml",
     "sha256": "b99ad367eb6f81ba049d7442c03adacb08087668147d1ceab6ac7ec01bed7b45"
   },
-  "created_utc": "2026-09-22T06:52:06+00:00",
-  "elapsed_s": 178.4,
+  "created_utc": "2026-09-22T07:08:12+00:00",
+  "elapsed_s": 40.3,
   "inputs": [
     {
       "bytes": 18291524,
@@ -24,12 +24,12 @@
       "sha256": "3ecf97a2f3fc579e2d80a2c4c1bc1f8c7874e5165874bc9a3d567d05bf6765d8"
     }
   ],
-  "n_fits": 9,
+  "n_fits": 0,
   "outputs": [
     {
-      "bytes": 4118,
+      "bytes": 4100,
       "path": "results/02_baselines/training_summary.csv",
-      "sha256": "d0c03807ff0f61ac4f58b5a82020793f35d177bd8058efe0181be6deb1c7d7ec"
+      "sha256": "e477f4f28bcb43a09dde53f57a3afedee36d44c11a03ee47c5bf64860000d417"
     },
     {
       "bytes": 1106,

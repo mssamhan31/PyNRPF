@@ -31,7 +31,7 @@ is not needed.
 
 ## Idempotence
 
-The same day scores the same in any batch: the evidence floor is frozen (`RELEASE_PHI`) and
+The same day scores the same in any batch: the evidence floor is fixed (`RELEASE_PHI`) and
 the calibration is two fixed numbers. Re-running over an overlapping period gives identical
 rows, so a `MERGE` keyed on site and date is safe.
 
