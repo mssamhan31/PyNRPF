@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pynrpf"
-version = "0.3.0"
-description = "PyNRPF implementation package for reverse power flow detection and correction."
+version = "0.4.0"
+description = "Detect and correct a wrong reverse-power-flow sign in fifteen-minute net-load data (M9)."
 readme = "README.MD"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -13,34 +13,39 @@ authors = [
   { name = "M. Syahman Samhan", email = "m.samhan@unsw.edu.au" }
 ]
 dependencies = [
-  "pyyaml>=6,<7",
-  "pandas>=2.1,<3",
   "numpy>=1.26,<3",
-  "scikit-learn>=1.4,<2",
-  "xgboost>=2,<3",
-  "holidays>=0.40,<1",
+  "pandas>=2.1,<3",
 ]
 
 [project.optional-dependencies]
-dev = [
-  "pytest>=8,<10",
-  "ruff>=0.9,<1",
-  "build>=1.2,<2",
-  # The journal-article tests import plotting and parquet helpers from
-  # publication/2_journal_article/notebooks, so the test suite needs these two
-  # even though the heavier journal extras (plotly, streamlit) are not required.
-  "matplotlib>=3.7,<4",
+# Fitting both calibration numbers (the paper's per-fold fits); the intercept-only refit needs nothing extra.
+fit = ["scikit-learn>=1.4,<2"]
+# The Spark adapter.
+spark = ["pyspark>=3.4,<4"]
+# Reproducing the journal paper: baselines, folds, figures, notebooks.
+paper = [
+  "scikit-learn>=1.4,<2",
+  "xgboost>=2,<3",
+  "holidays>=0.40,<1",
+  "pyyaml>=6,<7",
   "pyarrow>=14,<23",
-]
-journal = [
-  "pyarrow>=14,<23",
   "matplotlib>=3.7,<4",
-  "plotly>=5.18,<7",
-  "streamlit>=1.31,<2",
   "jupyterlab>=4,<5",
   "ipykernel>=6,<8",
   "tabulate>=0.9,<1",
 ]
+dev = [
+  "pytest>=8,<10",
+  "ruff>=0.9,<1",
+  "build>=1.2,<2",
+  "mkdocs>=1.5,<2",
+  "mkdocs-material>=9,<10",
+  "pyarrow>=14,<23",
+  "scikit-learn>=1.4,<2",
+]
+
+[project.scripts]
+pynrpf = "pynrpf.cli:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -54,7 +59,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
-line-length = 100
+line-length = 120
 extend-exclude = ["src/pynrpf/_legacy"]
 
 [tool.ruff.lint]

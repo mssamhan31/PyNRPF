@@ -1,25 +1,17 @@
-"""PyNRPF implementation package API."""
+"""PyNRPF: detect and correct a wrong reverse-power-flow sign in fifteen-minute net-load data.
 
-from .api import run_inference, train_m8_xgb
-from .artifacts import load_artifact_bundle, save_artifact_bundle
-from .config import load_config
-from .registry import list_models
-from .scaffold import (
-    build_pipeline_config,
-    generate_model_scaffold,
-    generate_pipeline_config,
-)
+    import pynrpf
+    result = pynrpf.run(frame)          # pandas frame in, two tables out
+    result.site_days, result.intervals
 
-__all__ = [
-    "load_artifact_bundle",
-    "load_config",
-    "list_models",
-    "run_inference",
-    "save_artifact_bundle",
-    "train_m8_xgb",
-    "build_pipeline_config",
-    "generate_pipeline_config",
-    "generate_model_scaffold",
-]
+The method (M9) lives in ``pynrpf.m9``, one file per step; ``pynrpf.spark.run_per_site``
+runs it on a Spark frame; ``pynrpf run`` is the command line.
+"""
 
-__version__ = "0.3.0"
+from .m9 import RELEASE_CALIBRATION, RELEASE_PHI, Calibration, Score, fit_calibration, score_siteday
+from .run import Result, run
+
+__version__ = "0.4.0"
+
+__all__ = ["Calibration", "RELEASE_CALIBRATION", "RELEASE_PHI", "Result", "Score", "__version__",
+           "fit_calibration", "run", "score_siteday"]
