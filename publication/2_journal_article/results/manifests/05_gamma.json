@@ -1,0 +1,90 @@
+{
+  "audit": {
+    "days_auto_corrected": 137,
+    "days_uncertain": 35,
+    "days_with_m9_decision": 366,
+    "days_without_decision_kept_raw": 0,
+    "gamma_days": 366,
+    "held_out_fold": "beta_beta_B",
+    "station": "beta_B"
+  },
+  "code_sha256": "9905b48a0fc05ef4d727dc87ecf94af5967891e51e3cfa035c5326facfda6afe",
+  "config": {
+    "bytes": 6108,
+    "path": "config/evaluation.yaml",
+    "sha256": "b99ad367eb6f81ba049d7442c03adacb08087668147d1ceab6ac7ec01bed7b45"
+  },
+  "created_utc": "2026-09-22T06:55:57+00:00",
+  "elapsed_s": 2.9,
+  "inputs": [
+    {
+      "bytes": 867838,
+      "path": "dataset/final/dataset_gamma.parquet",
+      "sha256": "7ebeedeab63b1a95059c0f413744230a183bf1d6f6883f5394855b26c229dc78"
+    },
+    {
+      "bytes": 1769173,
+      "path": "results/04_metrics/site_days.parquet",
+      "sha256": "2e3879993542879d492a1d575ebe5ee9cb142de6dd33b3ed351da6348cc8a96e"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 1840886,
+      "path": "results/05_gamma/gamma_series.parquet",
+      "sha256": "e616417cba3f987ef950281acb56d44a1e756c75f1a5d5dfc01e6b191c115e84"
+    },
+    {
+      "bytes": 159,
+      "path": "results/05_gamma/gamma_correction_audit.csv",
+      "sha256": "794af9797069beb7fcd332f81f3f8c8bc36ad01def0d0662b36f5d1404bbb449"
+    },
+    {
+      "bytes": 700,
+      "path": "results/05_gamma/gamma_data_error_metrics.csv",
+      "sha256": "236a5fd300f95646dd6585fc1d1ffc7c38910df3d1e812d7d6ccb5f3680f65a2"
+    },
+    {
+      "bytes": 397925,
+      "path": "results/05_gamma/gamma_forecast_predictions.parquet",
+      "sha256": "1c6fb8be7333297d2db46192c97d5a6e39705f3fb671f890772bc79e4cce2ba2"
+    },
+    {
+      "bytes": 667,
+      "path": "results/05_gamma/gamma_forecast_fit_audit.csv",
+      "sha256": "5192617d91b613433409d7d360dce122b29770abf7e276095f12635defa66bf5"
+    },
+    {
+      "bytes": 1058,
+      "path": "results/05_gamma/gamma_forecast_metrics.csv",
+      "sha256": "86505e1d2aae9aa953fe053267ec4ccc1754f59564895bdb191f35aa8b47d02b"
+    },
+    {
+      "bytes": 589,
+      "path": "results/05_gamma/gamma_forecast_impact.csv",
+      "sha256": "ff24a548a7410e9a6608246e088356443c6f01931836fd1ca72e37027f661394"
+    },
+    {
+      "bytes": 203666,
+      "path": "results/05_gamma/fig01_gamma_raw_m9_manual_example_week.png",
+      "sha256": "9a2f12698f35a44293acf343e5f1faacbd0b9f8b99f98d539adb3b75e4e903e9"
+    },
+    {
+      "bytes": 52470,
+      "path": "results/05_gamma/fig02_gamma_data_error_rmse.png",
+      "sha256": "b6a2b31e1930b495b47ac3161dc98cf689dd1d0b90acf8d6f49a861d94c5a10c"
+    },
+    {
+      "bytes": 57680,
+      "path": "results/05_gamma/fig03_gamma_forecast_rmse.png",
+      "sha256": "7c6f2d552de0faa961a0275b0959d60a819b32fd73256a068e288b901a2e7e8b"
+    },
+    {
+      "bytes": 57704,
+      "path": "results/05_gamma/fig04_gamma_forecast_residuals.png",
+      "sha256": "f10b15b6b8d541ba8f22c77336706f6fd0f56f9306c005acb9ed1f34c6cd857f"
+    }
+  ],
+  "pynrpf_version": "0.4.0",
+  "stage": "05_gamma"
+}

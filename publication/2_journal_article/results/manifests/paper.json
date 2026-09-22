@@ -1,0 +1,337 @@
+{
+  "code_sha256": "9905b48a0fc05ef4d727dc87ecf94af5967891e51e3cfa035c5326facfda6afe",
+  "config": {
+    "bytes": 6108,
+    "path": "config/evaluation.yaml",
+    "sha256": "b99ad367eb6f81ba049d7442c03adacb08087668147d1ceab6ac7ec01bed7b45"
+  },
+  "created_utc": "2026-09-22T06:56:19+00:00",
+  "elapsed_s": 22.8,
+  "figures": [
+    "fig01_problem",
+    "fig02_energy_metrics",
+    "fig03_dataset_alpha",
+    "fig04_dataset_beta",
+    "fig05_two_stories",
+    "fig06_worked_day",
+    "fig07_headline",
+    "fig08_per_station",
+    "fig09_review_burden_frontier",
+    "fig10_gamma",
+    "fig11_calibration",
+    "fig12_coverage_scores",
+    "fig13_samples_m7",
+    "fig14_samples_m8",
+    "fig15_samples_m9"
+  ],
+  "inputs": [
+    {
+      "bytes": 1769173,
+      "path": "results/04_metrics/site_days.parquet",
+      "sha256": "2e3879993542879d492a1d575ebe5ee9cb142de6dd33b3ed351da6348cc8a96e"
+    },
+    {
+      "bytes": 4527,
+      "path": "results/04_metrics/pooled.csv",
+      "sha256": "a6450ce0a9f316b2d442d0acd098ea719f976970abef8bd9a918afdf36f94506"
+    },
+    {
+      "bytes": 19877,
+      "path": "results/04_metrics/stations.csv",
+      "sha256": "ff06a4e090ef0007271e685c101d159202b8393d44fa9815929285b7131cbf20"
+    },
+    {
+      "bytes": 2295,
+      "path": "results/04_metrics/macro.csv",
+      "sha256": "1ae081932208038efc081757861489e306428327e71b850f08b1004b0e627481"
+    },
+    {
+      "bytes": 3087,
+      "path": "results/04_metrics/bootstrap.csv",
+      "sha256": "bfb11c1e7f5870fe04a3486d08c251b74cb2535c3afe424864bb758a19ddb5c4"
+    },
+    {
+      "bytes": 4078,
+      "path": "results/04_metrics/coverage.csv",
+      "sha256": "e313484cf7e81175458ad315b65c346ee9bdd58d39907b79c542eb2a2e6e4362"
+    },
+    {
+      "bytes": 3026,
+      "path": "results/04_metrics/sensitivity.csv",
+      "sha256": "95381030a468624cf13063a6111bf8c15b8845820e8752ccc09967188fde02a1"
+    },
+    {
+      "bytes": 1120,
+      "path": "results/04_metrics/gate.json",
+      "sha256": "0e61422109915c696d5b228e2ce290f233d341c5a961c4d336dcc0c12c17684b"
+    },
+    {
+      "bytes": 2095,
+      "path": "results/03_m9/calibration_fits.csv",
+      "sha256": "1c731f8a7787fafb0c884414c15498cd4883c5a467b98ccbbf0d7bd720caac98"
+    },
+    {
+      "bytes": 11537,
+      "path": "results/04_metrics/operating_points/targets.csv",
+      "sha256": "30e76961701e90ab95e311a8c5fe54cfb6ad8f572c5eace2f6ca8d6fcd0edfa9"
+    },
+    {
+      "bytes": 59026,
+      "path": "results/04_metrics/operating_points/frontier.csv",
+      "sha256": "b57f27b03a4995813b42b4979c0d21432699b801ce94d23fd124a39e4e95ffb5"
+    },
+    {
+      "bytes": 1840886,
+      "path": "results/05_gamma/gamma_series.parquet",
+      "sha256": "e616417cba3f987ef950281acb56d44a1e756c75f1a5d5dfc01e6b191c115e84"
+    },
+    {
+      "bytes": 1058,
+      "path": "results/05_gamma/gamma_forecast_metrics.csv",
+      "sha256": "86505e1d2aae9aa953fe053267ec4ccc1754f59564895bdb191f35aa8b47d02b"
+    },
+    {
+      "bytes": 589,
+      "path": "results/05_gamma/gamma_forecast_impact.csv",
+      "sha256": "ff24a548a7410e9a6608246e088356443c6f01931836fd1ca72e37027f661394"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 189243,
+      "path": "results/paper/figures/fig06_worked_day.png",
+      "sha256": "e70af46803fb3e8e353d70edba58bf236985ef5d4f8db62a9f55d15bce79ae86"
+    },
+    {
+      "bytes": 41425,
+      "path": "results/paper/figures/fig06_worked_day.pdf",
+      "sha256": "cad55f7263a4c564fc28ac2807699800b2c9349c1130debc7f3977a1d7b6f966"
+    },
+    {
+      "bytes": 116649,
+      "path": "results/paper/figures/fig07_headline.png",
+      "sha256": "7c76bc50189765b95cae557ba73a5d8f08be87e30512302e445cc9b36a7dc3a9"
+    },
+    {
+      "bytes": 31755,
+      "path": "results/paper/figures/fig07_headline.pdf",
+      "sha256": "c3befbfd06f49772ecad4e6beb272e195d23116daf2fb3eb989d72fd67563d1a"
+    },
+    {
+      "bytes": 92751,
+      "path": "results/paper/figures/fig08_per_station.png",
+      "sha256": "8ab5dcaeaab974735990e258a320ff037b5fcb3801eb934841f250972e633a8a"
+    },
+    {
+      "bytes": 30442,
+      "path": "results/paper/figures/fig08_per_station.pdf",
+      "sha256": "6c8106755f753d75b2f63c076b019757b345aab35240ebd6ac67e3aebec18bfe"
+    },
+    {
+      "bytes": 240588,
+      "path": "results/paper/figures/fig09_review_burden_frontier.png",
+      "sha256": "6196e29993157a3dea1add0ceb5e914958ce1d86c48f758b5c69425f0f571b51"
+    },
+    {
+      "bytes": 37953,
+      "path": "results/paper/figures/fig09_review_burden_frontier.pdf",
+      "sha256": "94a7031d455f0cb6c462831be76c83df7a8dced11fe08e8493c7aaf4c1c298ff"
+    },
+    {
+      "bytes": 241263,
+      "path": "results/paper/figures/fig10_gamma.png",
+      "sha256": "178cfd46360be0950078d21693e54c720bafd526d089233bb305c4f5f1819c30"
+    },
+    {
+      "bytes": 40583,
+      "path": "results/paper/figures/fig10_gamma.pdf",
+      "sha256": "1a1bcb51adaeb979fdfc39a39692555d890def42c78a0b4965c1a29193ab602b"
+    },
+    {
+      "bytes": 95265,
+      "path": "results/paper/figures/fig11_calibration.png",
+      "sha256": "1b7e456c26dd1de3c8ad50760ecc186e34494adb8b50ad70bcb00511786fbf43"
+    },
+    {
+      "bytes": 29196,
+      "path": "results/paper/figures/fig11_calibration.pdf",
+      "sha256": "3afeecced53fc26f293ae0fb4d6c5bb1420f11f974da21a97561589525a9d8ef"
+    },
+    {
+      "bytes": 90765,
+      "path": "results/paper/figures/fig12_coverage_scores.png",
+      "sha256": "f17b8ae32a3510f45f501df7a3e164b69c18f94f930e266a68bfa35b34e2f57d"
+    },
+    {
+      "bytes": 28640,
+      "path": "results/paper/figures/fig12_coverage_scores.pdf",
+      "sha256": "baf190e22cbd4ea67e533ac45994be275291e2733531d9b46e4ea77200c44d2d"
+    },
+    {
+      "bytes": 718807,
+      "path": "results/paper/figures/fig13_samples_m7.png",
+      "sha256": "c59b4dec8ced2ab1d181f05f64f66270516b8f8098ee32f00735071027242447"
+    },
+    {
+      "bytes": 121229,
+      "path": "results/paper/figures/fig13_samples_m7.pdf",
+      "sha256": "f7243b91dcc609443a8e061abe29d08b7f15988ebdb7864c11014ca8e06605a7"
+    },
+    {
+      "bytes": 771441,
+      "path": "results/paper/figures/fig14_samples_m8.png",
+      "sha256": "888d51f26d583707ea30d1edfa3e6fdd00d03a3cb4392778f2cb6fb11053b3ab"
+    },
+    {
+      "bytes": 121442,
+      "path": "results/paper/figures/fig14_samples_m8.pdf",
+      "sha256": "576a3a4c3d8fa72b09b115dd53eeff5013dc98795f5bab9e6366ef5213e5fc53"
+    },
+    {
+      "bytes": 842314,
+      "path": "results/paper/figures/fig15_samples_m9.png",
+      "sha256": "fa15a2caa52e93ba085ca117dce262445b1abba9cb6e5e3963745119d9939d4f"
+    },
+    {
+      "bytes": 125672,
+      "path": "results/paper/figures/fig15_samples_m9.pdf",
+      "sha256": "8703e0ca38e70082af5773074afcfeb92c8c58762d59f56453a25b24d198bbb9"
+    },
+    {
+      "bytes": 229,
+      "path": "results/paper/tables/tab01_datasets.csv",
+      "sha256": "666effa04bd5a76a3e2d030b43f5201b5da64ce5ee3bbbc4bf3f17c0e737316c"
+    },
+    {
+      "bytes": 328,
+      "path": "results/paper/tables/tab01_datasets.md",
+      "sha256": "8a3aab39ba55a3248af33cef94c8c2d6f6da1a1fb8d70602b4412d770b572b6f"
+    },
+    {
+      "bytes": 1631,
+      "path": "results/paper/tables/tab02_headline.csv",
+      "sha256": "be20b92672a92e3ceeff2fe8bb3555042f6423e05a30d6fb09c5f7caa8936cf7"
+    },
+    {
+      "bytes": 1480,
+      "path": "results/paper/tables/tab02_headline.md",
+      "sha256": "f17aeeea8ecd5c32c06ac9235899b0f09a563ad2943a445a8c40bee591afbe57"
+    },
+    {
+      "bytes": 3133,
+      "path": "results/paper/tables/tab03_per_station.csv",
+      "sha256": "7e34532134a84fee381d9b32d1f0cd06ca761c0463a6acfe4fd86c7bac35e450"
+    },
+    {
+      "bytes": 2282,
+      "path": "results/paper/tables/tab03_per_station.md",
+      "sha256": "37bee21fe5fee8b082da8f3a9e36ce0f60be8a9c580576de39fbac55e49b4018"
+    },
+    {
+      "bytes": 807,
+      "path": "results/paper/tables/tab04_operating_points.csv",
+      "sha256": "9cf4f0edff9b0f1ba569e50aebc702168897787823dc279c27d3c6b9ca5b5b97"
+    },
+    {
+      "bytes": 726,
+      "path": "results/paper/tables/tab04_operating_points.md",
+      "sha256": "0b4ca8e46f1738ab9fda7a6f9f0f74d876efe10c69f4cbb15dc9fa8d3085ec7c"
+    },
+    {
+      "bytes": 532,
+      "path": "results/paper/tables/tab05_gamma_forecast.csv",
+      "sha256": "23ab36e5fbb7da5f6dc51e37174ecdac944d7cc8712b688496b8fc0296c106de"
+    },
+    {
+      "bytes": 411,
+      "path": "results/paper/tables/tab05_gamma_forecast.md",
+      "sha256": "cbc97b66c1f7c8b3136a032da8986f12110d7ab3b5d07d3662f61044ef99840c"
+    },
+    {
+      "bytes": 1421,
+      "path": "results/paper/tables/tab06_method_summary.csv",
+      "sha256": "7fd1dd928f0bc52520a5c43444b77d6689c0157bf777ef052c62c21684a7ecbb"
+    },
+    {
+      "bytes": 1540,
+      "path": "results/paper/tables/tab06_method_summary.md",
+      "sha256": "15d0b71d4593e08b3cea425b20e1804205ad9c016a4a3220c0ed4757a63f354d"
+    },
+    {
+      "bytes": 4032,
+      "path": "results/paper/tables/tab07_coverage.csv",
+      "sha256": "dbee08681774aa62136f4405d6a7c5a5c9f31bcf92c71216d0df62ce4f028681"
+    },
+    {
+      "bytes": 2741,
+      "path": "results/paper/tables/tab07_coverage.md",
+      "sha256": "9ec639bcd2e18c5b0860ef4d552e764b043d2f215fa69fc379f7dce98bd4fc10"
+    },
+    {
+      "bytes": 2711,
+      "path": "results/paper/tables/tab08_sensitivity.csv",
+      "sha256": "7ddf515769a326d4a68f113a6c7b49692d8f06f7b274d0e6615b82797f9e6e93"
+    },
+    {
+      "bytes": 2047,
+      "path": "results/paper/tables/tab08_sensitivity.md",
+      "sha256": "2e596c731d780f809d23d6775bf49b5c58782eca00e6a9ac02c3e26f7f511838"
+    },
+    {
+      "bytes": 2093,
+      "path": "results/paper/tables/tab09_calibration_fits.csv",
+      "sha256": "406cc6e27b95c05ed71492b1a30cde8a40e0f1c9ded0edf0d6bb751422924839"
+    },
+    {
+      "bytes": 1721,
+      "path": "results/paper/tables/tab09_calibration_fits.md",
+      "sha256": "c18f28cde9f15b52cad00c168e93aaca373dac8321f206b6c39ed532d6d83e37"
+    },
+    {
+      "bytes": 7172,
+      "path": "results/paper/tables/tab10_pooled_macro_stations.csv",
+      "sha256": "f1d282380b0352828549f55179e65ec79bb2816c6235c6eeac186f80ce34123a"
+    },
+    {
+      "bytes": 6012,
+      "path": "results/paper/tables/tab10_pooled_macro_stations.md",
+      "sha256": "25410d3d2e98ab34fc7e0124937604db6ac8bf4d5f12ecaae74fa69b99aadb56"
+    },
+    {
+      "bytes": 4097,
+      "path": "results/paper/tables/tab11_method_comparison.csv",
+      "sha256": "ab5971c61a38523f4daa1bae4026c958644e77f827958a9d389d204d47344b33"
+    },
+    {
+      "bytes": 2852,
+      "path": "results/paper/tables/tab11_method_comparison.md",
+      "sha256": "dfdfd121b6662f4af984bb105d620d02a88231ffe3d4097b54552f4bb9824359"
+    },
+    {
+      "bytes": 8550,
+      "path": "results/paper/tables/tab12_sample_days.csv",
+      "sha256": "60bf164508e523ddae645c50bc1f027c67834609802d6451bb67c40346480ead"
+    },
+    {
+      "bytes": 9624,
+      "path": "results/paper/tables/tab12_sample_days.md",
+      "sha256": "942372f12a9e947da0e71a56c1de2da4caa82b548e23d0cfe2b67735feb5d81c"
+    }
+  ],
+  "pynrpf_version": "0.4.0",
+  "stage": "paper",
+  "tables": [
+    "tab01_datasets",
+    "tab02_headline",
+    "tab03_per_station",
+    "tab04_operating_points",
+    "tab05_gamma_forecast",
+    "tab06_method_summary",
+    "tab07_coverage",
+    "tab08_sensitivity",
+    "tab09_calibration_fits",
+    "tab10_pooled_macro_stations",
+    "tab11_method_comparison",
+    "tab12_sample_days"
+  ]
+}

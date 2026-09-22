@@ -1,0 +1,137 @@
+{
+  "code_sha256": "9905b48a0fc05ef4d727dc87ecf94af5967891e51e3cfa035c5326facfda6afe",
+  "config": {
+    "bytes": 6108,
+    "path": "config/evaluation.yaml",
+    "sha256": "b99ad367eb6f81ba049d7442c03adacb08087668147d1ceab6ac7ec01bed7b45"
+  },
+  "created_utc": "2026-09-22T06:52:06+00:00",
+  "elapsed_s": 178.4,
+  "inputs": [
+    {
+      "bytes": 18291524,
+      "path": "dataset/final/dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    },
+    {
+      "bytes": 5699083,
+      "path": "dataset/final/dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    },
+    {
+      "bytes": 5543,
+      "path": "results/01_data_folds/fold_manifest.csv",
+      "sha256": "3ecf97a2f3fc579e2d80a2c4c1bc1f8c7874e5165874bc9a3d567d05bf6765d8"
+    }
+  ],
+  "n_fits": 9,
+  "outputs": [
+    {
+      "bytes": 4118,
+      "path": "results/02_baselines/training_summary.csv",
+      "sha256": "d0c03807ff0f61ac4f58b5a82020793f35d177bd8058efe0181be6deb1c7d7ec"
+    },
+    {
+      "bytes": 1106,
+      "path": "results/02_baselines/alpha_alpha_A.json",
+      "sha256": "a554eadb31560edfc9fc71e5a89971f1fdd64b827d4c2d3613bb1214d75f334b"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_B.json",
+      "sha256": "e40e04042220770be60be418290a2ce1db03d3df3acce4c25318108bbd355fa0"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_C.json",
+      "sha256": "de28cabea132dbb2845ef580a829f1380b9fb15f54735c79fe4bea4100f0a92d"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_D.json",
+      "sha256": "b2139550e373f60962f62fcaa05aa324d8648645d24caaeae84cb4690b55a6c7"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_E.json",
+      "sha256": "e3e60beffd6bab4763a6f3dcc2acbfeb48ae146320068a51a82a4c355ccb289c"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_F.json",
+      "sha256": "cd4b20c2b2d8a1dbbed454b254df75581726864ab22b0d5e99d004276d1f0c94"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_G.json",
+      "sha256": "1890a3308d8f441947ae98b7dcfaec3d210032696a882e20d704a085594a5283"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_H.json",
+      "sha256": "fcac2660d672f864f97719702be41dfad0974e96e1bc65553439b49d0ff11414"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_I.json",
+      "sha256": "386e626f5175f215b133ebf3f9093b4bb2e8379117d2b0532bcd37c2c3f4dada"
+    },
+    {
+      "bytes": 1116,
+      "path": "results/02_baselines/alpha_alpha_J.json",
+      "sha256": "f109df19aea88cf9c0ab295965f0b14ed0bf9affd3be8e162a6788f8a0ad66f4"
+    },
+    {
+      "bytes": 1085,
+      "path": "results/02_baselines/beta_beta_A.json",
+      "sha256": "91dcbc65580d436b1a2985e123f36ca93cdd79da232184a89fd5930aa96bdee3"
+    },
+    {
+      "bytes": 1057,
+      "path": "results/02_baselines/beta_beta_B.json",
+      "sha256": "da3e5c3ddd9ff6ca6f5ea96c4a67d03b3b6182acb3c02f48b21131445f52004f"
+    },
+    {
+      "bytes": 1085,
+      "path": "results/02_baselines/beta_beta_C.json",
+      "sha256": "c870c99a16dda390f31a5dafdb4214779db481a45fb214e6a91dec744040f3ae"
+    },
+    {
+      "bytes": 1086,
+      "path": "results/02_baselines/beta_beta_D.json",
+      "sha256": "2f6ac877faa924d723faef05cc007dbc4a3ff5ee1dfde9901dc0695005a86055"
+    },
+    {
+      "bytes": 1084,
+      "path": "results/02_baselines/beta_beta_E.json",
+      "sha256": "b24d091d0010a3691c0b4ca61938025e015273417527f5f9161cdaf9e81f5c9c"
+    },
+    {
+      "bytes": 1085,
+      "path": "results/02_baselines/beta_beta_F.json",
+      "sha256": "6aad51268c9f8d95c20f14b667d933de38620104badac62153cc61bd563b324e"
+    },
+    {
+      "bytes": 1072,
+      "path": "results/02_baselines/beta_beta_G.json",
+      "sha256": "082ab7192c9d80d0968cc3b2dc9ec361c739d7e56bf0b689de689eb7a103e292"
+    },
+    {
+      "bytes": 1085,
+      "path": "results/02_baselines/beta_beta_H.json",
+      "sha256": "db406a90fe0289639647792bb1da04b5d8367193948fbd97389436617e2368fa"
+    },
+    {
+      "bytes": 3860228,
+      "path": "results/02_baselines/intervals_m7.parquet",
+      "sha256": "28ebe318004b9d5431dba5e8a9dde71cc0dc5fdcaa546723c5d14ad0200d56a0"
+    },
+    {
+      "bytes": 4867808,
+      "path": "results/02_baselines/intervals_m8.parquet",
+      "sha256": "1c864ad30adce44cb967c013bc751dc589a8be6ac1e23879d381c0fe7a3a5bcb"
+    }
+  ],
+  "pynrpf_version": "0.4.0",
+  "stage": "02_baselines"
+}

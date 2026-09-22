@@ -1,0 +1,24 @@
+| Setting | Value |
+|---|---|
+| Bridge misfit | sum of squared residuals against the straight bridge between the nearest finite anchors |
+| Evidence statistic | r(W) = (L/2) log((RSS_u + λ) / (RSS_c + λ)), λ = L φ² |
+| Evidence floor φ, Beta (MW) | 8.0313e-09 |
+| Evidence floor φ, Alpha (MW) | 1.40091e-07 |
+| Release φ (MW) | 8.0313e-09 |
+| Missing readings | windows touching a missing reading are inadmissible; the day is scored on the rest |
+| Window edges | local minima of net load; start at or one slot after, end at or one slot before; gap exemption |
+| Candidate windows | 1,176 windows between 06:00 and 18:00, plus no correction at evidence zero |
+| Tie order | no correction, then the shorter window, then the earlier window |
+| Calibration | p = logistic(a + b z), z = sign(r*) log(1 + |r*|); a and b by logistic regression per fold |
+| Control c | 0.70: AUTO_CORRECT at p ≥ 0.70, AUTO_KEEP at p ≤ 0.30, UNCERTAIN between |
+| Fitting scope | M8 beta_only, M9 beta_only |
+| Beta folds: intercept a | -5.193 to -4.274 |
+| Beta folds: slope b | 2.058 to 2.353 |
+| Alpha folds (all eight Beta stations): a, b | -4.5901, 2.1621 |
+| Release calibration a, b | -4.5901, 2.1621 |
+| Release calibration provenance | Beta, eight stations, sure days, 22 September 2026 |
+| Evidence at p = c under the release pair | 11.365 |
+| Evidence at p = 1 - c under the release pair | 4.647 |
+| Gate | energy precision ≥ 0.90 on beta |
+| Bootstrap | 1000 station resamples, seed 9 |
+| Package | pynrpf 0.4.0 |
