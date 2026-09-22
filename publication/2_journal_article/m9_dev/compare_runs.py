@@ -6,7 +6,10 @@ Rule 5 (Alpha non-regression): Alpha pooled Energy IoU and energy precision with
 0.01 of the incumbent. Rule 1 (gate): energy precision >= 0.90 on both cohorts.
 
 Usage: python compare_runs.py --incumbent phase2_baseline --candidate r1_fullday
-Prints the verdict and the per-station deltas; writes notes/compare_<cand>.csv.
+       python compare_runs.py --incumbent phase5_final_rev2 --candidate <sandbox>/runs/edge --out-dir <sandbox>/tables
+A run is a name under --runs-dir (default m9_dev/runs) or a path to a run folder.
+Prints the verdict and the per-station deltas; writes compare_<cand>.csv to --out-dir
+(default notes/).
 """
 
 from __future__ import annotations
@@ -25,9 +28,16 @@ PREC_TOL = 0.01   # sampling-noise tolerance on station energy precision (round-
 EPS = 1e-9
 
 
-def load(run: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    p = pd.read_csv(RUNS / run / "summary_pooled.csv")
-    s = pd.read_csv(RUNS / run / "summary_station.csv")
+def resolve(run: str, runs_dir: pathlib.Path) -> pathlib.Path:
+    """A run given as a path to its folder, or as a name under runs_dir."""
+    p = pathlib.Path(run)
+    return p if p.is_dir() else runs_dir / run
+
+
+def load(run: str, runs_dir: pathlib.Path = RUNS) -> tuple[pd.DataFrame, pd.DataFrame]:
+    d = resolve(run, runs_dir)
+    p = pd.read_csv(d / "summary_pooled.csv")
+    s = pd.read_csv(d / "summary_station.csv")
     return p[p.group == "headline"].set_index("cohort"), s.set_index(["cohort", "station"])
 
 
@@ -35,11 +45,14 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--incumbent", required=True)
     ap.add_argument("--candidate", required=True)
+    ap.add_argument("--runs-dir", type=pathlib.Path, default=RUNS, help="folder holding named runs (default m9_dev/runs)")
+    ap.add_argument("--out-dir", type=pathlib.Path, default=HERE / "notes", help="where compare_<candidate>.csv is written")
     a = ap.parse_args()
-    ip, ist = load(a.incumbent)
-    cp, cst = load(a.candidate)
+    ip, ist = load(a.incumbent, a.runs_dir)
+    cp, cst = load(a.candidate, a.runs_dir)
+    inc_name, cand_name = pathlib.Path(a.incumbent).name, pathlib.Path(a.candidate).name
 
-    print(f"=== {a.candidate} vs {a.incumbent} ===")
+    print(f"=== {cand_name} vs {inc_name} ===")
     cols = ["energy_iou", "energy_precision", "sure_day_recall", "sure_day_uncertain_rate", "day_precision", "day_f1"]
     pooled = pd.DataFrame({"incumbent": ip[cols].stack(), "candidate": cp[cols].stack()})
     pooled["delta"] = pooled.candidate - pooled.incumbent
@@ -55,7 +68,8 @@ def main() -> None:
               + [f"d_{c}" for c in ("sure_day_recall", "energy_precision", "energy_iou")]]
     print("\nBeta per station (sure days):")
     print(show.round(3).to_string())
-    st.to_csv(HERE / "notes" / f"compare_{a.candidate}.csv")
+    a.out_dir.mkdir(parents=True, exist_ok=True)
+    st.to_csv(a.out_dir / f"compare_{cand_name}.csv")
 
     # --- verdict
     # One sure day of recall per station is the tolerance: 1 / n_sure_rpf_days (round-1 note).

@@ -16,6 +16,10 @@ Key steps: reconstruct U0 = s + y; for every window [a, b] in slots 24-71 comput
          inside the window; divide by the day's overnight noise scale and the window
          length; rank jointly with the null; calibrate; decide.
 
+The bridge anchors are chosen by the `anchors` rule (edge_anchored_sides): the nearest
+finite readings outside the window (the frozen default), the window's own edge slots,
+or the edge slot only beside a missing reading. The default is unchanged bit for bit.
+
 bridge_gain_matrix_reference is the plain-loop definition; bridge_gain_matrix is the
 vectorised version checked against it in tests/.
 """
@@ -38,6 +42,8 @@ AUTO_CORRECT = "AUTO_CORRECT"
 AUTO_KEEP = "AUTO_KEEP"
 UNCERTAIN = "UNCERTAIN"
 NO_CORRECTION = "NO_CORRECTION"
+
+ANCHORS = ("nearest", "edge", "gap_edge")  # bridge anchor rules; "nearest" is the frozen default
 
 
 # --------------------------------------------------------------------------- inputs
@@ -71,20 +77,58 @@ def nearest_finite(y: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarray
     return prev, nxt
 
 
-def admissible_windows(y: np.ndarray, s: np.ndarray) -> np.ndarray:
+def edge_anchored_sides(anchors: str, finite: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Per slot, whether a window starting (ending) there anchors its bridge on that edge slot itself.
+
+    Returns (left_edge, right_edge), boolean over all 96 slots: left_edge[a] applies to
+    windows starting at a, right_edge[b] to windows ending at b. Where an entry is
+    False the anchor on that side is the nearest finite reading outside the window
+    (nearest_finite). Each side is decided on its own.
+
+    "nearest":  never. The round-4 rule and the frozen default.
+    "edge":     always. The bridge is drawn between the window's own end slots.
+    "gap_edge": only where the reading adjacent to that edge (a-1 for the start, b+1
+                for the end) is missing, so a gap no longer pushes the anchor further
+                out; a side whose adjacent reading is present keeps its nearest-finite
+                anchor, which is then that adjacent reading.
+
+    An edge slot that serves as an anchor sits on its own bridge and drops out of the
+    misfit, so it also lowers the number of residual slots (see admissible_windows).
+    """
+    if anchors not in ANCHORS:
+        raise ValueError(f"unknown anchors {anchors!r}")
+    if anchors != "gap_edge":
+        always = np.full(SLOTS, anchors == "edge")
+        return always, always.copy()
+    left_edge = np.zeros(SLOTS, dtype=bool)
+    right_edge = np.zeros(SLOTS, dtype=bool)
+    left_edge[1:] = ~finite[:-1]     # slot a has a missing reading just before it
+    right_edge[:-1] = ~finite[1:]    # slot b has a missing reading just after it
+    return left_edge, right_edge
+
+
+def admissible_windows(y: np.ndarray, s: np.ndarray, anchors: str = "nearest") -> np.ndarray:
     """Boolean [start, end] matrix: a window is admissible iff its interior is finite in
     both y and s and a finite reading exists somewhere before a and after b. Round-4
     rule: missing readings disqualify the windows that contain them; the anchors are
-    the nearest finite readings on each side."""
-    bad = ~(np.isfinite(y) & np.isfinite(s))
-    cum = np.concatenate([[0], np.cumsum(bad)])          # cum[k] = number of bad slots < k
+    the nearest finite readings on each side.
+
+    Under the "edge" and "gap_edge" anchor rules a window must also keep at least one
+    slot that is not an anchor, because an anchor slot contributes no misfit: length
+    >= 3 under "edge", >= 2 on the gap side under "gap_edge". The outside-reading
+    condition is kept for every rule so the candidate set differs between rules only
+    by this minimum length."""
+    finite = np.isfinite(y) & np.isfinite(s)
+    cum = np.concatenate([[0], np.cumsum(~finite)])      # cum[k] = number of bad slots < k
     a = SCAN_START + np.arange(N_WINDOWS)[:, None]
     b = SCAN_START + np.arange(N_WINDOWS)[None, :]
     n_bad = cum[b + 1] - cum[a]                           # bad slots in a .. b
     prev, nxt = nearest_finite(y, s)
     has_left = prev[a] >= 0
     has_right = nxt[b] >= 0
-    return (n_bad == 0) & (b >= a) & has_left & has_right
+    left_edge, right_edge = edge_anchored_sides(anchors, finite)
+    n_residual = (b - a + 1) - left_edge[a] - right_edge[b]
+    return (n_bad == 0) & (b >= a) & has_left & has_right & (n_residual >= 1)
 
 
 def local_minimum_edges(y: np.ndarray, tolerance: int = 0) -> np.ndarray:
@@ -186,36 +230,76 @@ def bridge_gain_matrix_reference(u0: np.ndarray, y: np.ndarray, variant: str = "
     return gain, length
 
 
-def bridge_residual_matrices(u0: np.ndarray, y: np.ndarray, variant: str = "sq") -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def bridge_misfit(series: np.ndarray, tt: np.ndarray, left_slot: int, left_value: float,
+                  right_slot: np.ndarray, right_value: np.ndarray, mask: np.ndarray, variant: str) -> np.ndarray:
+    """Misfit of `series` against the straight bridge from (left_slot, left_value) to
+    (right_slot, right_value), one value per end b.
+
+    right_slot, right_value and the rows of mask are indexed by end; tt holds the slots
+    the columns of mask refer to. Squared deviation for "sq", absolute for "abs",
+    summed over the masked slots. Units MW^2 or MW. A right anchor that does not exist
+    is passed as a NaN value and yields NaN.
+    """
+    with np.errstate(divide="ignore", invalid="ignore"):
+        span = (right_slot - left_slot).astype(float)
+        frac = (tt[None, :] - left_slot) / span[:, None]
+        line = left_value + (right_value[:, None] - left_value) * frac
+        res = np.where(mask, series[tt][None, :] - line, 0.0)
+    return (res**2).sum(1) if variant == "sq" else np.abs(res).sum(1)
+
+
+def bridge_residual_matrices(u0: np.ndarray, y: np.ndarray, variant: str = "sq", anchors: str = "nearest") -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Per-window misfit under each counterfactual: (rss_u, rss_c, length), vectorised over ends.
 
-    rss_u is the misfit of the uncorrected reconstruction against the bridge and rss_c
+    rss_u is the misfit of the uncorrected reconstruction against its bridge and rss_c
     that of the corrected one; their difference is the gain. Keeping both allows the
     scale-free likelihood-ratio statistic in llr_matrix. Units follow the variant.
+    length is the number of residual slots, which is what the likelihood ratio counts.
+
+    Anchors (edge_anchored_sides). Under "nearest" both stories share one bridge
+    between the nearest finite readings outside the window, and every window slot is
+    a residual slot; with no missing data the anchors are a-1 and b+1, identical to
+    the reference. Under "edge" the bridge runs between the window's own end slots,
+    story A through U0 at a and b and story B through S - y at a and b, and only the
+    interior a+1 .. b-1 is measured. Under "gap_edge" each side is decided on its own:
+    a side whose adjacent reading is missing anchors on the edge slot as in "edge"
+    and that slot leaves the misfit; a side whose adjacent reading is present keeps
+    the nearest-finite anchor, which is then that adjacent reading, and the edge slot
+    stays in the misfit. With a gap on one side only, the bridge therefore runs from
+    the window's own edge on the gap side (U0 for story A, S - y for story B) to the
+    adjacent reading on the other side (U0 for both stories, which agree there), and
+    the misfit covers L - 1 slots. A window with no residual slot has NaN misfit.
 
     For each start a, every end b is handled at once: the bridge line for [a, b] is
-    left + (right_b - left) * (t - (a-1)) / (b - a + 2), masked to t <= b.
-    See bridge_gain_matrix_reference for the definition of each variant.
+    left + (right_b - left) * (t - left_slot) / (right_slot_b - left_slot), masked to
+    the window's residual slots. See bridge_gain_matrix_reference for each variant.
     """
     if variant not in ("sq", "abs", "tv"):
         raise ValueError(f"unknown variant {variant!r}")
+    if variant == "tv" and anchors != "nearest":
+        raise ValueError("the tv variant keeps adjacent-slot edges; anchors must be 'nearest'")
     rss_u = np.full((N_WINDOWS, N_WINDOWS), np.nan)
     rss_c = np.full((N_WINDOWS, N_WINDOWS), np.nan)
     length = np.zeros((N_WINDOWS, N_WINDOWS))
     uc_full = u0 - 2.0 * y
     t = np.arange(SCAN_START, SCAN_END)
-    # Anchors: nearest finite reading on each side (u0 is finite exactly where y and
-    # s are). With no missing data this is a-1 and b+1, identical to the reference.
+    # Anchor slots: the nearest finite reading on each side (u0 is finite exactly where
+    # y and s are), or the window's own edge slot where the anchor rule says so.
     prev, nxt = nearest_finite(u0, u0)
+    left_edge, right_edge = edge_anchored_sides(anchors, np.isfinite(u0))
     for i, a in enumerate(range(SCAN_START, SCAN_END)):
         bs = np.arange(a, SCAN_END)                       # every end for this start
-        la = prev[a]
-        rb = nxt[bs]
+        la = a if left_edge[a] else prev[a]
+        rb = np.where(right_edge[bs], bs, nxt[bs])
         if la < 0:
             continue
         rb_safe = np.where(rb >= 0, rb, SLOTS - 1)
         tt = t[i:]                                        # interior slots a .. 71
-        mask = tt[None, :] <= bs[:, None]                 # [b, t]: slot belongs to window
+        in_window = tt[None, :] <= bs[:, None]            # [b, t]: slot belongs to window
+        # An edge slot that serves as an anchor sits on its own bridge: not a residual slot.
+        mask = (in_window
+                & ~(left_edge[a] & (tt[None, :] == a))
+                & ~(right_edge[bs][:, None] & (tt[None, :] == bs[:, None])))
         n = mask.sum(1)
         length[i, i:] = n
         if variant == "tv":
@@ -229,23 +313,22 @@ def bridge_residual_matrices(u0: np.ndarray, y: np.ndarray, variant: str = "sq")
             rss_u[i, i:] = cum_u[kmax] + np.abs(u0[a] - u0[a - 1]) + np.abs(u0[bs + 1] - u0[bs])
             rss_c[i, i:] = cum_c[kmax] + np.abs(uc_full[a] - u0[a - 1]) + np.abs(u0[bs + 1] - uc_full[bs])
             continue
-        left = u0[la]
-        right = np.where(rb >= 0, u0[rb_safe], np.nan)
-        span = (rb_safe - la).astype(float)
-        frac = (tt[None, :] - la) / span[:, None]
-        line = left + (right[:, None] - left) * frac
-        ru = np.where(mask, u0[tt][None, :] - line, 0.0)
-        rc = np.where(mask, uc_full[tt][None, :] - line, 0.0)
-        if variant == "sq":
-            rss_u[i, i:], rss_c[i, i:] = (ru**2).sum(1), (rc**2).sum(1)
-        else:
-            rss_u[i, i:], rss_c[i, i:] = np.abs(ru).sum(1), np.abs(rc).sum(1)
+        # Story A's anchor values are U0. Story B's are U0 too where the anchor lies
+        # outside the window (the reconstructions agree there) and S - y = uc where the
+        # anchor is the window's own edge slot.
+        left_c = uc_full[la] if left_edge[a] else u0[la]
+        right_u = np.where(rb >= 0, u0[rb_safe], np.nan)
+        right_c = np.where(right_edge[bs], uc_full[rb_safe], right_u)
+        misfit_u = bridge_misfit(u0, tt, la, u0[la], rb_safe, right_u, mask, variant)
+        misfit_c = bridge_misfit(uc_full, tt, la, left_c, rb_safe, right_c, mask, variant)
+        rss_u[i, i:] = np.where(n > 0, misfit_u, np.nan)
+        rss_c[i, i:] = np.where(n > 0, misfit_c, np.nan)
     return rss_u, rss_c, length
 
 
-def bridge_gain_matrix(u0: np.ndarray, y: np.ndarray, variant: str = "sq") -> tuple[np.ndarray, np.ndarray]:
+def bridge_gain_matrix(u0: np.ndarray, y: np.ndarray, variant: str = "sq", anchors: str = "nearest") -> tuple[np.ndarray, np.ndarray]:
     """Vectorised gain = rss_u - rss_c; identical values to bridge_gain_matrix_reference."""
-    rss_u, rss_c, length = bridge_residual_matrices(u0, y, variant)
+    rss_u, rss_c, length = bridge_residual_matrices(u0, y, variant, anchors)
     gain = np.where(np.isfinite(rss_u), rss_u - rss_c, -np.inf)
     return gain, length
 
@@ -386,7 +469,7 @@ def corrected_series(y: np.ndarray, cand: Candidate) -> np.ndarray:
     return out
 
 
-def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str = "sq", p_exp: float = 1.0, sigma: float | None = None, scale: str = "overnight", stat: str = "gain", missing: str = "abstain_day", edges: str = "any") -> dict:
+def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str = "sq", p_exp: float = 1.0, sigma: float | None = None, scale: str = "overnight", stat: str = "gain", missing: str = "abstain_day", edges: str = "any", anchors: str = "nearest") -> dict:
     """Score one site-day end to end, without calibration.
 
     Args:
@@ -398,12 +481,15 @@ def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str
         stat: "gain" (external scale, score_matrix) or "llr" (scale-free, llr_matrix).
         missing: "abstain_day" (any missing slot in 23-72 abstains the day) or
             "mask_windows" (only windows touching a missing slot are excluded).
+        edges: local-minimum rule for window edges; "any" imposes none.
+        anchors: bridge anchor rule, "nearest" (frozen), "edge" or "gap_edge";
+            see edge_anchored_sides and bridge_residual_matrices.
 
     Returns:
         Dict with input_ok, sigma, best/runner-up start, end and score, margins, and
         the raw evidence r_best (0.0 when the null wins).
     """
-    adm = admissible_windows(y, s)
+    adm = admissible_windows(y, s, anchors)
     if edges != "any":
         # Window edges must sit at local minima of recorded net load ("minima" strict,
         # "minima1" within one slot). Applied to the candidate set, not the score.
@@ -449,7 +535,7 @@ def score_siteday(y: np.ndarray, s: np.ndarray, sigma_floor: float, variant: str
         sig = float(sigma)
     else:
         sig = overnight_scale(u0, sigma_floor) if scale == "overnight" else fullday_scale(u0, sigma_floor)
-    rss_u, rss_c, length = bridge_residual_matrices(u0, y, variant)
+    rss_u, rss_c, length = bridge_residual_matrices(u0, y, variant, anchors)
     if stat == "llr":
         sc = llr_matrix(rss_u, rss_c, length, sigma_floor, p_exp)
     else:

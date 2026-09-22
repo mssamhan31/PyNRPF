@@ -1,0 +1,167 @@
+# Sandbox 2026-09-22: Beta-only-trained evaluation. A copy of config/final_evaluation.yaml
+# (Phase 3, 16 September 2026) with three differences, each marked "SANDBOX": the output
+# directory, the two fitting scopes (beta_only) and the M8 split, which now lies inside
+# the Beta year. Run from publication/2_journal_article/ with
+#   python -m final_eval <stage> --config sandbox/2026-09-22_beta_only_eval/config.yaml
+# Paths are relative to publication/2_journal_article/.
+schema_version: "final_eval_v1"
+
+paths:
+  alpha_dataset: "dataset/final/dataset_alpha.parquet"
+  beta_dataset: "dataset/final/dataset_beta.parquet"
+  gamma_dataset: "dataset/final/dataset_gamma.parquet"
+  output_dir: "sandbox/2026-09-22_beta_only_eval/outputs"   # SANDBOX: Phase 3 wrote outputs/01_final_evaluation
+  m9_dev_dir: "m9_dev"
+
+# SHA-256 of the frozen datasets; config.load() refuses to run on anything else.
+input_hashes:
+  dataset_alpha.parquet: "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+  dataset_beta.parquet: "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+  dataset_gamma.parquet: "7ebeedeab63b1a95059c0f413744230a183bf1d6f6883f5394855b26c229dc78"
+
+columns:
+  site: "substation_id"
+  date: "date"
+  timestamp: "timestamp"
+  net_load: "net_load_MW"
+  solar: "solar_MW"
+  label_interval: "label_interval"
+  label_day: "label_day"
+  confidence: "confidence"
+
+population:
+  slots_per_day: 96          # a site-day enters the evaluation only when all 96 quarter-hours are present
+  cohorts: ["alpha", "beta"]
+  alpha_confidence: "controlled"   # Alpha carries no confidence column; every day is controlled truth
+  headline_confidence: ["controlled", "sure"]   # Beta 'unsure' is scored, never fitted on, reported as sensitivity only
+
+folds:
+  rule: "leave_one_station_out"
+  # SANDBOX: every method is fitted on Beta only and Alpha is a comparison cohort. For a
+  # held-out Beta station, M8 trains and M9 calibrates on the other seven Beta stations
+  # (Beta 'sure' days only). For every Alpha station, M8 uses one bundle trained on all
+  # eight Beta stations and M9 the (cal_intercept, cal_slope) pair fitted on all eight, so
+  # the ten Alpha folds share one M8 fit: 9 fits in all. Phase 3 used
+  # "all_other_stations_both_cohorts" and "other_stations_same_cohort" (18 fits).
+  m8_training_scope: "beta_only"
+  m9_calibration_scope: "beta_only"
+
+m7:
+  # Deterministic threshold rule; nothing is fitted. Values are the package defaults.
+  m7_threshold:
+    solar_peak_tiebreak_time: "12:30"
+    peak_window_minutes: 150
+    min_threshold: 0.05
+    min_threshold_both: 0.25
+
+m8:
+  # Two-stage XGBoost, package defaults, thresholds frozen from the conference configuration.
+  split:
+    # SANDBOX: the Beta dataset spans 2023-10-01 to 2024-09-30, so the fit window is the first
+    # ten months and the last two are the in-bundle validation window (reported only; nothing
+    # is tuned). Phase 3 used 2021-11-01 to 2024-05-31 and 2024-06-01 to 2024-09-30.
+    train_start: "2023-10-01"
+    train_end: "2024-07-31"
+    validation_start: "2024-08-01"   # in-bundle validation metrics on other-station rows only; nothing is tuned
+    validation_end: "2024-09-30"
+  thresholds:
+    xgb1_day: 0.585985
+    xgb2_timestamp: 0.892234
+  random_seed: 9
+  m8_xgb:
+    noon_hour_start: 6
+    noon_hour_end: 18
+    holiday_country: "AU"
+    holiday_subdivision: "NSW"
+    xgb1_day:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.585985
+    xgb2_timestamp:
+      objective: "binary:logistic"
+      eval_metric: "aucpr"
+      tree_method: "hist"
+      eta: 0.1
+      n_estimators: 500
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      scale_pos_weight: 5
+      seed: 9
+      threshold: 0.892234
+      score_all_days_for_review: false
+
+m9:
+  # M9 revision 2 exactly as frozen: m9_dev run phase5_final_rev2.
+  frozen_run: "phase5_final_rev2"
+  variant: "sq"
+  stat: "llr"
+  p_exp: 0.0
+  sigma_mode: "overnight"
+  missing: "mask_windows"
+  edges: "inwardx"
+  c: 0.7                     # the one public control: AUTO_CORRECT at p >= c, AUTO_KEEP at p <= 1 - c
+  calibration: "logistic_on_signed_log_evidence"   # cal_intercept + cal_slope * z, z = sign(r) log(1 + |r|)
+
+metrics:
+  hours_per_slot: 0.25
+  bootstrap:
+    draws: 1000
+    seed: 9
+    percentiles: [2.5, 97.5]
+  coverage_grid: [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99]
+
+gate:
+  # Decision D1: the energy-precision gate is applied on Beta 'sure'. Alpha is reported against
+  # its label-contiguity ceiling (a perfect single-window localiser scores 0.904 energy precision
+  # on Alpha because Alpha labels are not always one contiguous block) and is not gated.
+  energy_precision_min: 0.90
+  gated_cohort: "beta"
+  alpha_energy_precision_ceiling: 0.904
+
+gamma:
+  station: "beta_B"
+  forecast_test_start: "2024-09-01"
+  forecast_test_end: "2024-09-30"
+  horizon_days: 7
+  lookback_days: 14
+  xgboost:
+    objective: "reg:squarederror"
+    tree_method: "hist"
+    eta: 0.05
+    n_estimators: 300
+    max_depth: 4
+    subsample: 0.8
+    colsample_bytree: 0.8
+    seed: 9
+
+figures:
+  sample_seed: 9
+  samples: {TP: 9, FN: 6, FP: 6, TN: 6}
+
+operating_points:
+  # Sensitivity study of the decision policy (notebook 10). Two controls: AUTO_CORRECT at
+  # p >= c_correct, AUTO_KEEP at p <= c_keep; the locked policy is c_keep = 1 - c_correct.
+  # Thresholds for a precision target are chosen per fold on the calibration stations
+  # (rule L: expected precision from the calibrated p, label-free; rule E: observed
+  # precision on the calibration stations' labels) and applied to the held-out station.
+  targets: [0.90, 0.925, 0.95, 0.975, 0.99]
+  c_correct_grid: {start: 0.50, stop: 0.995, step: 0.005}
+  heatmap_c_correct: [0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  heatmap_c_keep: [0.05, 0.10, 0.20, 0.30, 0.50]
+  recommended_rule: "L"
+  per_station_points:                 # (label, rule, target on both precisions); "locked" is c = 0.7
+    - {label: "locked c = 0.70", rule: "locked", target: null}
+    - {label: "target 0.95 (rule L)", rule: "L", target: 0.95}
+    - {label: "target 0.99 (rule L)", rule: "L", target: 0.99}
+  paper_figures: ["figA_precision_recall_frontier_beta", "figC_cost_of_precision_target_beta"]

@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 ARTICLE = Path(__file__).resolve().parents[1] / "publication" / "2_journal_article"
-OUT = ARTICLE / "outputs" / "01_final_evaluation"
+OUT = ARTICLE / "sandbox" / "2026-09-16_phase3_release" / "outputs"
 sys.path.insert(0, str(ARTICLE))
 
 from final_eval import folds as fl  # noqa: E402

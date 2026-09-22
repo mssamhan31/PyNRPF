@@ -1,12 +1,18 @@
 """The eighteen leave-one-station-out folds and the manifest that proves the exclusions.
 
-Inputs:  the site-day index of each cohort.
+Inputs:  the site-day index of each cohort and the ``folds`` block of the settings.
 Outputs: a list of Fold objects and a fold manifest table (one row per fold) with
          the held-out station, the M8 training stations, the M9 calibration stations,
-         record counts and a hash of the training keys.
-Key steps: every station of every cohort is held out exactly once; M8 trains on all
-         other stations of both cohorts (Beta 'sure' days only); M9 calibrates on the
-         other stations of the same cohort, exactly as frozen in m9_dev.
+         record counts, a hash of the training keys and the training signature that
+         identifies which folds share one M8 bundle.
+Key steps: every station of every cohort is held out exactly once. Who may be fitted
+         on is a configured scope. ``all_other_stations_both_cohorts`` (M8, Phase 3)
+         trains on every other station of both cohorts, Beta 'sure' days only;
+         ``other_stations_same_cohort`` (M9, Phase 3) calibrates on the other stations
+         of the same cohort, exactly as frozen in m9_dev. ``beta_only`` (either method)
+         fits on the other Beta stations for a Beta fold and on all Beta stations for
+         an Alpha fold, so Alpha becomes a pure transfer cohort and its ten folds
+         share one fit.
 """
 
 from __future__ import annotations
@@ -33,17 +39,82 @@ class Fold:
         return {station for _, station in self.m8_training}
 
 
+# Who a fold may be fitted on. The first value of each pair is the Phase 3 behaviour
+# and the default when the settings carry no ``folds`` block.
+M8_SCOPES = ("all_other_stations_both_cohorts", "beta_only")
+M9_SCOPES = ("other_stations_same_cohort", "beta_only")
+FITTING_COHORT = "beta"   # the cohort that ``beta_only`` names
+
+
+def fold_scopes(settings: Settings) -> tuple[str, str]:
+    """The configured (M8 training scope, M9 calibration scope), validated.
+
+    Args:
+        settings: the evaluation settings; ``folds.m8_training_scope`` and
+            ``folds.m9_calibration_scope`` are optional and default to the Phase 3 values.
+
+    Returns:
+        A pair of scope names, each one of ``M8_SCOPES`` or ``M9_SCOPES``.
+    """
+    block = settings.raw.get("folds", {}) or {}
+    m8_scope = block.get("m8_training_scope", M8_SCOPES[0])
+    m9_scope = block.get("m9_calibration_scope", M9_SCOPES[0])
+    if m8_scope not in M8_SCOPES:
+        raise ValueError(f"folds.m8_training_scope must be one of {M8_SCOPES}, not {m8_scope!r}.")
+    if m9_scope not in M9_SCOPES:
+        raise ValueError(f"folds.m9_calibration_scope must be one of {M9_SCOPES}, not {m9_scope!r}.")
+    return m8_scope, m9_scope
+
+
+def _fitting_stations(scope: str, cohort: str, held_out: str,
+                      stations: list[tuple[str, str]]) -> tuple[tuple[str, str], ...]:
+    """(cohort, station) pairs a fold may fit on under one scope; never the held-out station."""
+    if scope == "all_other_stations_both_cohorts":
+        return tuple((c, s) for c, s in stations if s != held_out)
+    if scope == "other_stations_same_cohort":
+        return tuple((c, s) for c, s in stations if c == cohort and s != held_out)
+    if scope == "beta_only":
+        return tuple((c, s) for c, s in stations if c == FITTING_COHORT and s != held_out)
+    raise ValueError(f"Unknown fitting scope {scope!r}.")
+
+
 def build_folds(indexes: dict[str, pd.DataFrame], settings: Settings) -> list[Fold]:
-    """One fold per station across the configured cohorts, in cohort then station order."""
+    """One fold per station across the configured cohorts, in cohort then station order.
+
+    Args:
+        indexes: site-day index per cohort (``data.siteday_index``).
+        settings: the evaluation settings; the ``folds`` block chooses the fitting scopes.
+
+    Returns:
+        The folds, each naming its held-out station, its M8 training stations and its
+        M9 calibration stations according to the configured scopes.
+    """
+    m8_scope, m9_scope = fold_scopes(settings)
     stations = [(cohort, station) for cohort in settings["population"]["cohorts"]
                 for station in sorted(indexes[cohort]["station"].unique())]
     folds = []
     for cohort, held_out in stations:
-        others = tuple((c, s) for c, s in stations if s != held_out)
-        same = tuple(s for c, s in stations if c == cohort and s != held_out)
+        m8_training = _fitting_stations(m8_scope, cohort, held_out, stations)
+        m9_calibration = tuple(s for _, s in _fitting_stations(m9_scope, cohort, held_out, stations))
         folds.append(Fold(fold_id=f"{cohort}_{held_out}", cohort=cohort, held_out=held_out,
-                          m8_training=others, m9_calibration=same))
+                          m8_training=m8_training, m9_calibration=m9_calibration))
     return folds
+
+
+def training_signature(fold: Fold) -> str:
+    """Identity of a fold's M8 training set: SHA-256 of its sorted (cohort, station) pairs.
+
+    Two folds with the same signature train on the same rows, so one bundle serves
+    both; under ``beta_only`` the ten Alpha folds share a signature.
+
+    Args:
+        fold: the fold.
+
+    Returns:
+        A 64-character hexadecimal digest.
+    """
+    text = "\n".join(f"{c}|{s}" for c, s in sorted(fold.m8_training))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def training_days(indexes: dict[str, pd.DataFrame], fold: Fold) -> pd.DataFrame:
@@ -71,13 +142,15 @@ def _keys_hash(days: pd.DataFrame) -> str:
 
 
 def fold_manifest(folds: list[Fold], indexes: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """One row per fold with counts and a hash of the exact training site-day keys."""
+    """One row per fold with counts, a hash of the exact training site-day keys and the
+    training signature (folds with equal signatures share one M8 bundle)."""
     rows = []
     for fold in folds:
         held = indexes[fold.cohort]
         held = held[(held["station"] == fold.held_out) & held["complete"]]
         train = training_days(indexes, fold)
-        cal = indexes[fold.cohort]
+        # Calibration stations may lie in another cohort (beta_only), so pool every index.
+        cal = pd.concat(indexes.values(), ignore_index=True)
         cal = cal[cal["station"].isin(fold.m9_calibration) & cal["complete"] & cal["headline"]]
         rows.append(dict(
             fold_id=fold.fold_id, cohort=fold.cohort, held_out=fold.held_out,
@@ -86,6 +159,7 @@ def fold_manifest(folds: list[Fold], indexes: dict[str, pd.DataFrame]) -> pd.Dat
             m8_training_stations=";".join(s for _, s in fold.m8_training),
             n_m8_training_days=len(train), n_m8_training_rpf_days=int(train["rpf"].sum()),
             m8_training_keys_sha256=_keys_hash(train),
+            m8_training_signature=training_signature(fold),
             m9_calibration_stations=";".join(fold.m9_calibration),
             n_m9_calibration_days=len(cal), n_m9_calibration_rpf_days=int(cal["rpf"].sum()),
         ))

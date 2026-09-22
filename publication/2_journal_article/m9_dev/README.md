@@ -43,7 +43,13 @@ python publication/2_journal_article/m9_dev/m9_eval.py --run final --stat llr --
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --variant abs      # Candidate B
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --variant tv       # Candidate C
 python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --sigma station    # station-level scale
+python publication/2_journal_article/m9_dev/m9_eval.py --run <name> --anchors gap_edge --runs-dir <folder>   # bridge anchored on the window edge beside a gap; run lands in <folder>/<name>
 ```
+
+`--anchors` (`nearest`, the frozen default; `edge`; `gap_edge`) chooses where the bridge is
+anchored; `--runs-dir` places the run outside `runs/`, for sandbox experiments such as
+`../sandbox/2026-09-22_bridge_anchors/`. `compare_runs.py` takes the same `--runs-dir`
+and accepts a path to a run folder in place of a name.
 
 A full run scores 13,000 site-days against 1,176 windows each and takes a few
 minutes. Per-station tables are the ones to read; pooled numbers hide station

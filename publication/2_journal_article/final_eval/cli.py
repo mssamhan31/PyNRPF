@@ -1,8 +1,9 @@
 """Stage entry points: what each numbered notebook runs, callable from the command line too.
 
-Inputs:  the settings (config/final_evaluation.yaml) and the outputs of earlier stages.
-Outputs: the files of each stage under outputs/01_final_evaluation/ and one manifest
-         per stage under manifests/.
+Inputs:  the settings (config/final_evaluation.yaml, or the file named by --config) and
+         the outputs of earlier stages.
+Outputs: the files of each stage under the configured ``paths.output_dir`` (Phase 3:
+         outputs/01_final_evaluation/) and one manifest per stage under manifests/.
 Key steps: every stage reads only committed inputs or the files of earlier stages,
          writes its own files, and records both in its manifest. Stages are separate
          functions so a notebook can run one at a time and a failure is local.
@@ -12,6 +13,7 @@ Usage (from publication/2_journal_article/):
     python -m final_eval train-m8 [--fold beta_beta_A] [--force]      # heavy; the author runs it
     python -m final_eval predict-m7 | predict-m8 | predict-m9
     python -m final_eval outcomes | metrics | report | gamma | operating-points
+    python -m final_eval <stage> --config sandbox/<run>/config.yaml   # a sandbox run
 """
 
 from __future__ import annotations
@@ -106,18 +108,29 @@ def stage_folds(settings: cfgmod.Settings) -> dict[str, Any]:
 
 
 def stage_train_m8(settings: cfgmod.Settings, fold_id: str | None = None, force: bool = False) -> pd.DataFrame:
-    """Train one M8 bundle per fold (or one fold). Heavy; resumable."""
+    """Train one M8 bundle per distinct training set (or one fold). Heavy; resumable.
+
+    Folds with the same training signature share a bundle, so the number of fits is the
+    number of distinct signatures in the fold manifest (18 under the Phase 3 scopes, 9
+    under ``beta_only``).
+    """
     started = time.time()
     _, intervals = load_population(settings)
     folds = [f for f in read_folds(settings) if fold_id is None or f.fold_id == fold_id]
     if not folds:
         raise ValueError(f"No fold named {fold_id}.")
     records = []
+    trained: dict[str, dict[str, Any]] = {}
     for k, fold in enumerate(folds, 1):
         t0 = time.time()
-        record = m8.train_fold(fold, intervals, settings, force=force)
+        record = m8.train_fold(fold, intervals, settings, force=force, trained=trained)
         records.append(record)
-        state = "skipped (bundle exists)" if record.get("skipped") else f"trained in {time.time() - t0:.0f} s"
+        if record.get("skipped"):
+            state = "skipped (bundle exists)"
+        elif record.get("shared_with"):
+            state = f"shares the bundle of {record['shared_with']}"
+        else:
+            state = f"trained in {time.time() - t0:.0f} s"
         _log(f"[{k}/{len(folds)}] {fold.fold_id}: {state}")
     summary = pd.DataFrame([{k: v for k, v in r.items() if k != "validation_metrics"} for r in records])
     summary["training_stations"] = summary["training_stations"].map(";".join)
@@ -137,21 +150,28 @@ def stage_predict(settings: cfgmod.Settings, method: str) -> pd.DataFrame:
     folder = settings.out(method)
     outputs, parts = [], []
     extra: dict[str, Any] = {}
-    for cohort in settings["population"]["cohorts"]:
+    cohorts = list(settings["population"]["cohorts"])
+    scores: dict[str, pd.DataFrame] = {}
+    if method == "m9":
+        # Score every cohort first (label-free, one sigma floor per cohort): a fold's
+        # calibration stations may lie in another cohort, so the fit draws from all scores.
+        for cohort in cohorts:
+            scores[cohort] = m9.score_cohort(intervals[cohort], indexes[cohort], settings)
+            scores_path = folder / f"scores_{cohort}.parquet"
+            scores[cohort].to_parquet(scores_path, index=False)
+            extra[f"sigma_floor_{cohort}"] = float(scores[cohort]["sigma_floor"].iloc[0])
+            outputs.append(scores_path)
+        calibration_pool = pd.concat(scores.values(), ignore_index=True)
+    for cohort in cohorts:
         if method == "m7":
             parts.append(m7.predict_cohort(intervals[cohort], folds, settings))
         elif method == "m8":
             parts.append(m8.predict_cohort(intervals[cohort], folds, settings))
         else:
-            scores = m9.score_cohort(intervals[cohort], indexes[cohort], settings)
-            scores_path = folder / f"scores_{cohort}.parquet"
-            scores.to_parquet(scores_path, index=False)
-            site_days, fits = m9.predict_cohort(scores, folds, settings)
+            site_days, fits = m9.predict_cohort(scores[cohort], folds, settings, calibration_pool)
             parts.append(m9.interval_table(site_days, intervals[cohort]))
             extra.setdefault("site_days", []).append(site_days)
             extra.setdefault("fits", []).append(fits)
-            extra[f"sigma_floor_{cohort}"] = float(scores["sigma_floor"].iloc[0])
-            outputs.append(scores_path)
         _log(f"{method} {cohort}: {len(parts[-1]):,} interval rows")
     table = pd.concat(parts, ignore_index=True)
     path = folder / f"intervals_{method}.parquet"
@@ -209,14 +229,15 @@ def stage_metrics(settings: cfgmod.Settings) -> dict[str, Any]:
     folder = settings.out("metrics")
     pooled = metrics.pooled_table(site_days)
     stations = metrics.station_table(site_days)
+    macro = metrics.macro_table(site_days)
     boot = metrics.bootstrap_stations(site_days, settings)
     m9_days = site_days[site_days["method"] == "m9"]
     coverage = metrics.coverage_table(m9_days, settings)
     gate = metrics.gate_decision(pooled, settings)
     sensitivity = metrics.sensitivity_table(site_days)
     reliability = metrics.calibration_reliability(m9_days)
-    written = {"pooled.csv": pooled, "stations.csv": stations, "bootstrap.csv": boot, "coverage.csv": coverage,
-               "sensitivity.csv": sensitivity, "calibration_reliability.csv": reliability}
+    written = {"pooled.csv": pooled, "stations.csv": stations, "macro.csv": macro, "bootstrap.csv": boot,
+               "coverage.csv": coverage, "sensitivity.csv": sensitivity, "calibration_reliability.csv": reliability}
     outputs = []
     for name, frame in written.items():
         frame.to_csv(folder / name, index=False)
@@ -226,8 +247,8 @@ def stage_metrics(settings: cfgmod.Settings) -> dict[str, Any]:
     write_stage_manifest(settings, "07_metrics", [settings.out("site_days") / "site_days.parquet"], outputs, started, {"gate": gate})
     show = pooled[["method", "group", "n_stations", "n_days", "n_rpf", "energy_iou", "energy_precision", "day_f1", "day_precision", "sure_day_recall", "rate_uncertain"]]
     _log(f"pooled headline:\n{show.round(4).to_string(index=False)}\n{gate['decision']}")
-    return {"pooled": pooled, "stations": stations, "bootstrap": boot, "coverage": coverage, "gate": gate,
-            "sensitivity": sensitivity, "reliability": reliability}
+    return {"pooled": pooled, "stations": stations, "macro": macro, "bootstrap": boot, "coverage": coverage,
+            "gate": gate, "sensitivity": sensitivity, "reliability": reliability}
 
 
 def stage_report(settings: cfgmod.Settings) -> list[Path]:
@@ -236,6 +257,7 @@ def stage_report(settings: cfgmod.Settings) -> list[Path]:
     mfolder = settings.out("metrics")
     pooled = pd.read_csv(mfolder / "pooled.csv")
     stations = pd.read_csv(mfolder / "stations.csv")
+    macro = pd.read_csv(mfolder / "macro.csv")
     boot = pd.read_csv(mfolder / "bootstrap.csv")
     coverage = pd.read_csv(mfolder / "coverage.csv")
     sensitivity = pd.read_csv(mfolder / "sensitivity.csv")
@@ -253,6 +275,7 @@ def stage_report(settings: cfgmod.Settings) -> list[Path]:
     outputs += tables.write_table(coverage, tfolder, "table07_m9_confidence_coverage")
     outputs += tables.write_table(tables.comparison_table(sensitivity.assign(group=sensitivity["group"])).assign(group=sensitivity["group"]), tfolder, "table08_beta_unsure_sensitivity")
     outputs += tables.write_table(tables.fits_table(fits), tfolder, "table09_m9_calibration_fits", digits=4)
+    outputs += tables.write_table(tables.pooled_macro_table(pooled, macro, stations), tfolder, "table10_pooled_macro_stations")
     outputs.append(figures.plot_headline(pooled, ffolder / "fig01_headline_metrics.png"))
     outputs.append(figures.plot_stations(stations, "energy_iou", "Reference Energy IoU", ffolder / "fig02_station_energy_iou.png"))
     outputs.append(figures.plot_stations(stations, "energy_precision", "Reference energy precision", ffolder / "fig03_station_energy_precision.png"))
@@ -275,7 +298,7 @@ def stage_report(settings: cfgmod.Settings) -> list[Path]:
                                                   "true_start", "true_end", "required_mwh", "candidate_mwh", "proposed_mwh", "correct_mwh"]]
     index.to_csv(ffolder / "samples_index.csv", index=False)
     outputs.append(ffolder / "samples_index.csv")
-    inputs = [mfolder / n for n in ("pooled.csv", "stations.csv", "bootstrap.csv", "coverage.csv", "sensitivity.csv", "gate.json")]
+    inputs = [mfolder / n for n in ("pooled.csv", "stations.csv", "macro.csv", "bootstrap.csv", "coverage.csv", "sensitivity.csv", "gate.json")]
     write_stage_manifest(settings, "08_report", inputs, outputs, started)
     _log(f"{len(outputs)} tables and figures written")
     return outputs

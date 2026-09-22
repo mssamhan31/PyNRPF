@@ -1,0 +1,64 @@
+{
+  "code_sha256": "85a7b278df62c283070f33cf9c2b347b4dfb433f2fb14d34b6029721328ccb28",
+  "config": {
+    "bytes": 6663,
+    "path": "sandbox/2026-09-22_beta_only_eval/config.yaml",
+    "sha256": "977901957af84c15c12fd83b880849a980e055253e45c39b61c3ed07687a3bd2"
+  },
+  "created_utc": "2026-09-22T00:22:17+00:00",
+  "elapsed_s": 10.0,
+  "inputs": [
+    {
+      "bytes": 18291524,
+      "path": "dataset/final/dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    },
+    {
+      "bytes": 5699083,
+      "path": "dataset/final/dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    }
+  ],
+  "n_folds": 18,
+  "outputs": [
+    {
+      "bytes": 5543,
+      "path": "sandbox/2026-09-22_beta_only_eval/outputs/01_folds/fold_manifest.csv",
+      "sha256": "3ecf97a2f3fc579e2d80a2c4c1bc1f8c7874e5165874bc9a3d567d05bf6765d8"
+    },
+    {
+      "bytes": 39884,
+      "path": "sandbox/2026-09-22_beta_only_eval/outputs/01_folds/site_days_alpha.parquet",
+      "sha256": "15dd49ecce8f1c07fcf6e4efb9f8400e5ce7c1fedcd753a3f23379bdd3e3260b"
+    },
+    {
+      "bytes": 15428,
+      "path": "sandbox/2026-09-22_beta_only_eval/outputs/01_folds/site_days_beta.parquet",
+      "sha256": "577123997ee375cbe34f14a088a14747155e88302adc451b82146e1930efd8c9"
+    },
+    {
+      "bytes": 147,
+      "path": "sandbox/2026-09-22_beta_only_eval/outputs/01_folds/population.csv",
+      "sha256": "9ab08ca448deee467aa4458dcd8cf6d8e20805b1e262a2680b2e1f5ad02a4553"
+    }
+  ],
+  "population": [
+    {
+      "cohort": "alpha",
+      "complete": 10425,
+      "dropped_incomplete": 218,
+      "headline_complete": 10425,
+      "rpf_headline_complete": 3381,
+      "site_days": 10643
+    },
+    {
+      "cohort": "beta",
+      "complete": 2922,
+      "dropped_incomplete": 6,
+      "headline_complete": 2305,
+      "rpf_headline_complete": 470,
+      "site_days": 2928
+    }
+  ],
+  "stage": "01_folds"
+}

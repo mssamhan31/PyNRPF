@@ -8,15 +8,18 @@ power flow (RPF) sign in distribution network interval meter data. See
 
 ## The red line: results are the author's
 
-`publication/` holds research results, not build artefacts. The committed
-figures, tables, metrics and manifests are the numbers that go into a paper.
+`publication/` holds research results, not build artefacts. Committed
+figures, tables, metrics and manifests are numbers that go into a paper.
 
-**Never re-execute a notebook to "refresh" an output, and never edit a committed
-result value.** Re-running changes numbers, and a silently changed metric is
-indistinguishable from a corrupted one six months later. Fixing formatting,
-documentation, structure and dead code is fine. Changing a model, metric, feature
-set, split, hyperparameter, transformation or tolerance is methodology — propose
-it, do not do it.
+**The journal evaluation is provisional until the journal freeze.** Re-running a
+stage of `final_eval` is allowed in the current round, but a changed number must
+be traceable to the run that produced it: the manifest, the config and the
+sandbox or output folder it was written to. Never edit a committed result value
+by hand. The Phase 3 release of 16 September 2026 is kept unchanged under
+`publication/2_journal_article/sandbox/2026-09-16_phase3_release/`. Fixing
+formatting, documentation, structure and dead code is fine anywhere. Changing a
+model, metric, feature set, split, hyperparameter, transformation or tolerance
+is methodology — propose it, do not do it silently.
 
 If a fix needs a methodology change to be correct, stop and say so rather than
 making a partial edit.

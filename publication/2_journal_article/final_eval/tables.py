@@ -1,11 +1,12 @@
 """Paper-facing tables from the frozen metric tables, written as CSV and Markdown.
 
-Inputs:  the pooled, per-station, bootstrap, coverage, sensitivity and fits tables and
-         the gate decision (metrics.py, m9.py).
+Inputs:  the pooled, per-station, macro, bootstrap, coverage, sensitivity and fits
+         tables and the gate decision (metrics.py, m9.py).
 Outputs: the section 04 headline table, the Ausgrid presentation table, the
          method-comparison table with supporting metrics and bootstrap intervals, the
-         per-station appendix table, the coverage table, the sensitivity table and the
-         calibration-fit table, each as ``.csv`` and ``.md``.
+         per-station appendix table, the coverage table, the sensitivity table, the
+         calibration-fit table and the pooled-and-macro results table, each as ``.csv``
+         and ``.md``.
 Key steps: select and rename columns; format intervals as text; a small Markdown
          writer so no optional dependency is needed.
 """
@@ -22,6 +23,9 @@ from .common import METHOD_LABELS
 GROUP_LABELS = {"combined": "Combined", "alpha": "Alpha", "beta": "Beta sure"}
 HEADLINE = [("energy_iou", "Reference Energy IoU (main)"), ("energy_precision", "Reference energy precision"),
             ("day_f1", "Site-day F1"), ("day_precision", "Site-day precision")]
+# Metrics shown side by side as pooled and macro in the results table.
+POOLED_MACRO = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"), ("day_f1", "Day F1"),
+                ("day_precision", "Day precision"), ("day_recall", "Day recall")]
 
 
 def _fmt(value, digits: int = 3) -> str:
@@ -111,3 +115,41 @@ def station_wide(stations: pd.DataFrame, metric: str) -> pd.DataFrame:
 def fits_table(fits: pd.DataFrame) -> pd.DataFrame:
     return fits[["fold_id", "cohort", "held_out", "n_train", "n_train_rpf", "cal_intercept", "cal_slope",
                  "raw_threshold_correct", "raw_threshold_keep"]]
+
+
+def pooled_macro_table(pooled: pd.DataFrame, macro: pd.DataFrame, stations: pd.DataFrame) -> pd.DataFrame:
+    """Results table: overall, Alpha and Beta rows with pooled and macro columns, then every station.
+
+    Args:
+        pooled: ``metrics.pooled_table`` (site-days and MWh weighted equally).
+        macro: ``metrics.macro_table`` (every station weighted equally).
+        stations: ``metrics.station_table``.
+
+    Returns:
+        Long form, one block per method. The three group rows carry ``Pooled <metric>``
+        and ``Macro <metric>`` for each entry of ``POOLED_MACRO``; the station rows that
+        follow carry the station's own values in the pooled columns and leave the macro
+        columns empty, because a single station has no mean over stations.
+    """
+    rows = []
+    for method in [m for m in METHOD_LABELS if m in set(pooled["method"])]:
+        for group in ("combined", "alpha", "beta"):
+            p = pooled[(pooled["method"] == method) & (pooled["group"] == group)].iloc[0]
+            m = macro[(macro["method"] == method) & (macro["group"] == group)].iloc[0]
+            row = {"Method": METHOD_LABELS[method], "Group": "Overall" if group == "combined" else GROUP_LABELS[group],
+                   "Stations": int(p["n_stations"]), "Site-days": int(p["n_days"]), "RPF days": int(p["n_rpf"])}
+            for key, label in POOLED_MACRO:
+                row[f"Pooled {label}"] = float(p[key])
+            for key, label in POOLED_MACRO:
+                row[f"Macro {label}"] = float(m[key])
+            rows.append(row)
+        st = stations[stations["method"] == method].sort_values(["cohort", "station"])
+        for _, r in st.iterrows():
+            row = {"Method": METHOD_LABELS[method], "Group": r["station"], "Stations": 1,
+                   "Site-days": int(r["n_days"]), "RPF days": int(r["n_rpf"])}
+            for key, label in POOLED_MACRO:
+                row[f"Pooled {label}"] = float(r[key])
+            for _, label in POOLED_MACRO:
+                row[f"Macro {label}"] = np.nan
+            rows.append(row)
+    return pd.DataFrame(rows)

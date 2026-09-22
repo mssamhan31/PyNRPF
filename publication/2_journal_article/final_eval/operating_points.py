@@ -149,10 +149,29 @@ def choose_threshold(curve: pd.DataFrame, target: float, column: str) -> float:
 
 def select_fold_threshold(t: pd.DataFrame, fold: Fold, target_energy: float | None, target_day: float | None,
                           rule: str, thresholds: np.ndarray) -> dict[str, Any]:
-    """The operating threshold for one fold: chosen on its calibration stations only."""
+    """The operating threshold for one fold: chosen on its calibration stations only.
+
+    Args:
+        t: prepared M9 site-days to draw the calibration stations from. It must hold
+            every station named by ``fold.m9_calibration``, which under ``beta_only``
+            lie in the other cohort, so callers pass the full prepared table.
+        fold: the fold; ``m9_calibration`` names the stations whose labels may be read.
+        target_energy: energy-precision target in [0, 1], or None for no constraint.
+        target_day: day-precision target in [0, 1], or None for no constraint.
+        rule: "L" (expected precision from the calibrated probabilities) or "E"
+            (observed precision on the calibration labels).
+        thresholds: the c_correct grid.
+
+    Returns:
+        The fold's selection: the chosen ``c_correct``, the threshold each target
+        demanded, which one binds, the number of calibration days and whether the
+        target was attainable within the grid.
+    """
     cal = t[t["station"].isin(fold.m9_calibration)]
     if fold.held_out in set(cal["station"]):
         raise ValueError(f"Fold {fold.fold_id}: held-out station inside the calibration set.")
+    if cal.empty:
+        raise ValueError(f"Fold {fold.fold_id}: none of its calibration stations {fold.m9_calibration} is present.")
     curve = precision_curve(cal, thresholds, rule)
     t_energy = choose_threshold(curve, target_energy, "energy_precision") if target_energy is not None else -np.inf
     t_day = choose_threshold(curve, target_day, "day_precision") if target_day is not None else -np.inf
@@ -195,22 +214,33 @@ def pooled_from_applied(applied: pd.DataFrame) -> dict[str, Any]:
                 review_days_per_station_year=int(review.sum()) / station_years, auto_share=float((~review).mean()))
 
 
-def target_table(t: pd.DataFrame, folds: list[Fold], settings: Settings) -> tuple[pd.DataFrame, pd.DataFrame]:
+def target_table(t: pd.DataFrame, folds: list[Fold], settings: Settings,
+                 calibration_pool: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Per (target, applies-to, rule): the fold thresholds and the pooled held-out result.
 
-    Returns (summary, selections). 'applies' is energy, day or both (same target on each).
+    Args:
+        t: prepared M9 site-days of the held-out cohort (every point is measured on it).
+        folds: all folds; those of the cohort are used.
+        settings: the evaluation settings.
+        calibration_pool: prepared M9 site-days the thresholds are chosen from; defaults
+            to ``t``. Under ``beta_only`` an Alpha fold calibrates on Beta stations, so
+            the caller passes the table of both cohorts.
+
+    Returns:
+        (summary, selections). 'applies' is energy, day or both (same target on each).
     """
     op = settings["operating_points"]
     thresholds = _thresholds(settings)
     cohort = t["cohort"].iloc[0]
     fold_list = [f for f in folds if f.cohort == cohort]
+    pool = t if calibration_pool is None else calibration_pool
     summaries, selections = [], []
     for target in op["targets"]:
         for applies in ("energy", "day", "both"):
             te = float(target) if applies in ("energy", "both") else None
             td = float(target) if applies in ("day", "both") else None
             for rule in RULES:
-                sel = pd.DataFrame([select_fold_threshold(t, f, te, td, rule, thresholds) for f in fold_list])
+                sel = pd.DataFrame([select_fold_threshold(pool, f, te, td, rule, thresholds) for f in fold_list])
                 sel["applies"] = applies
                 sel["target"] = float(target)
                 selections.append(sel)
@@ -436,7 +466,7 @@ def run_study(m9_days: pd.DataFrame, folds: list[Fold], settings: Settings, fold
             continue
         front = frontier(t, settings).assign(cohort=cohort)
         grid = heatmap_grid(t, settings).assign(cohort=cohort)
-        summary, selections = target_table(t, folds, settings)
+        summary, selections = target_table(t, folds, settings, calibration_pool=prepared)
         boot = bootstrap_targets(t, selections, settings)
         stations = per_station_points(t, folds, selections, settings)
         for k, v in (("frontier", front), ("heatmap", grid), ("targets", summary), ("selections", selections.assign(cohort=cohort)),

@@ -1,0 +1,14 @@
+{
+  "elapsed_s": 437.2,
+  "selection_counts": {
+    "C1": 12,
+    "C3": 6
+  },
+  "gate_fallback_folds": [
+    "beta_beta_A",
+    "beta_beta_B",
+    "beta_beta_E",
+    "beta_beta_F",
+    "beta_beta_H"
+  ]
+}

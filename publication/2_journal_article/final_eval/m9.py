@@ -7,9 +7,12 @@ Outputs: a cached score table (one row per site-day, label-free), the M9 site-da
 Key steps: the sigma floor is the smallest non-zero overnight step in the cohort
          (label-free); every site-day is scored once with the frozen settings; for each
          fold the two calibration coefficients ``cal_intercept`` and ``cal_slope`` are
-         fitted by logistic regression on the signed-log evidence of the other stations
-         of the same cohort (headline-confidence days only) and applied to the held-out
-         station with the public control c.
+         fitted by logistic regression on the signed-log evidence of the fold's
+         calibration stations (headline-confidence days only) and applied to the held-out
+         station with the public control c. The calibration stations come from the fold
+         manifest: the other stations of the same cohort under the Phase 3 scope, Beta
+         stations under ``beta_only``, so the fit draws from a pool of every cohort's
+         scores and the held-out cohort's table supplies only the test rows.
 
 The scorer is imported from ``m9_dev``; this module adds no scoring logic.
 """
@@ -57,14 +60,32 @@ def score_cohort(intervals: pd.DataFrame, index: pd.DataFrame, settings: Setting
     return scores.merge(labels, on=["cohort", "station", "date"], how="left", validate="one_to_one")
 
 
-def calibrate_fold(scores: pd.DataFrame, fold: Fold, settings: Settings) -> tuple[pd.DataFrame, dict]:
-    """Held-out probabilities and outcomes for one fold; the fit uses other stations only."""
+def calibrate_fold(scores: pd.DataFrame, fold: Fold, settings: Settings,
+                   calibration_pool: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dict]:
+    """Held-out probabilities and outcomes for one fold; the fit uses the calibration stations only.
+
+    Args:
+        scores: score table of the held-out station's cohort (``score_cohort``).
+        fold: the fold; ``m9_calibration`` names the stations the fit may read labels from.
+        settings: the evaluation settings (``m9.c`` is the public control).
+        calibration_pool: score rows of every cohort, from which the calibration stations
+            are drawn; defaults to ``scores``. Under ``beta_only`` an Alpha fold calibrates
+            on Beta stations, so the caller passes the pool of both cohorts.
+
+    Returns:
+        (test, fit): the held-out station's site-days with probability ``p`` and
+        ``outcome`` added, and the fit record (coefficients and the raw-score thresholds
+        that c implies).
+    """
     ms, _ = import_m9_dev(settings)
     c = float(settings["m9"]["c"])
-    eligible = scores["input_ok"] & scores["headline"]
-    train = scores[scores["station"].isin(fold.m9_calibration) & eligible]
+    pool = scores if calibration_pool is None else calibration_pool
+    eligible = pool["input_ok"] & pool["headline"]
+    train = pool[pool["station"].isin(fold.m9_calibration) & eligible]
     if fold.held_out in set(train["station"]):
         raise ValueError(f"Fold {fold.fold_id}: held-out station inside the calibration set.")
+    if train.empty:
+        raise ValueError(f"Fold {fold.fold_id}: none of its calibration stations {fold.m9_calibration} is present.")
     test = scores[scores["station"] == fold.held_out].copy()
     cal = ms.Calibrator().fit(train["r_best"].to_numpy(float), train["rpf"].to_numpy(int))
     p = np.where(test["input_ok"], cal.probability(test["r_best"].fillna(0.0).to_numpy(float)), np.nan)
@@ -81,14 +102,25 @@ def calibrate_fold(scores: pd.DataFrame, fold: Fold, settings: Settings) -> tupl
     return test, fit
 
 
-def predict_cohort(scores: pd.DataFrame, folds: list[Fold], settings: Settings) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Site-day predictions for every held-out station of a cohort, and the fits table."""
+def predict_cohort(scores: pd.DataFrame, folds: list[Fold], settings: Settings,
+                   calibration_pool: pd.DataFrame | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Site-day predictions for every held-out station of a cohort, and the fits table.
+
+    Args:
+        scores: score table of one cohort.
+        folds: all folds; those of the cohort are predicted.
+        settings: the evaluation settings.
+        calibration_pool: score rows of every cohort (see ``calibrate_fold``).
+
+    Returns:
+        (site_days, fits) concatenated over the cohort's folds.
+    """
     cohort = scores["cohort"].iloc[0]
     parts, fits = [], []
     for fold in folds:
         if fold.cohort != cohort:
             continue
-        test, fit = calibrate_fold(scores, fold, settings)
+        test, fit = calibrate_fold(scores, fold, settings, calibration_pool)
         parts.append(test)
         fits.append(fit)
     return pd.concat(parts, ignore_index=True), pd.DataFrame(fits)

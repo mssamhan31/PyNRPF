@@ -1,7 +1,8 @@
 """Headline and supporting metrics, pooled and per station, with bootstrap intervals.
 
 Inputs:  the site-day decision-and-impact table of all methods (impact.py).
-Outputs: pooled table (method × evaluation group), per-station table, station-level
+Outputs: pooled table (method × evaluation group), per-station table, macro table (the
+         unweighted mean over stations of the per-station metrics), station-level
          bootstrap intervals, the M9 confidence-versus-coverage table, the release-gate
          decision, the Beta 'unsure' sensitivity table and M9 calibration reliability.
 Key steps: the four headline metrics come from the locked definitions in
@@ -23,6 +24,10 @@ from .config import Settings
 
 GROUPS = ("combined", "alpha", "beta")
 HEADLINE_METRICS = ("energy_iou", "energy_precision", "day_f1", "day_precision")
+# Ratio metrics the macro table averages over stations; counts are summed instead.
+MACRO_METRICS = ("energy_iou", "energy_precision", "day_f1", "day_precision", "day_recall",
+                 "sure_day_recall", "rate_uncertain", "interval_precision", "interval_recall",
+                 "interval_f1", "window_iou_mean")
 
 
 def methods_present(site_days: pd.DataFrame) -> list[str]:
@@ -82,6 +87,43 @@ def station_table(site_days: pd.DataFrame) -> pd.DataFrame:
     t = site_days[site_days["headline"]]
     for (method, cohort, station), g in t.groupby(["method", "cohort", "station"], sort=True):
         rows.append(dict(method=method, cohort=cohort, station=station, **summarise(g)))
+    return pd.DataFrame(rows)
+
+
+def macro_table(site_days: pd.DataFrame) -> pd.DataFrame:
+    """Method × {combined, alpha, beta}: the unweighted mean over stations of the station metrics.
+
+    The pooled table weights every site-day (and every MWh) equally, so the large Alpha
+    stations dominate the combined row; the macro table gives every station one vote,
+    which is the unit the evaluation generalises over. Each ``MACRO_METRICS`` value is
+    the mean of the ``station_table`` values over the stations of the group. A station
+    whose value is undefined is left out of that mean: energy and day precision need at
+    least one applied correction, day recall needs at least one RPF day. Energy IoU of
+    a station without RPF days is 0 by the frozen definition and stays in the mean.
+
+    Args:
+        site_days: the site-day decision-and-impact table of all methods (headline flag,
+            outcome, energies in MWh, slot counts).
+
+    Returns:
+        One row per method × group with ``n_stations``, ``n_stations_with_rpf``,
+        ``n_stations_with_correction``, the summed ``n_days`` and ``n_rpf`` and the
+        station means of ``MACRO_METRICS`` (dimensionless ratios).
+    """
+    stations = station_table(site_days)
+    rows = []
+    for method in methods_present(site_days):
+        for group in GROUPS:
+            st = stations[stations["method"] == method]
+            if group != "combined":
+                st = st[st["cohort"] == group]
+            row = dict(method=method, group=group, n_stations=int(len(st)),
+                       n_stations_with_rpf=int((st["n_rpf"] > 0).sum()),
+                       n_stations_with_correction=int((st["rate_auto_correct"] > 0).sum()),
+                       n_days=int(st["n_days"].sum()), n_rpf=int(st["n_rpf"].sum()))
+            for metric in MACRO_METRICS:
+                row[metric] = float(st[metric].mean(skipna=True)) if st[metric].notna().any() else np.nan
+            rows.append(row)
     return pd.DataFrame(rows)
 
 

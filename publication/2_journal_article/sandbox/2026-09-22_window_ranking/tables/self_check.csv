@@ -1,0 +1,3 @@
+cohort,days_checked,days_input_ok,sigma_floor_matches,n_admissible_mismatches,best_window_mismatches,null_decision_mismatches,tie_break_mismatches,score_max_abs_diff,days_with_committed_window,energy_days_compared,candidate_mwh_max_abs_diff,correct_mwh_max_abs_diff,required_mwh_max_abs_diff,energy_days_differing
+alpha,3381,3381,True,0,0,0,0,0.0,3093,3093,6.394884621840902e-14,2.842170943040401e-14,2.842170943040401e-14,0
+beta,629,629,True,0,0,0,0,0.0,597,597,1.1901590823981678e-13,2.842170943040401e-14,2.842170943040401e-14,0

@@ -1,0 +1,46 @@
+{
+  "bundle": "sandbox/2026-09-22_beta_only_eval/outputs/02_bundles/beta_beta_F/m8_xgb/20260922T002601Z/bundle.pkl",
+  "elapsed_s": 14.4,
+  "fold_id": "beta_beta_F",
+  "held_out": "beta_F",
+  "n_training_rows": 193824,
+  "n_training_rpf_days": 306,
+  "shared_with": null,
+  "skipped": false,
+  "training_signature": "992c826c183307d985f31335fd87e7c6638f2fcb88b9b4e63ae144f14178d613",
+  "training_stations": [
+    "beta_A",
+    "beta_B",
+    "beta_C",
+    "beta_D",
+    "beta_E",
+    "beta_G",
+    "beta_H"
+  ],
+  "validation_metrics": {
+    "xgb1_day": {
+      "f1": 0.9166666666666667,
+      "fn": 16,
+      "fp": 4,
+      "positives": 126,
+      "precision": 0.9649122807017544,
+      "recall": 0.873015873015873,
+      "rows": 334,
+      "threshold": 0.585985,
+      "tn": 204,
+      "tp": 110
+    },
+    "xgb2_timestamp": {
+      "f1": 0.9132197891321979,
+      "fn": 355,
+      "fp": 73,
+      "positives": 2607,
+      "precision": 0.9686021505376344,
+      "recall": 0.8638281549673955,
+      "rows": 6552,
+      "threshold": 0.892234,
+      "tn": 3872,
+      "tp": 2252
+    }
+  }
+}

@@ -51,8 +51,12 @@ python -m final_eval gamma
 python -m final_eval operating-points
 ```
 
-Expected result: `outputs/01_final_evaluation/08_tables/table01_headline.md` holds the
-locked headline table and `07_metrics/gate.json` the release-gate decision.
+Expected result: `<output_dir>/08_tables/table01_headline.md` holds the headline table
+and `07_metrics/gate.json` the release-gate decision, where `<output_dir>` is `paths.output_dir`
+in the config (`outputs/01_final_evaluation` by default; pass `--config` for a sandbox run).
+The Phase 3 run of 16 September 2026 is kept as it was under
+`sandbox/2026-09-16_phase3_release/outputs/`; the Beta-only evaluation of 22 September
+lives in `sandbox/2026-09-22_beta_only_eval/`.
 
 ## Structure
 
@@ -63,7 +67,8 @@ dataset/                       frozen Alpha, Beta and Gamma datasets and the ora
 m9_dev/                        the locked M9 revision 2 scorer and its development record; imported, never copied
 final_eval/                    the evaluation package, one module per stage (see below)
 notebooks/                     ten thin notebooks, one per stage, committed without outputs
-outputs/01_final_evaluation/   one sub-folder per stage, numbered like the notebooks; manifests/ per stage
+outputs/                       default output root for a fresh run (gitignored bundles and logs)
+sandbox/                       dated studies; 2026-09-16_phase3_release/ holds the Phase 3 outputs unchanged
 archive_m9_pbm_2026-07/        the previous pipeline, frozen for provenance; its own README explains it
 ```
 
