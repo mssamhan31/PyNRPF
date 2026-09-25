@@ -14,15 +14,18 @@ python -m pip install -e .[dev,paper]
 
 ## The figures and tables (minutes)
 
-Two notebooks read `results/` and write `results/paper/figures/` (PNG and PDF) and
-`results/paper/tables/` (CSV and Markdown):
+Two notebooks read `results/` and write the manuscript's figures and tables to
+`results/paper/figures/` (PNG at 600 dpi and PDF) and `results/paper/tables/` (CSV and
+Markdown), and the supplementary ones to `results/paper/supplementary/`:
 
 | notebook | writes |
 |---|---|
-| `paper_figures.ipynb` | one figure per cell, each `show("fig07_headline")` from the registry in `paper/figures.py` |
-| `paper_tables.ipynb` | one table per cell, each `show("tab02_headline")` from `paper/tables.py` |
+| `paper_figures.ipynb` | one figure per cell, each `show("fig05_headline")` from the registry in `paper/figures.py` |
+| `paper_tables.ipynb` | one table per cell, each `show("table02_headline")` from `paper/tables.py` |
 
-Adding a figure or table later is one function in the registry and one cell.
+The manuscript entries (`fig01` to `fig08`, `table01` to `table03`) live in `paper/manuscript.py`,
+drawn at the journal's column widths; adding one later is one function in the registry and
+one cell.
 
 ## The reference run (hours)
 

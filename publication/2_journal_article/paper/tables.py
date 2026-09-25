@@ -1,23 +1,25 @@
-"""Paper tables: the registry ``TABLES`` and the functions behind it, written as CSV and Markdown.
+"""Paper tables: the manuscript registry from ``manuscript`` and the supplementary tables built here.
 
 Inputs:  the files of the finished stages under ``results/`` (read through ``results``)
          and the configuration.
-Outputs: pandas frames; ``write_all`` saves each registry entry as
-         ``results/paper/tables/<name>.csv`` and ``.md``.
+Outputs: pandas frames; ``write_all`` saves every manuscript entry under
+         ``results/paper/tables/`` and every supplementary entry under
+         ``results/paper/supplementary/tables/``, each as CSV and Markdown.
 Key steps: every registry entry is ``name -> function(settings) -> DataFrame``. A
-         notebook cell calls ``show("tab02_headline", settings)``; adding a table later
+         notebook cell calls ``show("table02_headline", settings)``; adding a table later
          is one function and one registry line. A small Markdown writer keeps the
          dependency list short.
 
-    tab01  datasets: stations, site-days, labelled days, sure and unsure
-    tab02  headline metrics with station-bootstrap intervals
-    tab03  per station, every method
-    tab04  operating points: precision target, c, review days, false corrections, recall
-    tab05  Gamma forecast error, raw versus corrected versus manual
-    tab06  method summary: settings, fitted numbers, release calibration
-    tab07  M9 confidence versus coverage      tab08  Beta 'unsure' sensitivity
-    tab09  M9 calibration fits per fold       tab10  pooled and macro results with every station
-    tab11  method comparison, all supporting metrics     tab12  the sample site-days of the figures
+    manuscript (``manuscript.TABLES``): table01 the datasets by role, table02 the headline metrics,
+        table03 Energy IoU and energy precision per station and method
+    supplementary (``SUPPLEMENTARY``):
+        supp_table01  per station, every method
+        supp_table02  operating points: precision target, c, review days, false corrections, recall
+        supp_table03  Gamma forecast error, raw versus corrected versus manual
+        supp_table04  method summary: settings, fitted numbers, release calibration
+        supp_table05  M9 confidence versus coverage      supp_table06  Beta unsure sensitivity
+        supp_table07  M9 calibration fits per fold       supp_table08  pooled and macro results with every station
+        supp_table09  method comparison, all supporting metrics     supp_table10  the sample site-days of the figures
 """
 
 from __future__ import annotations
@@ -31,15 +33,13 @@ import pandas as pd
 import pynrpf
 from pynrpf.m9 import RELEASE_CALIBRATION, RELEASE_PHI
 
-from . import results
+from . import manuscript, results
 from .config import Settings
 from .data import METHOD_LABELS
 from .figures import sample_index
 from .style import GROUP_LABELS
 
 TableFn = Callable[[Settings], pd.DataFrame]
-HEADLINE = [("energy_iou", "Reference Energy IoU (main)"), ("energy_precision", "Reference energy precision"),
-            ("day_f1", "Site-day F1"), ("day_precision", "Site-day precision")]
 # Metrics shown side by side as pooled and macro in the results table.
 POOLED_MACRO = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"), ("day_f1", "Day F1"),
                 ("day_precision", "Day precision"), ("day_recall", "Day recall")]
@@ -72,40 +72,6 @@ def write_table(df: pd.DataFrame, folder: Path, name: str, digits: int = 3) -> l
 
 
 # ----------------------------------------------------------------------------- the tables
-
-def datasets_table(settings: Settings) -> pd.DataFrame:
-    """tab01: per cohort, the stations, site-days, complete days and labelled wrong-sign days by confidence."""
-    rows = []
-    for cohort in settings["population"]["cohorts"]:
-        idx = results.index(settings, cohort)
-        complete = idx[idx["complete"]]
-        sure, unsure = complete[complete["headline"]], complete[~complete["headline"]]
-        rows.append({
-            "Cohort": cohort.capitalize(), "Stations": int(idx["station"].nunique()),
-            "Site-days": int(len(idx)), "Complete site-days": int(len(complete)),
-            "Dropped (incomplete)": int((~idx["complete"]).sum()),
-            "Sure or controlled days": int(len(sure)), "Unsure days": int(len(unsure)),
-            "Wrong-sign days (sure)": int(sure["rpf"].sum()), "Wrong-sign days (unsure)": int(unsure["rpf"].sum()),
-        })
-    return pd.DataFrame(rows)
-
-
-def headline_table(pooled: pd.DataFrame, bootstrap: pd.DataFrame | None = None) -> pd.DataFrame:
-    """tab02: method × evaluation group, the four headline metrics with station-bootstrap intervals."""
-    rows = []
-    for _, r in pooled.iterrows():
-        row = {"Method": METHOD_LABELS[r["method"]], "Evaluation group": GROUP_LABELS[r["group"]],
-               "Held-out stations": int(r["n_stations"]), "Evaluated site-days": int(r["n_days"])}
-        for key, label in HEADLINE:
-            row[label] = float(r[key])
-            if bootstrap is not None:
-                ci = bootstrap[(bootstrap["method"] == r["method"]) & (bootstrap["group"] == r["group"])
-                               & (bootstrap["metric"] == key)]
-                if len(ci):
-                    row[f"{label} 95% CI"] = f"{ci['ci_low'].iloc[0]:.3f}–{ci['ci_high'].iloc[0]:.3f}"
-        rows.append(row)
-    return pd.DataFrame(rows)
-
 
 def station_all_methods(stations: pd.DataFrame) -> pd.DataFrame:
     """tab03: one row per station; per method its Energy IoU, energy precision and day F1."""
@@ -165,17 +131,17 @@ def method_summary(settings: Settings) -> pd.DataFrame:
     c = float(m9["c"])
     rows = [
         ("Bridge misfit", "sum of squared residuals against the straight bridge between the nearest finite anchors"),
-        ("Evidence statistic", "r(W) = (L/2) log((RSS_u + λ) / (RSS_c + λ)), λ = L φ²"),
-        ("Evidence floor φ, Beta (MW)", f"{floors.get('beta', float('nan')):.6g}"),
-        ("Evidence floor φ, Alpha (MW)", f"{floors.get('alpha', float('nan')):.6g}"),
-        ("Release φ (MW)", f"{RELEASE_PHI:.6g}"),
+        ("Evidence statistic", "r(W) = (L/2) log((RSS_u + lambda) / (RSS_c + lambda)), lambda = L phi^2"),
+        ("Evidence floor phi, Beta (MW)", f"{floors.get('beta', float('nan')):.6g}"),
+        ("Evidence floor phi, Alpha (MW)", f"{floors.get('alpha', float('nan')):.6g}"),
+        ("Release phi (MW)", f"{RELEASE_PHI:.6g}"),
         ("Missing readings", "windows touching a missing reading are inadmissible; the day is scored on the rest"),
         ("Window edges",
          "local minima of net load; start at or one slot after, end at or one slot before; gap exemption"),
         ("Candidate windows", "1,176 windows between 06:00 and 18:00, plus no correction at evidence zero"),
         ("Tie order", "no correction, then the shorter window, then the earlier window"),
         ("Calibration", "p = logistic(a + b z), z = sign(r*) log(1 + |r*|); a and b by logistic regression per fold"),
-        ("Control c", f"{c:.2f}: AUTO_CORRECT at p ≥ {c:.2f}, AUTO_KEEP at p ≤ {1 - c:.2f}, UNCERTAIN between"),
+        ("Control c", f"{c:.2f}: AUTO_CORRECT at p >= {c:.2f}, AUTO_KEEP at p <= {1 - c:.2f}, UNCERTAIN between"),
         ("Fitting scope", f"M8 {settings['folds']['m8_training_scope']}, "
                           f"M9 {settings['folds']['m9_calibration_scope']}"),
         ("Beta folds: intercept a",
@@ -187,7 +153,7 @@ def method_summary(settings: Settings) -> pd.DataFrame:
         ("Release calibration provenance", RELEASE_CALIBRATION.provenance),
         ("Evidence at p = c under the release pair", f"{RELEASE_CALIBRATION.evidence_at(c):.3f}"),
         ("Evidence at p = 1 - c under the release pair", f"{RELEASE_CALIBRATION.evidence_at(1 - c):.3f}"),
-        ("Gate", f"energy precision ≥ {float(settings['gate']['energy_precision_min']):.2f} "
+        ("Gate", f"energy precision >= {float(settings['gate']['energy_precision_min']):.2f} "
                  f"on {settings['gate']['gated_cohort']}"),
         ("Bootstrap", f"{int(settings['metrics']['bootstrap']['draws'])} station resamples, "
                       f"seed {settings['metrics']['bootstrap']['seed']}"),
@@ -267,34 +233,41 @@ def pooled_macro_table(pooled: pd.DataFrame, macro: pd.DataFrame, stations: pd.D
 
 # ----------------------------------------------------------------------------- the registry
 
-TABLES: dict[str, TableFn] = {
-    "tab01_datasets": datasets_table,
-    "tab02_headline": lambda s: headline_table(results.metric(s, "pooled"), results.metric(s, "bootstrap")),
-    "tab03_per_station": lambda s: station_all_methods(results.metric(s, "stations")),
-    "tab04_operating_points": lambda s: operating_points_table(results.operating_point(s, "targets"),
-                                                               s["operating_points"]["recommended_rule"]),
-    "tab05_gamma_forecast": lambda s: gamma_table(results.gamma_table(s, "gamma_forecast_impact")),
-    "tab06_method_summary": method_summary,
-    "tab07_coverage": lambda s: results.metric(s, "coverage"),
-    "tab08_sensitivity": lambda s: comparison_table(results.metric(s, "sensitivity")),
-    "tab09_calibration_fits": lambda s: fits_table(results.calibration_fits(s)),
-    "tab10_pooled_macro_stations": lambda s: pooled_macro_table(results.metric(s, "pooled"), results.metric(s, "macro"),
-                                                                results.metric(s, "stations")),
-    "tab11_method_comparison": lambda s: comparison_table(results.metric(s, "pooled")),
-    "tab12_sample_days": sample_index,
+
+# ----------------------------------------------------------------------------- the registries
+
+TABLES: dict[str, TableFn] = dict(manuscript.TABLES)
+SUPPLEMENTARY: dict[str, TableFn] = {
+    "supp_table01_per_station": lambda s: station_all_methods(results.metric(s, "stations")),
+    "supp_table02_operating_points": lambda s: operating_points_table(results.operating_point(s, "targets"),
+                                                                     s["operating_points"]["recommended_rule"]),
+    "supp_table03_gamma_forecast": lambda s: gamma_table(results.gamma_table(s, "gamma_forecast_impact")),
+    "supp_table04_method_summary": method_summary,
+    "supp_table05_coverage": lambda s: results.metric(s, "coverage"),
+    "supp_table06_sensitivity": lambda s: comparison_table(results.metric(s, "sensitivity")),
+    "supp_table07_calibration_fits": lambda s: fits_table(results.calibration_fits(s)),
+    "supp_table08_pooled_macro_stations": lambda s: pooled_macro_table(results.metric(s, "pooled"),
+                                                                       results.metric(s, "macro"),
+                                                                       results.metric(s, "stations")),
+    "supp_table09_method_comparison": lambda s: comparison_table(results.metric(s, "pooled")),
+    "supp_table10_sample_days": sample_index,
 }
-DIGITS = {"tab09_calibration_fits": 4}
+DIGITS = {"supp_table07_calibration_fits": 4}
 
 
 def show(name: str, settings: Settings) -> pd.DataFrame:
-    """Build one registry entry and return the frame (a notebook cell displays it)."""
-    return TABLES[name](settings)
+    """Build one registry entry (manuscript or supplementary) and return the frame."""
+    return {**TABLES, **SUPPLEMENTARY}[name](settings)
 
 
 def write_all(settings: Settings, names: list[str] | None = None) -> list[Path]:
-    """Write every registry entry as CSV and Markdown under ``results/paper/tables/``; returns the paths written."""
-    folder = results.paper_dir(settings, "tables")
+    """Write every registry entry as CSV and Markdown; manuscript under ``paper/tables``, the rest under
+    ``paper/supplementary/tables``. Returns the paths written."""
     written: list[Path] = []
-    for name in names or list(TABLES):
-        written += write_table(TABLES[name](settings), folder, name, digits=DIGITS.get(name, 3))
+    for registry, kind in ((TABLES, "tables"), (SUPPLEMENTARY, "supplementary/tables")):
+        folder = results.paper_dir(settings, kind)
+        for name, build in registry.items():
+            if names and name not in names:
+                continue
+            written += write_table(build(settings), folder, name, digits=DIGITS.get(name, 3))
     return written

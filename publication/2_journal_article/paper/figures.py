@@ -1,27 +1,20 @@
-"""Paper figures: the registry ``FIGURES`` and the drawing functions behind it.
+"""Paper figures: the manuscript registry from ``manuscript`` and the supplementary figures drawn here.
 
 Inputs:  the files of the finished stages under ``results/`` (read through ``results``)
          and, for the day-level figures, the Beta dataset.
-Outputs: matplotlib figures; ``write_all`` saves each registry entry as
-         ``results/paper/figures/<name>.png`` and ``.pdf``.
+Outputs: matplotlib figures; ``write_all`` saves every manuscript entry under
+         ``results/paper/figures/`` and every supplementary entry under
+         ``results/paper/supplementary/figures/``, each as PNG and PDF.
 Key steps: every registry entry is ``name -> function(settings) -> Figure``. A notebook
-         cell calls ``show("fig07_headline", settings)``; adding a figure later is one
-         function and one registry line. Entries whose design is not yet agreed raise
-         ``NotImplementedError`` with the reason, and ``write_all`` skips them.
+         cell calls ``show("fig05_headline", settings)``; adding a figure later is one
+         function and one registry line.
 
-    fig01  the problem: a Beta day with the reviewers' span                      (not yet drawn)
-    fig02  the energy metrics on one day                                         (not yet drawn)
-    fig03  dataset Alpha: true trace, recorded = abs(true), label                (not yet drawn)
-    fig04  dataset Beta: labelled sure and unsure examples                       (not yet drawn)
-    fig05  M9 idea: the two stories on the worked day                            (not yet drawn)
-    fig06  M9 worked day: the two stories, the evidence surface and the best window
-    fig07  headline metrics, three methods, four panels
-    fig08  per-station Energy IoU and energy precision
-    fig09  M9 review burden against c, and the precision-target frontier (Beta)
-    fig10  Gamma: example week and forecast RMSE
-    fig11  M9 calibration on held-out stations (reliability diagram)
-    fig12  M9 coverage scores against c (Beta)
-    fig13  sample site-days, M7      fig14  M8      fig15  M9   (27 panels each, Beta 'sure')
+    manuscript (``manuscript.FIGURES``): fig01 to fig08, drawn at journal column width
+    supplementary (``SUPPLEMENTARY``):
+        supp_fig01  the worked day with the evidence surface, at report size
+        supp_fig02  M9 calibration on held-out stations (reliability diagram)
+        supp_fig03  M9 coverage scores against c (Beta)
+        supp_fig04  sample site-days, M7    supp_fig05  M8    supp_fig06  M9   (27 panels each, Beta sure)
 """
 
 from __future__ import annotations
@@ -36,44 +29,14 @@ from matplotlib.transforms import blended_transform_factory
 
 from pynrpf.m9 import AUTO_CORRECT, AUTO_KEEP, UNCERTAIN, bridge, edges, evidence, misfit, stories, windows, winner
 
-from . import results
+from . import manuscript, results
 from .config import Settings
-from .data import KEY, METHOD_LABELS, METHODS, load_cohort
-from .gamma import draw_example_week, draw_forecast_rmse
+from .data import KEY, METHOD_LABELS, load_cohort
 from .metrics import methods_present
-from .operating_points import draw_frontier
-from .style import (
-    COHORT_LABELS,
-    COLORS,
-    GROUP_LABELS,
-    METHOD_COLORS,
-    align_twin_y_axes,
-    apply_journal_style,
-    save_figure,
-    style_axis,
-)
+from .style import COHORT_LABELS, COLORS, apply_journal_style, save_figure, style_axis
 
 FigureFn = Callable[[Settings], Any]
-HEADLINE = [("energy_iou", "Reference Energy IoU"), ("energy_precision", "Reference energy precision"),
-            ("day_f1", "Site-day F1"), ("day_precision", "Site-day precision")]
-
-
-def _not_drawn(reason: str) -> FigureFn:
-    def draw(settings: Settings) -> Any:
-        raise NotImplementedError(reason)
-    return draw
-
-
 # ----------------------------------------------------------------------------- the worked day
-
-def worked_day(settings: Settings) -> tuple[str, str]:
-    """The worked day: the Beta 'sure' wrong-sign day M9 corrected with the largest reference energy."""
-    days = results.site_days(settings)
-    t = days[(days["method"] == "m9") & (days["cohort"] == "beta") & days["headline"] & (days["rpf"] == 1)
-             & (days["outcome"] == AUTO_CORRECT)]
-    row = t.sort_values(["required_mwh", "station", "date"], ascending=[False, True, True]).iloc[0]
-    return str(row["station"]), str(row["date"])
-
 
 def day_arrays(settings: Settings, cohort: str, station: str, date: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """(y, s, truth) of one site-day from the dataset, 96 slots each."""
@@ -99,11 +62,11 @@ def evidence_surface(y: np.ndarray, s: np.ndarray, phi: float) -> tuple[np.ndarr
     return r, best, runner
 
 
-def fig06_worked_day(settings: Settings) -> Any:
-    """The worked day: recorded trace and the two stories (left), the evidence surface and the best window (right)."""
+def supp_worked_day(settings: Settings) -> Any:
+    """The manuscript's worked day at report size: the two stories (left), the evidence surface (right)."""
     apply_journal_style()
-    station, date = worked_day(settings)
-    y, s, truth = day_arrays(settings, "beta", station, date)
+    cohort, station, date = manuscript.WORKED_DAY
+    y, s, truth = day_arrays(settings, cohort, station, date)
     phi = float(results.scores(settings, "beta")["sigma_floor"].iloc[0])
     r, best, _ = evidence_surface(y, s, phi)
     figure, (left, right) = plt.subplots(1, 2, figsize=(12.4, 4.6), gridspec_kw={"width_ratios": [3, 2]})
@@ -148,108 +111,9 @@ def fig06_worked_day(settings: Settings) -> Any:
 
 # ----------------------------------------------------------------------------- headline and stations
 
-def draw_headline(axes: Any, pooled: pd.DataFrame) -> None:
-    """Four headline metrics, grouped bars by evaluation group, one bar per method."""
-    groups = list(GROUP_LABELS)
-    x = np.arange(len(groups))
-    width = 0.26
-    methods = [m for m in METHODS if m in set(pooled["method"])]
-    for axis, (key, label) in zip(axes.ravel(), HEADLINE, strict=True):
-        for k, method in enumerate(methods):
-            vals = [float(pooled[(pooled["method"] == method) & (pooled["group"] == g)][key].iloc[0]) for g in groups]
-            bars = axis.bar(x + (k - 1) * width, vals, width, color=METHOD_COLORS[method], label=METHOD_LABELS[method])
-            axis.bar_label(bars, fmt="%.2f", fontsize=8, padding=1)
-        axis.set_xticks(x, [GROUP_LABELS[g] for g in groups])
-        axis.set_ylim(0, 1.12)
-        axis.set_title(label)
-        style_axis(axis)
-    axes.ravel()[0].legend(ncol=3, loc="upper left")
-
-
-def fig07_headline(settings: Settings) -> Any:
-    """Headline metrics of the three methods on headline-confidence site-days, four panels."""
-    apply_journal_style()
-    figure, axes = plt.subplots(2, 2, figsize=(10, 6.4))
-    draw_headline(axes, results.metric(settings, "pooled"))
-    figure.suptitle("Station-held-out evaluation: headline metrics on headline-confidence site-days", fontsize=12)
-    return figure
-
-
-def draw_stations(axes: Any, stations: pd.DataFrame, metric: str, label: str) -> None:
-    """One metric per station, one bar per method, Alpha on the left and Beta on the right."""
-    width = 0.26
-    methods = [m for m in METHODS if m in set(stations["method"])]
-    for axis, cohort in zip(axes, ("alpha", "beta"), strict=True):
-        t = stations[stations["cohort"] == cohort]
-        names = sorted(t["station"].unique())
-        x = np.arange(len(names))
-        for k, method in enumerate(methods):
-            vals = [float(t[(t["method"] == method) & (t["station"] == s)][metric].iloc[0]) for s in names]
-            axis.bar(x + (k - 1) * width, vals, width, color=METHOD_COLORS[method], label=METHOD_LABELS[method])
-        axis.set_xticks(x, [n.replace(f"{cohort}_", "") for n in names])
-        axis.set_xlabel(f"{cohort.capitalize()} station")
-        axis.set_ylim(0, 1.05)
-        style_axis(axis)
-    axes[0].set_ylabel(label)
-
-
-def fig08_per_station(settings: Settings) -> Any:
-    """Energy IoU (top) and energy precision (bottom) per held-out station, one bar per method."""
-    apply_journal_style()
-    stations = results.metric(settings, "stations")
-    figure, axes = plt.subplots(2, 2, figsize=(12, 7.6), gridspec_kw={"width_ratios": [10, 8]})
-    draw_stations(axes[0], stations, "energy_iou", "Reference Energy IoU")
-    draw_stations(axes[1], stations, "energy_precision", "Reference energy precision")
-    axes[0, 0].legend(ncol=3, loc="lower left")
-    figure.suptitle("Per held-out station: Energy IoU and energy precision", fontsize=12)
-    return figure
-
-
 # ----------------------------------------------------------------------------- review burden and frontier
 
-def draw_review_burden(left: Any, coverage: pd.DataFrame, cohort: str) -> None:
-    """Manual-review burden and auto-accepted errors across the confidence control c.
-
-    Left axis: days sent to review (UNCERTAIN). Right axis: errors among automatically
-    decided days, stacked (auto FP = corrected non-RPF day, auto FN = kept RPF day).
-    The x axis is the share of days decided automatically; each point is one value of c.
-    """
-    data = coverage[coverage["cohort"] == cohort].sort_values("auto_decided_share")
-    x = 100 * data["auto_decided_share"].to_numpy(float)
-    right = left.twinx()
-    left.plot(x, data["review_days"], marker="o", linewidth=2.2, color=COLORS["dark_blue"],
-              label="Days sent to manual review")
-    width = max(0.8, 0.6 * np.min(np.diff(np.unique(x))) if len(np.unique(x)) > 1 else 1.0)
-    right.bar(x, data["auto_fp"], width=width, color=COLORS["red"], alpha=0.8, label="Auto FP (corrected, not RPF)")
-    right.bar(x, data["auto_fn"], width=width, bottom=data["auto_fp"], color=COLORS["orange"], alpha=0.85,
-              label="Auto FN (kept, RPF)")
-    # Alternate the label offsets so neighbouring points at high coverage stay legible.
-    for k, (xi, c) in enumerate(zip(x, data["c"], strict=True)):
-        review_days = float(data.loc[data["c"] == c, "review_days"].iloc[0])
-        left.annotate(f"c={c:.2f}", (xi, review_days), textcoords="offset points",
-                      xytext=(0, 7 if k % 2 == 0 else -13), ha="center", fontsize=7, color=COLORS["dark_blue"])
-    left.set_xlabel(f"Automatically decided {COHORT_LABELS[cohort]} site-days (%)")
-    left.set_ylabel("Days remaining for manual review", color=COLORS["dark_blue"])
-    right.set_ylabel("Errors among automatically decided days")
-    h1, l1 = left.get_legend_handles_labels()
-    h2, l2 = right.get_legend_handles_labels()
-    left.legend(h1 + h2, l1 + l2, ncol=1, loc="upper center", fontsize=8)
-    align_twin_y_axes(left, right)
-
-
-def fig09_review_burden_and_frontier(settings: Settings) -> Any:
-    """Beta: the review burden against c (left) and the precision-target frontier over c_correct (right)."""
-    apply_journal_style()
-    figure, (left, right) = plt.subplots(1, 2, figsize=(14, 4.8))
-    draw_review_burden(left, results.metric(settings, "coverage"), "beta")
-    left.set_title("Review burden and auto-accepted errors", fontsize=11)
-    frontier = results.operating_point(settings, "frontier")
-    draw_frontier(right, frontier[frontier["cohort"] == "beta"], "beta", settings)
-    right.set_title("Precision and recall against the correction threshold", fontsize=11)
-    return figure
-
-
-def fig12_coverage_scores(settings: Settings) -> Any:
+def supp_coverage_scores(settings: Settings) -> Any:
     """Energy IoU, energy precision and sure-day recall of the automatic decisions against c (Beta)."""
     apply_journal_style()
     coverage = results.metric(settings, "coverage")
@@ -271,22 +135,9 @@ def fig12_coverage_scores(settings: Settings) -> Any:
 
 # ----------------------------------------------------------------------------- Gamma
 
-def fig10_gamma(settings: Settings) -> Any:
-    """Gamma: the highest-impact test-month week (left) and seven-day-ahead RMSE per data condition (right)."""
-    apply_journal_style()
-    g = settings["gamma"]
-    figure, (left, right) = plt.subplots(1, 2, figsize=(14.4, 4.4), gridspec_kw={"width_ratios": [5, 3]})
-    week_start = draw_example_week(left, results.gamma_series(settings), g["forecast_test_start"],
-                                   g["forecast_test_end"])
-    left.set_title(f"Highest-impact week of the test month ({week_start.date()})", fontsize=11)
-    draw_forecast_rmse(right, results.gamma_table(settings, "gamma_forecast_metrics"))
-    right.set_title("Direct point forecasts of the test month", fontsize=11)
-    return figure
-
-
 # ----------------------------------------------------------------------------- calibration
 
-def fig11_calibration(settings: Settings, bins: int = 10) -> Any:
+def supp_calibration(settings: Settings, bins: int = 10) -> Any:
     """Reliability diagram of the M9 probability per cohort (equal-count bins)."""
     apply_journal_style()
     days = results.site_days(settings)
@@ -302,7 +153,7 @@ def fig11_calibration(settings: Settings, bins: int = 10) -> Any:
     axis.set_xlabel("Calibrated probability of RPF (held-out)")
     axis.set_ylabel("Observed share of RPF days")
     axis.set_title("M9 calibration on held-out stations")
-    axis.legend(loc="upper left")
+    axis.legend(loc="lower right")
     style_axis(axis)
     return figure
 
@@ -442,48 +293,39 @@ def _samples_figure(method: str) -> FigureFn:
 
 # ----------------------------------------------------------------------------- the registry
 
-FIGURES: dict[str, FigureFn] = {
-    "fig01_problem": _not_drawn("the problem figure follows the paper's introduction, whose day and annotations "
-                                "are not yet chosen"),
-    "fig02_energy_metrics": _not_drawn("the one-day illustration of Energy IoU and energy precision is not yet "
-                                       "designed"),
-    "fig03_dataset_alpha": _not_drawn("the Alpha construction figure (true trace, recorded = abs, label) is not yet "
-                                      "designed"),
-    "fig04_dataset_beta": _not_drawn("the Beta labelled-example figure (sure and unsure) is not yet designed"),
-    "fig05_two_stories": _not_drawn("the M9 idea figure is not yet designed; fig06 shows the two stories on the "
-                                    "worked day"),
-    "fig06_worked_day": fig06_worked_day,
-    "fig07_headline": fig07_headline,
-    "fig08_per_station": fig08_per_station,
-    "fig09_review_burden_frontier": fig09_review_burden_and_frontier,
-    "fig10_gamma": fig10_gamma,
-    "fig11_calibration": fig11_calibration,
-    "fig12_coverage_scores": fig12_coverage_scores,
-    "fig13_samples_m7": _samples_figure("m7"),
-    "fig14_samples_m8": _samples_figure("m8"),
-    "fig15_samples_m9": _samples_figure("m9"),
-}
 # Raster resolution per entry; the sample grids are large and are read on screen, not in print.
-DPI = {"fig13_samples_m7": 110, "fig14_samples_m8": 110, "fig15_samples_m9": 110}
+
+
+# ----------------------------------------------------------------------------- the registries
+
+FIGURES: dict[str, FigureFn] = dict(manuscript.FIGURES)
+SUPPLEMENTARY: dict[str, FigureFn] = {
+    "supp_fig01_worked_day": supp_worked_day,
+    "supp_fig02_calibration": supp_calibration,
+    "supp_fig03_coverage_scores": supp_coverage_scores,
+    "supp_fig04_samples_m7": _samples_figure("m7"),
+    "supp_fig05_samples_m8": _samples_figure("m8"),
+    "supp_fig06_samples_m9": _samples_figure("m9"),
+}
+# Raster resolution: manuscript figures at print resolution; the sample grids are read on screen.
+DPI = {name: 600 for name in FIGURES}
+DPI.update({"supp_fig04_samples_m7": 110, "supp_fig05_samples_m8": 110, "supp_fig06_samples_m9": 110})
 
 
 def show(name: str, settings: Settings) -> Any:
-    """Draw one registry entry and return the figure (a notebook cell displays it)."""
-    return FIGURES[name](settings)
+    """Draw one registry entry (manuscript or supplementary) and return the figure."""
+    return {**FIGURES, **SUPPLEMENTARY}[name](settings)
 
 
 def write_all(settings: Settings, names: list[str] | None = None) -> list[Path]:
-    """Save every registry entry as PNG and PDF under ``results/paper/figures/``; returns the paths written.
-
-    Entries that raise ``NotImplementedError`` are reported and skipped.
-    """
-    folder = results.paper_dir(settings, "figures")
+    """Save every registry entry as PNG and PDF; manuscript under ``paper/figures``, the rest under
+    ``paper/supplementary/figures``. Returns the paths written."""
     written: list[Path] = []
-    for name in names or list(FIGURES):
-        try:
-            figure = FIGURES[name](settings)
-        except NotImplementedError as reason:
-            print(f"[paper] {name}: not drawn ({reason})", flush=True)
-            continue
-        written += save_figure(figure, folder / f"{name}.png", formats=("png", "pdf"), dpi=DPI.get(name, 200))
+    for registry, kind in ((FIGURES, "figures"), (SUPPLEMENTARY, "supplementary/figures")):
+        folder = results.paper_dir(settings, kind)
+        for name, draw in registry.items():
+            if names and name not in names:
+                continue
+            written += save_figure(draw(settings), folder / f"{name}.png", formats=("png", "pdf"),
+                                   dpi=DPI.get(name, 200))
     return written

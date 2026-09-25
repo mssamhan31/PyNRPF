@@ -33,7 +33,8 @@ COHORT_LABELS = {"alpha": "Alpha", "beta": "Beta 'sure'"}
 
 
 def apply_journal_style() -> None:
-    """Article-wide typography, frame and grid defaults."""
+    """Article-wide typography, frame and grid defaults, set from matplotlib's defaults so no earlier style leaks in."""
+    plt.rcdefaults()                       # the manuscript style (apply_paper_style) must not carry over
     plt.rcParams.update({
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Liberation Sans", "DejaVu Sans"],
@@ -45,6 +46,43 @@ def apply_journal_style() -> None:
         "ytick.color": COLORS["dark_blue"], "text.color": COLORS["dark_blue"], "savefig.facecolor": "white",
         "legend.frameon": False,
     })
+
+
+# IEEE Transactions column widths in inches; the manuscript figures are drawn at final size with 8 pt type.
+COLUMN_WIDTH = 3.5
+DOUBLE_WIDTH = 7.16
+
+
+def apply_paper_style() -> None:
+    """The journal style at manuscript size: 8 pt type (IEEE minimum), thin frames, no titles above 8.5 pt."""
+    apply_journal_style()
+    plt.rcParams.update({
+        "font.size": 8, "axes.titlesize": 8.5, "axes.labelsize": 8, "legend.fontsize": 7.5,
+        "xtick.labelsize": 7.5, "ytick.labelsize": 7.5, "axes.linewidth": 0.7, "lines.linewidth": 1.0,
+        "xtick.major.width": 0.7, "ytick.major.width": 0.7, "xtick.major.size": 2.5, "ytick.major.size": 2.5,
+        "legend.handlelength": 1.6, "legend.columnspacing": 1.0, "legend.handletextpad": 0.5,
+        "figure.constrained_layout.use": True,
+    })
+
+
+def panel_label(axis: Any, letter: str, title: str = "") -> None:
+    """``(a) title`` as the axis title, left-aligned, the way IEEE panels are referred to."""
+    axis.set_title(f"({letter}) {title}".rstrip(), loc="left", fontsize=8.5)
+
+
+def legend_below(target: Any, axis_or_axes: Any, ncol: int, pad: float = 0.02) -> None:
+    """One legend under a figure or an axis, from the union of the panels' labelled artists."""
+    handles, labels = {}, []
+    for axis in np.atleast_1d(axis_or_axes).flat:
+        for handle, label in zip(*axis.get_legend_handles_labels(), strict=True):
+            if label not in handles:
+                handles[label] = handle
+                labels.append(label)
+    if hasattr(target, "add_axes"):        # a Figure
+        target.legend([handles[k] for k in labels], labels, loc="outside lower center", ncol=ncol)
+    else:                                  # an Axes: hang the legend below it
+        target.legend([handles[k] for k in labels], labels, loc="upper center", bbox_to_anchor=(0.5, -0.18 - pad),
+                      ncol=ncol)
 
 
 def style_axis(axis: Any, grid_axis: str | None = "y", y_continuous: bool = True) -> None:
@@ -90,7 +128,8 @@ def save_figure(figure: Any, path: Path, formats: tuple[str, ...] = ("png",), dp
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    figure.tight_layout()
+    if figure.get_layout_engine() is None:      # constrained-layout figures manage their own spacing
+        figure.tight_layout()
     written = []
     for fmt in formats:
         target = path.with_suffix(f".{fmt}")

@@ -1,0 +1,5 @@
+| Dataset | Role | Stations | Complete site-days | Wrong-sign days | Label source | Allowed use |
+|---|---|---|---|---|---|---|
+| Alpha | Placement check | 10 | 10,425 | 3,381 (by construction) | Absolute value of correctly signed readings; every negative interval is a label | Scored only; never fitted |
+| Beta | Real-world calibration and validation | 8 | 2,922 (2,305 sure, 617 unsure) | 470 sure, 159 unsure | Manual review of every site-day: span to flip and confidence, sure or unsure | Per-fold fitting on the other Beta stations; sure days are the headline, unsure days a sensitivity |
+| Gamma | Forecast-impact case study | 1 (Beta B) | 366 (231 sure, 135 unsure) | 152 labelled | As Beta | Forecast targets on raw, M9-corrected and manually corrected history |

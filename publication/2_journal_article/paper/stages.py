@@ -255,7 +255,8 @@ def gamma(settings: Settings) -> dict[str, Any]:
 # ----------------------------------------------------------------------------- paper artefacts
 
 def artefacts(settings: Settings) -> list[Path]:
-    """Every figure and table of the registries, under ``paper/figures`` and ``paper/tables``."""
+    """Every figure and table of the registries: the manuscript's under ``paper/figures`` and ``paper/tables``,
+    the supplementary ones under ``paper/supplementary/``."""
     started = time.time()
     outputs = figures.write_all(settings) + tables.write_all(settings)
     metric_dir, m9_dir, gamma_dir = settings.out("metrics"), settings.out("m9"), settings.out("gamma")
@@ -265,6 +266,8 @@ def artefacts(settings: Settings) -> list[Path]:
                results.operating_points_dir(settings) / "frontier.csv", gamma_dir / "gamma_series.parquet",
                gamma_dir / "gamma_forecast_metrics.csv", gamma_dir / "gamma_forecast_impact.csv"]
     write_stage_manifest(settings, "paper", inputs, outputs, started,
-                         {"figures": list(figures.FIGURES), "tables": list(tables.TABLES)})
+                         {"figures": list(figures.FIGURES), "tables": list(tables.TABLES),
+                          "supplementary_figures": list(figures.SUPPLEMENTARY),
+                          "supplementary_tables": list(tables.SUPPLEMENTARY)})
     _log(f"{len(outputs)} figure and table files written")
     return outputs

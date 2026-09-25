@@ -38,7 +38,7 @@ python -c "from paper import config, stages; stages.metrics(config.load())"
 ```
 
 Expected result: `results/04_metrics/gate.json` says "M9 is the default method" and
-`results/paper/tables/tab02_headline.md` holds the headline table.
+`results/paper/tables/table02_headline.md` holds the headline table.
 
 ## Structure
 
@@ -48,7 +48,8 @@ config/evaluation.yaml   the one configuration: dataset hashes, fold rule, M7 an
 dataset/                 final/ (Alpha, Beta, Gamma) and the oracle export behind the Beta and Gamma labels
 paper/                   the code the notebooks call (below)
 notebooks/               five pipeline notebooks and two artefact notebooks, committed without outputs
-results/                 the reference run: one folder per stage, paper/ with the artefacts, manifests/
+results/                 the reference run: one folder per stage, paper/ with the manuscript's figures and
+                         tables (paper/supplementary/ for the rest), manifests/
 sandbox/                 development history and dated studies; not maintained, not cited (see its README)
 ```
 
@@ -61,7 +62,8 @@ sandbox/                 development history and dated studies; not maintained, 
 | `paper/reference.py` | applied corrections against the reference: energy terms, window agreement, minimum demand |
 | `paper/metrics.py`, `operating_points.py` | pooled, per-station and macro metrics, bootstrap, coverage, gate, sensitivity, reliability; the precision-target study |
 | `paper/gamma.py` | the forecasting case study |
-| `paper/figures.py`, `tables.py`, `style.py` | the registries every artefact is drawn from, in the journal style |
+| `paper/manuscript.py` | the numbered figures and tables of the manuscript, drawn at journal column width |
+| `paper/figures.py`, `tables.py`, `style.py` | the registries (manuscript and supplementary) and the journal style |
 | `paper/results.py`, `manifest.py`, `stages.py` | readers of finished stages; stage manifests with repository-relative paths and hashes; one function per stage |
 
 ## Evaluation design, in brief

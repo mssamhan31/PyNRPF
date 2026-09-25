@@ -14,7 +14,8 @@ Modules, in the order the notebooks use them:
     reference, metrics,      notebook 04  reference-side terms, the metric tables, the operating-point study
       operating_points
     gamma                    notebook 05  the forecasting case study
-    figures, tables, style   paper_figures, paper_tables  the registries of paper artefacts
+    manuscript               paper_figures, paper_tables  the numbered figures and tables of the manuscript
+    figures, tables, style   paper_figures, paper_tables  the registries (manuscript and supplementary), the style
     results                  readers for the files a finished stage wrote
     manifest                 stage manifests with repository-relative paths and hashes
     stages                   one function per stage; what each notebook runs
