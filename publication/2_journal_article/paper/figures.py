@@ -6,15 +6,17 @@ Outputs: matplotlib figures; ``write_all`` saves every manuscript entry under
          ``results/paper/figures/`` and every supplementary entry under
          ``results/paper/supplementary/figures/``, each as PNG and PDF.
 Key steps: every registry entry is ``name -> function(settings) -> Figure``. A notebook
-         cell calls ``show("fig05_headline", settings)``; adding a figure later is one
+         cell calls ``show("fig05_two_hypotheses", settings)``; adding a figure later is one
          function and one registry line.
 
-    manuscript (``manuscript.FIGURES``): fig01 to fig08, drawn at journal column width
+    manuscript (``manuscript.FIGURES``): fig01 to fig12, one panel each at journal column width
     supplementary (``SUPPLEMENTARY``):
         supp_fig01  the worked day with the evidence surface, at report size
         supp_fig02  M9 calibration on held-out stations (reliability diagram)
         supp_fig03  M9 coverage scores against c (Beta)
         supp_fig04  sample site-days, M7    supp_fig05  M8    supp_fig06  M9   (27 panels each, Beta sure)
+        supp_fig07  headline metrics, three methods (journal size)
+        supp_fig08  Energy IoU and energy precision per held-out station (journal size)
 """
 
 from __future__ import annotations
@@ -32,8 +34,19 @@ from pynrpf.m9 import AUTO_CORRECT, AUTO_KEEP, UNCERTAIN, bridge, edges, evidenc
 from . import manuscript, results
 from .config import Settings
 from .data import KEY, METHOD_LABELS, load_cohort
+from .manuscript import GROUPS, HEADLINE, METHOD_COLORS
 from .metrics import methods_present
-from .style import COHORT_LABELS, COLORS, apply_journal_style, save_figure, style_axis
+from .style import (
+    COHORT_LABELS,
+    COLORS,
+    COLUMN_WIDTH,
+    apply_journal_style,
+    apply_paper_style,
+    legend_below,
+    panel_label,
+    save_figure,
+    style_axis,
+)
 
 FigureFn = Callable[[Settings], Any]
 # ----------------------------------------------------------------------------- the worked day
@@ -296,6 +309,71 @@ def _samples_figure(method: str) -> FigureFn:
 # Raster resolution per entry; the sample grids are large and are read on screen, not in print.
 
 
+# ----------------------------------------------------------------------------- dropped from the manuscript
+# Journal-size results the manuscript no longer prints: the headline bars and the per-station bars.
+
+def supp_headline(settings: Settings) -> Any:
+    """Four headline metrics, one panel each; groups Beta sure, Alpha, Both; one bar per method."""
+    apply_paper_style()
+    pooled = results.metric(settings, "pooled")
+    gate = float(settings["gate"]["energy_precision_min"])
+    figure, axes = plt.subplots(2, 2, figsize=(COLUMN_WIDTH, 3.3), sharey=True)
+    x = np.arange(len(GROUPS))
+    width = 0.26
+    for axis, (key, label) in zip(axes.ravel(), HEADLINE, strict=True):
+        for k, method in enumerate(("m7", "m8", "m9")):
+            values = [float(pooled[(pooled["method"] == method) & (pooled["group"] == g)][key].iloc[0])
+                      for g, _ in GROUPS]
+            axis.bar(x + (k - 1) * width, values, width, color=METHOD_COLORS[method], label=METHOD_LABELS[method],
+                     lw=0)
+        if key == "energy_precision":
+            axis.axhline(gate, color=COLORS["red"], lw=0.8, ls="--", label=f"precision gate ({gate:.2f})")
+        axis.set_xticks(x, [name for _, name in GROUPS])
+        axis.set_ylim(0, 1.05)
+        axis.set_yticks([0, 0.5, 1.0])
+        axis.set_title(label, fontsize=8.5)
+        style_axis(axis, y_continuous=False)
+    legend_below(figure, axes, ncol=4)
+    return figure
+
+
+def supp_per_station(settings: Settings) -> Any:
+    """Energy IoU and energy precision per held-out station: Beta with three methods, Alpha with M9 only.
+
+    Stations without a wrong-sign day (Alpha A, D, H and Beta C) have no defined Energy IoU and are left out.
+    """
+    apply_paper_style()
+    stations = results.metric(settings, "stations")
+    stations = stations[stations["n_rpf"] > 0]
+    figure, axes = plt.subplots(2, 2, figsize=(COLUMN_WIDTH, 3.5), sharey=True,
+                                gridspec_kw={"width_ratios": [3, 2]})
+    width = 0.27
+    beta = stations[stations["cohort"] == "beta"]
+    names = sorted(beta["station"].unique())
+    x = np.arange(len(names))
+    alpha = stations[(stations["cohort"] == "alpha") & (stations["method"] == "m9")].sort_values("station")
+    xa = np.arange(len(alpha))
+    for row, (key, label) in enumerate((("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"))):
+        for k, method in enumerate(("m7", "m8", "m9")):
+            values = [float(beta[(beta["method"] == method) & (beta["station"] == st)][key].iloc[0]) for st in names]
+            axes[row, 0].bar(x + (k - 1) * width, values, width, color=METHOD_COLORS[method],
+                             label=METHOD_LABELS[method], lw=0)
+        axes[row, 0].set_xticks(x, [n.split("_")[1] for n in names])
+        axes[row, 0].set_ylabel(label)
+        axes[row, 1].bar(xa, alpha[key].fillna(0.0).to_numpy(float), 0.6, color=METHOD_COLORS["m9"], lw=0)
+        axes[row, 1].set_xticks(xa, [n.split("_")[1] for n in alpha["station"]])
+        for axis in axes[row]:
+            axis.set_ylim(0, 1.05)
+            axis.set_yticks([0, 0.5, 1.0])
+            style_axis(axis, y_continuous=False)
+    panel_label(axes[0, 0], "a", "Beta stations, sure days")
+    panel_label(axes[0, 1], "b", "Alpha, M9 only")
+    axes[1, 0].set_xlabel("Beta station")
+    axes[1, 1].set_xlabel("Alpha station")
+    legend_below(figure, axes[0, 0], ncol=3)
+    return figure
+
+
 # ----------------------------------------------------------------------------- the registries
 
 FIGURES: dict[str, FigureFn] = dict(manuscript.FIGURES)
@@ -306,9 +384,11 @@ SUPPLEMENTARY: dict[str, FigureFn] = {
     "supp_fig04_samples_m7": _samples_figure("m7"),
     "supp_fig05_samples_m8": _samples_figure("m8"),
     "supp_fig06_samples_m9": _samples_figure("m9"),
+    "supp_fig07_headline": supp_headline,
+    "supp_fig08_per_station": supp_per_station,
 }
 # Raster resolution: manuscript figures at print resolution; the sample grids are read on screen.
-DPI = {name: 600 for name in FIGURES}
+DPI = {name: 600 for name in [*FIGURES, "supp_fig07_headline", "supp_fig08_per_station"]}
 DPI.update({"supp_fig04_samples_m7": 110, "supp_fig05_samples_m8": 110, "supp_fig06_samples_m9": 110})
 
 

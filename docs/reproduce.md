@@ -20,10 +20,10 @@ Markdown), and the supplementary ones to `results/paper/supplementary/`:
 
 | notebook | writes |
 |---|---|
-| `paper_figures.ipynb` | one figure per cell, each `show("fig05_headline")` from the registry in `paper/figures.py` |
+| `paper_figures.ipynb` | one figure per cell, each `show("fig05_two_hypotheses")` from the registry in `paper/figures.py` |
 | `paper_tables.ipynb` | one table per cell, each `show("table02_headline")` from `paper/tables.py` |
 
-The manuscript entries (`fig01` to `fig08`, `table01` to `table03`) live in `paper/manuscript.py`,
+The manuscript entries (`fig01` to `fig12`, `table01` and `table02`) live in `paper/manuscript.py`,
 drawn at the journal's column widths; adding one later is one function in the registry and
 one cell.
 

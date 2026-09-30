@@ -1,4 +1,4 @@
 Dataset,Role,Stations,Complete site-days,Wrong-sign days,Label source,Allowed use
-Alpha,Placement check,10,"10,425","3,381 (by construction)",Absolute value of correctly signed readings; every negative interval is a label,Scored only; never fitted
+Alpha,Supplementary validation on constructed errors (exact labels),10,"10,425","3,381 (by construction)",Absolute value of correctly signed readings; every negative interval is a label,Scored only; never fitted
 Beta,Real-world calibration and validation,8,"2,922 (2,305 sure, 617 unsure)","470 sure, 159 unsure","Manual review of every site-day: span to flip and confidence, sure or unsure",Per-fold fitting on the other Beta stations; results reported on sure days
 Gamma,Forecast-impact case study,1 (Beta B),"366 (231 sure, 135 unsure)",152 labelled,As Beta,"Forecast targets on raw, m9_pbm-corrected and manually corrected history"

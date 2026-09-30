@@ -2,24 +2,30 @@
 
 Inputs:  the reference run under ``results/`` (through ``results``), the Alpha and Beta datasets
          for the day-level figures, and the release calibration of ``pynrpf``.
-Outputs: ``FIGURES`` (``fig01`` to ``fig08``, each ``settings -> Figure``) and ``TABLES``
-         (``table01`` to ``table03``, each ``settings -> DataFrame``); ``figures.write_all`` and
+Outputs: ``FIGURES`` (``fig01`` to ``fig12``, each ``settings -> Figure``) and ``TABLES``
+         (``table01``, ``table02``, each ``settings -> DataFrame``); ``figures.write_all`` and
          ``tables.write_all`` save them under ``results/paper/``.
-Key steps: every figure is drawn at its final size for a two-column IEEE Transactions page
-         (3.5 in single column, 7.16 in double) with 8 pt type; multi-panel figures stack their
-         panels in rows; legends sit below the panels so no text overlaps a curve.
+Key steps: every figure is drawn at its final size for one column of a two-column IEEE
+         Transactions page (3.5 in wide) with 8 pt type; every figure is one panel without a title
+         (the caption in the manuscript names it); legends sit below the axes so no text overlaps a curve.
 
     fig01  expected versus observed reading under a wrong sign (Alpha day, no station identifier)
-    fig02  the two questions: is the day wrong, which slots flip (Beta worked day)
-    fig03  the energy metrics on a synthetic day, and the station-held-out design
-    fig04  the method on the worked day: two stories, evidence surface, calibration and decision bands
-    fig05  headline metrics, three methods, Beta sure first
-    fig06  per station: Beta with three methods, Alpha with M9 only
-    fig07  the review trade-off: the precision frontier, the review burden and the remaining errors against c
-    fig08  forecast impact on Gamma: the highest-impact week and the RMSE per model (double column)
+    fig02  the two tasks on one reviewed Beta day: site-day detection and interval correction
+    fig03  Energy IoU on one synthetic day: overlap over union
+    fig04  the evaluation design: one of the eighteen station-held-out folds, fitted on Beta only
+    fig05  the worked day under the keep and flip hypotheses of demand
+    fig06  the evidence of every admissible window of the worked day
+    fig07  the calibrated probability and the three decision bands at the control c
+    fig08  precision and recall of automatic corrections against c (Beta-sure)
+    fig09  days sent to review against c
+    fig10  errors left among the automatic decisions against c
+    fig11  Gamma: the highest-impact week of the test month
+    fig12  Gamma: one-week-ahead forecast RMSE by model and training data
     table01  the three datasets by role
-    table02  headline metrics with bootstrap intervals, Beta sure first
-    table03  Energy IoU and energy precision per held-out station and method (Fig. 6 in numbers)
+    table02  headline metrics with bootstrap intervals, Beta-sure first
+
+The headline bar chart, the per-station figure and the per-station table the draft no longer
+prints live in the supplementary registries of ``figures`` and ``tables``.
 """
 
 from __future__ import annotations
@@ -35,9 +41,9 @@ from pynrpf.m9 import RELEASE_CALIBRATION, bridge, edges, evidence, misfit, stor
 
 from . import results
 from .config import Settings
-from .data import METHOD_LABELS, load_cohort
+from .data import load_cohort
 from .gamma import CONDITIONS, MODEL_LABELS, MODELS, _utc
-from .style import COLORS, COLUMN_WIDTH, DOUBLE_WIDTH, apply_paper_style, legend_below, panel_label, style_axis
+from .style import COLORS, COLUMN_WIDTH, apply_paper_style, legend_below, panel_label, style_axis
 
 FigureFn = Callable[[Settings], Any]
 TableFn = Callable[[Settings], pd.DataFrame]
@@ -47,7 +53,10 @@ TableFn = Callable[[Settings], pd.DataFrame]
 WORKED_DAY = ("beta", "beta_B", "2024-09-20")
 SIGN_ERROR_DAY = ("alpha", "alpha_F", "2024-02-17")
 METHOD_COLORS = {"m7": COLORS["grey"], "m8": COLORS["blue"], "m9": COLORS["orange"]}
-GROUPS = [("beta", "Beta sure"), ("alpha", "Alpha"), ("combined", "Both")]
+GROUPS = [("beta", "Beta-sure"), ("alpha", "Alpha"), ("combined", "Both")]
+# The paper's method names; the pipeline and the reference run keep M7, M8 and M9.
+PAPER_METHOD_NAMES = {"m7": "m7_dtr", "m8": "m8_xgb", "m9": "m9_pbm"}
+PAPER_MODEL_LABELS = {**MODEL_LABELS, "seasonal_naive": "Seasonal naïve"}
 HOURS = np.arange(96) / 4.0
 NOTE_BOX = dict(boxstyle="round,pad=0.3", fc="#EBEBEB", ec="none")
 LABEL_BOX = dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85)
@@ -138,7 +147,7 @@ def fig02_two_questions(settings: Settings) -> Any:
     return figure
 
 
-# ----------------------------------------------------------------------------- fig03
+# ----------------------------------------------------------------------------- fig03 and the drawing of fig04
 
 def draw_energy_metrics(axis: Any) -> None:
     """A synthetic recorded trace with the reference span and a shifted proposed span: the three energies."""
@@ -185,21 +194,28 @@ def draw_holdout_design(axis: Any) -> None:
     axis.axis("off")
 
 
-def fig03_metrics_design(settings: Settings) -> Any:
-    """(a) Energy IoU and energy precision on one day; (b) the station-held-out design."""
+def fig03_energy_iou(settings: Settings) -> Any:
+    """Energy IoU on one synthetic day: reference only, proposed only and their overlap under the recorded trace."""
     apply_paper_style()
-    figure, (top, bottom) = plt.subplots(2, 1, figsize=(COLUMN_WIDTH, 3.9), gridspec_kw={"height_ratios": [3, 2]})
-    draw_energy_metrics(top)
-    panel_label(top, "a", "Energy IoU and energy precision on one day")
-    legend_below(top, top, ncol=2)
-    draw_holdout_design(bottom)
-    panel_label(bottom, "b", "Station-held-out evaluation, fitted on Beta only")
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.3))
+    draw_energy_metrics(axis)
+    legend_below(figure, axis, ncol=2)
     return figure
 
 
 # ----------------------------------------------------------------------------- fig04
 
-def draw_two_stories(axis: Any, y: np.ndarray, s: np.ndarray, truth: np.ndarray, best: Any) -> None:
+def fig04_holdout_design(settings: Settings) -> Any:
+    """One of the eighteen station-held-out folds: Beta C held out, the other Beta stations fit, Alpha scored."""
+    apply_paper_style()
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 1.1))
+    draw_holdout_design(axis)
+    return figure
+
+
+# ----------------------------------------------------------------------------- fig05 to fig07: the worked day
+
+def draw_two_hypotheses(axis: Any, y: np.ndarray, s: np.ndarray, truth: np.ndarray, best: Any) -> None:
     kept = stories.demand_if_kept(y, s)
     flipped = np.where(best.mask(96), stories.demand_if_flipped(y, s), kept)
     axis.plot(HOURS, y, color="black", lw=1.1, label="recorded net load $y$")
@@ -256,100 +272,48 @@ def draw_decision_bands(axis: Any, c: float, day_evidence: float) -> None:
     axis.set_yticks([0, 1 - c, 0.5, c, 1])
     axis.set_xlabel("evidence of the best window $r^*$ (symmetric log scale)")
     axis.set_ylabel("probability $p$")
-    legend_below(axis, axis, ncol=1, pad=0.22)
     style_axis(axis, grid_axis=None, y_continuous=False)
 
 
-def fig04_method(settings: Settings) -> Any:
-    """The method on the worked day: (a) two stories, (b) evidence surface, (c) calibration and decision."""
-    apply_paper_style()
+def worked_day_evidence(settings: Settings) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Any]:
+    """``(y, s, truth, r, best)`` of the worked day: its readings, the evidence surface and the winning window."""
     cohort, station, date = WORKED_DAY
     y, s, truth = day(settings, cohort, station, date)
     phi = float(results.scores(settings, cohort)["sigma_floor"].iloc[0])
     r, best = evidence_surface(y, s, phi)
-    figure, (top, middle, bottom) = plt.subplots(3, 1, figsize=(COLUMN_WIDTH, 7.8),
-                                                 gridspec_kw={"height_ratios": [3, 3, 2.4]})
-    draw_two_stories(top, y, s, truth, best)
-    panel_label(top, "a", "Two stories of demand on the worked day")
-    legend_below(top, top, ncol=2)
-    draw_evidence_surface(figure, middle, r, best)
-    panel_label(middle, "b", "Evidence of every admissible window")
-    draw_decision_bands(bottom, float(settings["m9"]["c"]), best.evidence)
-    panel_label(bottom, "c", "From evidence to probability to decision")
-    return figure
+    return y, s, truth, r, best
 
 
-# ----------------------------------------------------------------------------- fig05
-
-HEADLINE = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"),
-            ("day_f1", "Site-day F1"), ("day_precision", "Site-day precision")]
-
-
-def fig05_headline(settings: Settings) -> Any:
-    """Four headline metrics, one panel each; groups Beta sure, Alpha, Both; one bar per method."""
+def fig05_two_hypotheses(settings: Settings) -> Any:
+    """The worked day under the keep and flip hypotheses of demand, with the best window and the reviewers' span."""
     apply_paper_style()
-    pooled = results.metric(settings, "pooled")
-    gate = float(settings["gate"]["energy_precision_min"])
-    figure, axes = plt.subplots(2, 2, figsize=(COLUMN_WIDTH, 3.3), sharey=True)
-    x = np.arange(len(GROUPS))
-    width = 0.26
-    for axis, (key, label) in zip(axes.ravel(), HEADLINE, strict=True):
-        for k, method in enumerate(("m7", "m8", "m9")):
-            values = [float(pooled[(pooled["method"] == method) & (pooled["group"] == g)][key].iloc[0])
-                      for g, _ in GROUPS]
-            axis.bar(x + (k - 1) * width, values, width, color=METHOD_COLORS[method], label=METHOD_LABELS[method],
-                     lw=0)
-        if key == "energy_precision":
-            axis.axhline(gate, color=COLORS["red"], lw=0.8, ls="--", label=f"precision gate ({gate:.2f})")
-        axis.set_xticks(x, [name for _, name in GROUPS])
-        axis.set_ylim(0, 1.05)
-        axis.set_yticks([0, 0.5, 1.0])
-        axis.set_title(label, fontsize=8.5)
-        style_axis(axis, y_continuous=False)
-    legend_below(figure, axes, ncol=4)
+    y, s, truth, _, best = worked_day_evidence(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 3.0))
+    draw_two_hypotheses(axis, y, s, truth, best)
+    legend_below(figure, axis, ncol=2)
     return figure
 
 
-# ----------------------------------------------------------------------------- fig06
-
-def fig06_per_station(settings: Settings) -> Any:
-    """Energy IoU and energy precision per held-out station: Beta with three methods, Alpha with M9 only.
-
-    Stations without a wrong-sign day (Alpha A, D, H and Beta C) have no defined Energy IoU and are left out.
-    """
+def fig06_evidence_surface(settings: Settings) -> Any:
+    """The evidence r(W) of every admissible window of the worked day, with the best window circled."""
     apply_paper_style()
-    stations = results.metric(settings, "stations")
-    stations = stations[stations["n_rpf"] > 0]
-    figure, axes = plt.subplots(2, 2, figsize=(COLUMN_WIDTH, 3.5), sharey=True,
-                                gridspec_kw={"width_ratios": [3, 2]})
-    width = 0.27
-    beta = stations[stations["cohort"] == "beta"]
-    names = sorted(beta["station"].unique())
-    x = np.arange(len(names))
-    alpha = stations[(stations["cohort"] == "alpha") & (stations["method"] == "m9")].sort_values("station")
-    xa = np.arange(len(alpha))
-    for row, (key, label) in enumerate((("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"))):
-        for k, method in enumerate(("m7", "m8", "m9")):
-            values = [float(beta[(beta["method"] == method) & (beta["station"] == st)][key].iloc[0]) for st in names]
-            axes[row, 0].bar(x + (k - 1) * width, values, width, color=METHOD_COLORS[method],
-                             label=METHOD_LABELS[method], lw=0)
-        axes[row, 0].set_xticks(x, [n.split("_")[1] for n in names])
-        axes[row, 0].set_ylabel(label)
-        axes[row, 1].bar(xa, alpha[key].fillna(0.0).to_numpy(float), 0.6, color=METHOD_COLORS["m9"], lw=0)
-        axes[row, 1].set_xticks(xa, [n.split("_")[1] for n in alpha["station"]])
-        for axis in axes[row]:
-            axis.set_ylim(0, 1.05)
-            axis.set_yticks([0, 0.5, 1.0])
-            style_axis(axis, y_continuous=False)
-    panel_label(axes[0, 0], "a", "Beta stations, sure days")
-    panel_label(axes[0, 1], "b", "Alpha, M9 only")
-    axes[1, 0].set_xlabel("Beta station")
-    axes[1, 1].set_xlabel("Alpha station")
-    legend_below(figure, axes[0, 0], ncol=3)
+    _, _, _, r, best = worked_day_evidence(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.7))
+    draw_evidence_surface(figure, axis, r, best)
     return figure
 
 
-# ----------------------------------------------------------------------------- fig07
+def fig07_decision_bands(settings: Settings) -> Any:
+    """The release calibration p(r*) with the three decision bands at the control c, and the worked day marked."""
+    apply_paper_style()
+    _, _, _, _, best = worked_day_evidence(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.8))
+    draw_decision_bands(axis, float(settings["m9"]["c"]), best.evidence)
+    legend_below(figure, axis, ncol=1)
+    return figure
+
+
+# ----------------------------------------------------------------------------- fig08 to fig10: the review trade-off
 
 def draw_precision_frontier(axis: Any, front: pd.DataFrame, targets: pd.DataFrame, c_release: float) -> None:
     c = front["c_correct"].to_numpy(float)
@@ -368,8 +332,8 @@ def draw_precision_frontier(axis: Any, front: pd.DataFrame, targets: pd.DataFram
                       color=COLORS["dark_blue"], bbox=LABEL_BOX)
     axis.set_xlim(0.5, 1.0)
     axis.set_ylim(0.4, 1.02)
-    axis.set_xlabel("correction threshold $c$ (AUTO_CORRECT when $p \\geq c$)")
-    axis.set_ylabel("held-out score, Beta sure")
+    axis.set_xlabel("control threshold $c$ (AUTO_CORRECT when $p \\geq c$)")
+    axis.set_ylabel("held-out score, Beta-sure")
     style_axis(axis)
 
 
@@ -377,8 +341,10 @@ def draw_review_days(axis: Any, coverage: pd.DataFrame, targets: pd.DataFrame, c
     """Days sent to review against c; the release point and the three precision targets are labelled."""
     data = coverage[coverage["cohort"] == "beta"].sort_values("c")
     axis.plot(data["c"], data["review_days"], marker="o", ms=3.2, lw=1.3, color=COLORS["dark_blue"])
-    # The curve hugs the bottom until c = 0.85, so the upper-left of the panel is empty: the four labels are
-    # stacked there and joined to their points by thin leader lines.
+    # The curve hugs the bottom until c = 0.85, so the labels sit in the empty space above it. Each label is
+    # right-aligned just left of its own point, one row higher than the label of the point before it, and its
+    # leader drops from the label's right end; the left-most point (c near 0.5) is labelled from the top-left
+    # corner instead. No leader then passes through another label's text.
     labelled = []
     release = data[np.isclose(data["c"], c_release)]
     if len(release):
@@ -388,16 +354,20 @@ def draw_review_days(axis: Any, coverage: pd.DataFrame, targets: pd.DataFrame, c
     for _, m in targets.iterrows():
         axis.plot([m["c_correct_mean"]], [m["review_days"]], marker="D", ms=4.5, color=COLORS["orange"],
                   mec=COLORS["dark_blue"], mew=0.6, ls="none")
-        labelled.append((f"P ≥ {m['target']:.3f}: {int(m['review_days'])} d",
+        labelled.append((f"$P_E \\geq$ {m['target']:.3f}: {int(m['review_days'])} d",
                          (float(m["c_correct_mean"]), float(m["review_days"])), COLORS["dark_blue"]))
-    labelled.sort(key=lambda item: item[1][0])                 # left-most point at the bottom of the stack
-    for k, (text, point, colour) in enumerate(labelled):
-        axis.annotate(text, point, xytext=(0.10, 0.42 + 0.16 * k), textcoords="axes fraction", fontsize=7,
-                      ha="left", va="center", color=colour,
-                      arrowprops=dict(arrowstyle="-", lw=0.6, color=COLORS["grey"], shrinkA=2, shrinkB=3,
-                                      relpos=(0.0 if point[0] < 0.55 else 0.5, 0.0)))
+    labelled.sort(key=lambda item: item[1][0])
+    top = float(data["review_days"].max())
+    leader = dict(arrowstyle="-", lw=0.6, color=COLORS["grey"], shrinkA=1, shrinkB=3)
+    first_text, first_point, first_colour = labelled[0]
+    axis.annotate(first_text, first_point, xytext=(first_point[0] - 0.015, 0.80 * top), textcoords="data",
+                  fontsize=7, ha="left", va="bottom", color=first_colour, arrowprops={**leader, "relpos": (0.0, 0.0)})
+    for k, (text, point, colour) in enumerate(labelled[1:]):
+        axis.annotate(text, point, xytext=(point[0] - 0.018, (0.25 + 0.18 * k) * top), textcoords="data",
+                      fontsize=7, ha="right", va="bottom", color=colour, arrowprops={**leader, "relpos": (1.0, 0.0)})
     axis.set_xlim(0.48, 1.0)
-    axis.set_ylabel("days sent to review")
+    axis.set_xlabel("control threshold $c$")
+    axis.set_ylabel("days sent to review, Beta-sure")
     style_axis(axis)
 
 
@@ -410,14 +380,13 @@ def draw_remaining_errors(axis: Any, coverage: pd.DataFrame, c_release: float) -
              label="missed error days (kept)")
     axis.axvline(c_release, color=COLORS["red"], lw=0.8, ls=":")
     axis.set_xlim(0.48, 1.0)
-    axis.set_xlabel("correction threshold $c$")
+    axis.set_xlabel("control threshold $c$")
     axis.set_ylabel("errors among\nautomatic decisions")
     style_axis(axis)
 
 
-def fig07_review_tradeoff(settings: Settings) -> Any:
-    """(a) precision and recall against c with the targets marked; (b) days sent to review; (c) remaining errors."""
-    apply_paper_style()
+def review_inputs(settings: Settings) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, float]:
+    """``(frontier, targets, coverage, c_release)`` on Beta-sure days: the inputs of the three review figures."""
     c_release = float(settings["m9"]["c"])
     front = results.operating_point(settings, "frontier")
     front = front[front["cohort"] == "beta"]
@@ -425,21 +394,39 @@ def fig07_review_tradeoff(settings: Settings) -> Any:
     rule = settings["operating_points"]["recommended_rule"]
     targets = targets[(targets["cohort"] == "beta") & (targets["applies"] == "both") & (targets["rule"] == rule)
                       & targets["target"].isin([0.9, 0.925, 0.95])].sort_values("target")
-    coverage = results.metric(settings, "coverage")
-    figure, (top, middle, bottom) = plt.subplots(3, 1, figsize=(COLUMN_WIDTH, 6.9),
-                                                 gridspec_kw={"height_ratios": [3, 2.6, 2]})
-    draw_precision_frontier(top, front, targets, c_release)
-    panel_label(top, "a", "Precision and recall of automatic corrections")
-    legend_below(top, top, ncol=3)
-    draw_review_days(middle, coverage, targets, c_release)
-    panel_label(middle, "b", "Days sent to review, Beta sure")
-    draw_remaining_errors(bottom, coverage, c_release)
-    panel_label(bottom, "c", "Errors left among the automatic decisions")
-    legend_below(bottom, bottom, ncol=2)
+    return front, targets, results.metric(settings, "coverage"), c_release
+
+
+def fig08_precision_frontier(settings: Settings) -> Any:
+    """Precision and recall of automatic corrections against c, with the precision targets and the release c."""
+    apply_paper_style()
+    front, targets, _, c_release = review_inputs(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.8))
+    draw_precision_frontier(axis, front, targets, c_release)
+    legend_below(figure, axis, ncol=3)
     return figure
 
 
-# ----------------------------------------------------------------------------- fig08
+def fig09_review_days(settings: Settings) -> Any:
+    """Days sent to review against c, with the release c and the three precision targets labelled."""
+    apply_paper_style()
+    _, targets, coverage, c_release = review_inputs(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.5))
+    draw_review_days(axis, coverage, targets, c_release)
+    return figure
+
+
+def fig10_remaining_errors(settings: Settings) -> Any:
+    """False corrections and missed error days left among the automatic decisions, against c."""
+    apply_paper_style()
+    _, _, coverage, c_release = review_inputs(settings)
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.4))
+    draw_remaining_errors(axis, coverage, c_release)
+    legend_below(figure, axis, ncol=2)
+    return figure
+
+
+# ----------------------------------------------------------------------------- fig11 and fig12: forecast impact
 
 def draw_example_week(axis: Any, series: pd.DataFrame, test_start: str, test_end: str) -> pd.Timestamp:
     in_month = series["timestamp"].between(_utc(test_start), _utc(test_end, end_of_day=True), inclusive="both")
@@ -450,7 +437,7 @@ def draw_example_week(axis: Any, series: pd.DataFrame, test_start: str, test_end
     week_start = month.groupby("week_start")["manual_change"].sum().idxmax()
     week = month[naive.between(week_start, week_start + pd.Timedelta(days=7), inclusive="left")]
     axis.plot(week["timestamp"], week["raw_uncorrected_MW"], color=COLORS["grey"], lw=1.0, label="raw")
-    axis.plot(week["timestamp"], week["m9_corrected_MW"], color=COLORS["orange"], lw=1.3, label="M9 corrected")
+    axis.plot(week["timestamp"], week["m9_corrected_MW"], color=COLORS["orange"], lw=1.3, label="m9_pbm-corrected")
     axis.plot(week["timestamp"], week["manually_corrected_MW"], color=COLORS["dark_blue"], lw=0.9, ls="--",
               label="manual reference")
     axis.axhline(0, color=COLORS["dark_blue"], lw=0.6)
@@ -463,31 +450,38 @@ def draw_example_week(axis: Any, series: pd.DataFrame, test_start: str, test_end
 
 def draw_forecast_rmse(axis: Any, metrics: pd.DataFrame) -> None:
     colours = [COLORS["dark_blue"], COLORS["orange"], COLORS["grey"]]
-    labels = {"raw_uncorrected": "raw", "m9_corrected": "M9 corrected", "manually_corrected": "manual"}
+    labels = {"raw_uncorrected": "raw", "m9_corrected": "m9_pbm-corrected", "manually_corrected": "manual"}
     x, width = np.arange(len(CONDITIONS)), 0.26
     for k, (model, colour) in enumerate(zip(MODELS, colours, strict=True)):
         values = metrics[metrics["model"] == model].set_index("data_condition").loc[CONDITIONS, "rmse_MW"]
-        bars = axis.bar(x + (k - 1) * width, values, width, color=colour, label=MODEL_LABELS[model], lw=0)
+        bars = axis.bar(x + (k - 1) * width, values, width, color=colour, label=PAPER_MODEL_LABELS[model], lw=0)
         axis.bar_label(bars, fmt="%.2f", fontsize=6, padding=1)
     axis.set_xticks(x, [labels[c] for c in CONDITIONS])
-    axis.set_ylabel("7-day-ahead RMSE (MW)")
+    axis.set_ylabel("One-week-ahead RMSE (MW)")
     axis.set_ylim(0, float(metrics["rmse_MW"].max()) * 1.2)
     style_axis(axis)
 
 
-def fig08_forecast_impact(settings: Settings) -> Any:
-    """Gamma: the highest-impact week of the test month and the seven-day-ahead RMSE per model (double column)."""
+def fig11_forecast_week(settings: Settings) -> Any:
+    """Gamma: the highest-impact week of the test month, raw, m9_pbm-corrected and manually corrected."""
     apply_paper_style()
     g = settings["gamma"]
-    figure, (left, right) = plt.subplots(1, 2, figsize=(DOUBLE_WIDTH, 2.7), gridspec_kw={"width_ratios": [5, 3]})
-    figure.get_layout_engine().set(wspace=0.14)         # the two panels read as one without this gap
-    week_start = draw_example_week(left, results.gamma_series(settings), g["forecast_test_start"],
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.6))
+    week_start = draw_example_week(axis, results.gamma_series(settings), g["forecast_test_start"],
                                    g["forecast_test_end"])
-    panel_label(left, "a", f"Highest-impact week of the test month, from {week_start:%d %b %Y}")
-    legend_below(left, left, ncol=3)
-    draw_forecast_rmse(right, results.gamma_table(settings, "gamma_forecast_metrics"))
-    panel_label(right, "b", "Forecast error by training data")
-    legend_below(right, right, ncol=3)
+    # One tick per day at column width: the day of the month, with the month and year in the axis label.
+    axis.xaxis.set_major_formatter(mdates.DateFormatter("%d"))
+    axis.set_xlabel(f"Day of {week_start:%B %Y}")
+    legend_below(figure, axis, ncol=3)
+    return figure
+
+
+def fig12_forecast_rmse(settings: Settings) -> Any:
+    """Gamma: one-week-ahead forecast RMSE by model and by the history the model was trained on."""
+    apply_paper_style()
+    figure, axis = plt.subplots(figsize=(COLUMN_WIDTH, 2.6))
+    draw_forecast_rmse(axis, results.gamma_table(settings, "gamma_forecast_metrics"))
+    legend_below(figure, axis, ncol=3)
     return figure
 
 
@@ -499,7 +493,7 @@ DATASET_FACTS = {
               "Scored only; never fitted"),
     "beta": ("Real-world calibration and validation",
              "Manual review of every site-day: span to flip and confidence, sure or unsure",
-             "Per-fold fitting on the other Beta stations; sure days are the headline, unsure days a sensitivity"),
+             "Per-fold fitting on the other Beta stations; results reported on sure days"),
 }
 
 
@@ -528,55 +522,30 @@ def table01_datasets(settings: Settings) -> pd.DataFrame:
                  "Stations": "1 (Beta " + settings["gamma"]["station"].split("_")[1] + ")",
                  "Complete site-days": f"{len(per_day):,} ({n_sure} sure, {n_unsure} unsure)",
                  "Wrong-sign days": f"{int(per_day['label'].sum()):,} labelled", "Label source": "As Beta",
-                 "Allowed use": "Forecast targets on raw, M9-corrected and manually corrected history"})
+                 "Allowed use": "Forecast targets on raw, m9_pbm-corrected and manually corrected history"})
     return pd.DataFrame(rows)
 
 
+HEADLINE = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision"),
+            ("day_f1", "Site-day F1"), ("day_precision", "Site-day precision")]
+
+
 def table02_headline(settings: Settings) -> pd.DataFrame:
-    """Headline metrics with station-bootstrap intervals, Beta sure first; the energy-precision gate on Beta sure.
+    """Headline metrics with station-bootstrap intervals, Beta-sure first: group, method and four metrics.
 
     Plain ASCII throughout (intervals as "(low, high)"), so the CSV opens cleanly in a spreadsheet.
     """
     pooled = results.metric(settings, "pooled")
     boot = results.metric(settings, "bootstrap")
-    gate = float(settings["gate"]["energy_precision_min"])
     rows = []
     for group, group_label in GROUPS:
         for method in ("m9", "m8", "m7"):
             r = pooled[(pooled["method"] == method) & (pooled["group"] == group)].iloc[0]
-            row = {"Group": group_label, "Method": METHOD_LABELS[method], "Site-days": int(r["n_days"])}
+            row = {"Group": group_label, "Method": PAPER_METHOD_NAMES[method]}
             for key, label in HEADLINE:
                 ci = boot[(boot["method"] == method) & (boot["group"] == group) & (boot["metric"] == key)]
                 interval = f" ({ci['ci_low'].iloc[0]:.3f}, {ci['ci_high'].iloc[0]:.3f})" if len(ci) else ""
                 row[f"{label} (95% CI)"] = f"{float(r[key]):.3f}{interval}"
-                if key == "energy_precision":
-                    passed = "pass" if float(r[key]) >= gate else "fail"
-                    row[f"Gate {gate:.2f}"] = passed if group == "beta" else "n/a"
-            rows.append(row)
-    return pd.DataFrame(rows)
-
-
-PER_STATION = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision")]
-
-
-def table03_per_station(settings: Settings) -> pd.DataFrame:
-    """Energy IoU and energy precision per held-out station and method: the numbers behind Fig. 6, with the
-    M7 and M8 Alpha columns the figure leaves out. n/a marks an undefined value: a station without a
-    wrong-sign day has no Energy IoU, and a method that flipped no energy there has no precision."""
-    stations = results.metric(settings, "stations")
-    rows = []
-    for cohort, cohort_label in (("beta", "Beta sure"), ("alpha", "Alpha")):
-        block = stations[stations["cohort"] == cohort]
-        for station in sorted(block["station"].unique()):
-            per = block[block["station"] == station].set_index("method")
-            n_rpf = int(per["n_rpf"].iloc[0])
-            row = {"Group": cohort_label, "Station": station.split("_")[1], "Site-days": int(per["n_days"].iloc[0]),
-                   "Wrong-sign days": n_rpf}
-            for key, label in PER_STATION:
-                for method in ("m7", "m8", "m9"):
-                    value = float(per.loc[method, key]) if method in per.index else float("nan")
-                    defined = n_rpf > 0 and np.isfinite(value)
-                    row[f"{label} {METHOD_LABELS[method]}"] = f"{value:.3f}" if defined else "n/a"
             rows.append(row)
     return pd.DataFrame(rows)
 
@@ -584,15 +553,18 @@ def table03_per_station(settings: Settings) -> pd.DataFrame:
 FIGURES: dict[str, FigureFn] = {
     "fig01_sign_error": fig01_sign_error,
     "fig02_two_questions": fig02_two_questions,
-    "fig03_metrics_design": fig03_metrics_design,
-    "fig04_method": fig04_method,
-    "fig05_headline": fig05_headline,
-    "fig06_per_station": fig06_per_station,
-    "fig07_review_tradeoff": fig07_review_tradeoff,
-    "fig08_forecast_impact": fig08_forecast_impact,
+    "fig03_energy_iou": fig03_energy_iou,
+    "fig04_holdout_design": fig04_holdout_design,
+    "fig05_two_hypotheses": fig05_two_hypotheses,
+    "fig06_evidence_surface": fig06_evidence_surface,
+    "fig07_decision_bands": fig07_decision_bands,
+    "fig08_precision_frontier": fig08_precision_frontier,
+    "fig09_review_days": fig09_review_days,
+    "fig10_remaining_errors": fig10_remaining_errors,
+    "fig11_forecast_week": fig11_forecast_week,
+    "fig12_forecast_rmse": fig12_forecast_rmse,
 }
 TABLES: dict[str, TableFn] = {
     "table01_datasets": table01_datasets,
     "table02_headline": table02_headline,
-    "table03_per_station": table03_per_station,
 }

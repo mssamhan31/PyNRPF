@@ -10,8 +10,7 @@ Key steps: every registry entry is ``name -> function(settings) -> DataFrame``. 
          is one function and one registry line. A small Markdown writer keeps the
          dependency list short.
 
-    manuscript (``manuscript.TABLES``): table01 the datasets by role, table02 the headline metrics,
-        table03 Energy IoU and energy precision per station and method
+    manuscript (``manuscript.TABLES``): table01 the datasets by role, table02 the headline metrics
     supplementary (``SUPPLEMENTARY``):
         supp_table01  per station, every method
         supp_table02  operating points: precision target, c, review days, false corrections, recall
@@ -20,6 +19,7 @@ Key steps: every registry entry is ``name -> function(settings) -> DataFrame``. 
         supp_table05  M9 confidence versus coverage      supp_table06  Beta unsure sensitivity
         supp_table07  M9 calibration fits per fold       supp_table08  pooled and macro results with every station
         supp_table09  method comparison, all supporting metrics     supp_table10  the sample site-days of the figures
+        supp_table11  Energy IoU and energy precision per held-out station and method (n/a where undefined)
 """
 
 from __future__ import annotations
@@ -231,7 +231,32 @@ def pooled_macro_table(pooled: pd.DataFrame, macro: pd.DataFrame, stations: pd.D
     return pd.DataFrame(rows)
 
 
-# ----------------------------------------------------------------------------- the registry
+PER_STATION = [("energy_iou", "Energy IoU"), ("energy_precision", "Energy precision")]
+
+
+def per_station_iou_precision(settings: Settings) -> pd.DataFrame:
+    """Energy IoU and energy precision per held-out station and method: the numbers behind supp_fig08,
+    with the M7 and M8 Alpha columns the figure leaves out.
+
+    n/a marks an undefined value: a station without a wrong-sign day has no Energy IoU, and a method
+    that flipped no energy there has no precision.
+    """
+    stations = results.metric(settings, "stations")
+    rows = []
+    for cohort, cohort_label in (("beta", "Beta sure"), ("alpha", "Alpha")):
+        block = stations[stations["cohort"] == cohort]
+        for station in sorted(block["station"].unique()):
+            per = block[block["station"] == station].set_index("method")
+            n_rpf = int(per["n_rpf"].iloc[0])
+            row = {"Group": cohort_label, "Station": station.split("_")[1], "Site-days": int(per["n_days"].iloc[0]),
+                   "Wrong-sign days": n_rpf}
+            for key, label in PER_STATION:
+                for method in ("m7", "m8", "m9"):
+                    value = float(per.loc[method, key]) if method in per.index else float("nan")
+                    defined = n_rpf > 0 and np.isfinite(value)
+                    row[f"{label} {METHOD_LABELS[method]}"] = f"{value:.3f}" if defined else "n/a"
+            rows.append(row)
+    return pd.DataFrame(rows)
 
 
 # ----------------------------------------------------------------------------- the registries
@@ -251,6 +276,7 @@ SUPPLEMENTARY: dict[str, TableFn] = {
                                                                        results.metric(s, "stations")),
     "supp_table09_method_comparison": lambda s: comparison_table(results.metric(s, "pooled")),
     "supp_table10_sample_days": sample_index,
+    "supp_table11_per_station_iou_precision": per_station_iou_precision,
 }
 DIGITS = {"supp_table07_calibration_fits": 4}
 
