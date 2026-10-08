@@ -29,7 +29,8 @@ def build_publication_figures_notebook(metadata):
         2. `fig02_solar_peak_window_hours.png`
         3. `fig03_min_threshold_both.png`
         4. `fig04_dtr_illustration.png`
-        5. `fig05_confusion_matrices_1x4.png`
+        5. `fig05_confusion_matrices_1x4.png` (and `.svg`), 600 dpi at its printed size, drawn by
+           `scripts/make_fig05_confusion.py`
         """
     ).lstrip()
 
@@ -740,49 +741,9 @@ def build_publication_figures_notebook(metadata):
             return fig
 
 
-        def _plot_confusion_publication_1x4(cm_counts, interval_tp_only=True):
-            fig = plt.figure(figsize=(31, 8.5))
-            gs = fig.add_gridspec(1, 5, width_ratios=[1.0, 1.0, 0.15, 1.0, 1.0], wspace=0.38)
-            axes = [
-                fig.add_subplot(gs[0, 0]),
-                fig.add_subplot(gs[0, 1]),
-                fig.add_subplot(gs[0, 3]),
-                fig.add_subplot(gs[0, 4]),
-            ]
-
-            labels = ["m7_dtr", "m8_xgb"]
-            for idx, label in enumerate(labels):
-                day_vals = cm_counts[label]["day"]
-                _plot_cm_with_cbar_counts(axes[idx], fig, day_vals, f"{label}  Day-Level")
-
-                key = "interval_tp_days_only" if interval_tp_only else "interval_all_days"
-                suffix = "Interval (TP days only)" if interval_tp_only else "Interval (all predicted-positive days)"
-                int_vals = cm_counts[label][key]
-                _plot_cm_with_cbar_counts(axes[idx + 2], fig, int_vals, f"{label}  {suffix}")
-
-            fig.subplots_adjust(left=0.03, right=0.985, bottom=0.12, top=0.80)
-            y1 = max(ax.get_position().y1 for ax in axes)
-
-            subtitle_y = y1 + 0.030
-            fig.text(
-                (axes[0].get_position().x0 + axes[1].get_position().x1) / 2.0,
-                subtitle_y,
-                "Day-Level\\n\\n",
-                ha="center",
-                va="bottom",
-                fontsize=24,
-                fontweight="bold",
-            )
-            fig.text(
-                (axes[2].get_position().x0 + axes[3].get_position().x1) / 2.0,
-                subtitle_y,
-                "Interval-Level\\n\\n",
-                ha="center",
-                va="bottom",
-                fontsize=24,
-                fontweight="bold",
-            )
-            return fig
+        # Fig. 5 itself is drawn at its final printed size (7.0 in x 1.25 in, Times New Roman, 8 pt and up)
+        # by scripts/make_fig05_confusion.py, which reads the same metrics JSON and checks P/R/F1 first.
+        from scripts.make_fig05_confusion import save_fig05
 
 
         fig_legacy_all_daytime_path = ARCHIVE_FIG_DIR / "confusion_matrices_all_daytime.png"
@@ -805,12 +766,8 @@ def build_publication_figures_notebook(metadata):
         fig_legacy_tp.savefig(fig_legacy_tp_only_path, dpi=300, bbox_inches="tight")
         print(f"Saved: {fig_legacy_tp_only_path}")
 
-        fig5 = _plot_confusion_publication_1x4(
-            CM_COUNTS,
-            interval_tp_only=True,
-        )
-        fig5.savefig(fig5_path, dpi=300, bbox_inches="tight")
-        print(f"Saved: {fig5_path}")
+        fig5 = save_fig05(METRICS_JSON, fig5_path)
+        print(f"Saved: {fig5_path} (600 dpi) and {fig5_path.with_suffix('.svg')}")
 
         print("\\nPublication figures generated:")
         for p in [
