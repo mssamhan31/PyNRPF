@@ -488,7 +488,7 @@ def fig12_forecast_rmse(settings: Settings) -> Any:
 # ----------------------------------------------------------------------------- tables
 
 DATASET_FACTS = {
-    "alpha": ("Placement check",
+    "alpha": ("Supplementary validation on constructed errors (exact labels)",
               "Absolute value of correctly signed readings; every negative interval is a label",
               "Scored only; never fitted"),
     "beta": ("Real-world calibration and validation",
@@ -522,7 +522,7 @@ def table01_datasets(settings: Settings) -> pd.DataFrame:
                  "Stations": "1 (Beta " + settings["gamma"]["station"].split("_")[1] + ")",
                  "Complete site-days": f"{len(per_day):,} ({n_sure} sure, {n_unsure} unsure)",
                  "Wrong-sign days": f"{int(per_day['label'].sum()):,} labelled", "Label source": "As Beta",
-                 "Allowed use": "Forecast targets on raw, m9_pbm-corrected and manually corrected history"})
+                 "Allowed use": "Forecast targets on raw, m9_pbm-corrected and manually reviewed reference data"})
     return pd.DataFrame(rows)
 
 
