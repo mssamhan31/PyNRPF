@@ -84,10 +84,28 @@ def write_stage_manifest(settings: Settings, stage: str, inputs: list[Path], out
     return path
 
 
+TEXT_SUFFIXES = {".csv", ".json", ".md", ".txt", ".yaml", ".yml"}
+
+
+def digests_either_line_ending(file: Path) -> set[str]:
+    """The file's SHA-256 as it is and, for a text file, with its line endings as LF and as CRLF.
+
+    Git checks text files out with the platform's line endings, so a manifest hashed on Windows
+    (CRLF) must still verify on Linux (LF). The swap changes bytes, never a value.
+    """
+    digests = {sha256_file(file)}
+    if file.suffix.lower() in TEXT_SUFFIXES:
+        lf = file.read_bytes().replace(b"\r\n", b"\n")
+        digests.add(hashlib.sha256(lf).hexdigest())
+        digests.add(hashlib.sha256(lf.replace(b"\n", b"\r\n")).hexdigest())
+    return digests
+
+
 def check_manifest(settings: Settings, path: Path) -> list[str]:
     """Compare a written manifest with the files on disk; return the mismatches (empty when all agree).
 
-    Every input and output must exist with the recorded SHA-256 and size.
+    Every input and output must exist with the recorded SHA-256; a text file may differ in its
+    line endings only.
     """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     problems = []
@@ -95,6 +113,6 @@ def check_manifest(settings: Settings, path: Path) -> list[str]:
         file = settings.root / record["path"]
         if not file.exists():
             problems.append(f"missing: {record['path']}")
-        elif sha256_file(file) != record["sha256"]:
+        elif record["sha256"] not in digests_either_line_ending(file):
             problems.append(f"changed: {record['path']}")
     return problems

@@ -80,3 +80,13 @@ def test_m9_pooled_beta_row_reproduces_from_the_site_day_table():
     old = committed[(committed["method"] == "m9") & (committed["group"] == "beta")].iloc[0]
     for key in HEADLINE_KEYS:
         assert float(new[key]) == pytest.approx(float(old[key]), abs=1e-12), key
+
+
+def test_manifest_check_ignores_line_endings_of_text_files(tmp_path):
+    crlf, lf = tmp_path / "a.csv", tmp_path / "b.csv"
+    crlf.write_bytes(b"x,y\r\n1,2\r\n")
+    lf.write_bytes(b"x,y\n1,2\n")
+    assert mf.digests_either_line_ending(crlf) == mf.digests_either_line_ending(lf)
+    binary = tmp_path / "c.parquet"
+    binary.write_bytes(b"\r\n")
+    assert len(mf.digests_either_line_ending(binary)) == 1

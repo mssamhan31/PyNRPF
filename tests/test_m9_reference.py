@@ -27,7 +27,9 @@ def test_scores_probabilities_and_outcomes_match_the_reference(name):
     assert (got["runner_start"].to_numpy() == expected["runner_start"].to_numpy()).all()
     scored = expected["input_ok"].to_numpy()
     assert np.array_equal(got["evidence"].to_numpy()[scored], expected["r_best"].to_numpy()[scored])
-    assert np.array_equal(got["p"].to_numpy()[scored], expected["prob_day"].to_numpy()[scored])
+    # The evidence reproduces bit for bit. The probability then passes through exp, whose last binary
+    # digit differs between platforms, so p is held to 1e-12 while everything else stays exact.
+    assert np.allclose(got["p"].to_numpy()[scored], expected["prob_day"].to_numpy()[scored], rtol=0, atol=1e-12)
     assert (got["outcome"].to_numpy() == expected["outcome"].to_numpy()).all()
     assert np.array_equal(got["proposed_mwh"].to_numpy(), expected["candidate_mwh"].to_numpy())
 
