@@ -63,3 +63,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Databricks notebooks install and restart Python before their imports, so imports cannot lead.
+"examples/*" = ["E402"]

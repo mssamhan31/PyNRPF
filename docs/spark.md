@@ -16,6 +16,17 @@ intervals.write.mode("overwrite").saveAsTable("rpf.intervals")
 `columns` if they are named differently. Both outputs carry the schemas of the
 [site-day and interval tables](quickstart.md).
 
+The adapter returns the two frames only. Build the matching provenance record with the same
+arguments and store it with them, so every table can be traced to the release and settings
+that produced it:
+
+```python
+import pynrpf
+
+record = pynrpf.provenance(c=0.7)          # the same c, calibration and phi as run_per_site
+record.as_dict()                           # version, calibration numbers, phi, c: write it next to the tables
+```
+
 ## Group size
 
 Each group is one site's readings: a year of one site is 35,000 rows, a bounded pandas

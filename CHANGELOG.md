@@ -1,12 +1,21 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0 (27 October 2026)
 
 The package now ships one method, M9, and nothing else.
 
 - `pynrpf.run(frame)` scores every site-day of a pandas frame and returns a site-day table
   and an interval table; `pynrpf.spark.run_per_site` does the same on a Spark frame per
   site; `pynrpf run` is the command line for a CSV.
+- Every run carries a provenance record (package version, calibration numbers, evidence floor,
+  control): `result.provenance` in Python, `provenance.json` from the command line, and
+  `pynrpf.provenance(...)` for a Spark job to store with its tables.
+- Releases attach the wheel, the sdist and `SHA256SUMS` to the GitHub Release, so the same
+  files can be installed from PyPI or from a Unity Catalog Volume; continuous integration runs
+  the Spark adapter test on Java 17.
+- Migrating from 0.3: `run_inference`, `train_m8_xgb`, `load_config` and the YAML
+  configuration are gone; `pynrpf.run(frame, columns=...)` replaces them. The `dev` branch
+  keeps 0.3 for pipelines that still depend on it.
 - The method lives in `pynrpf.m9`, one module per step: stories, windows, edges, bridge,
   misfit, evidence, winner, calibration, decision.
 - Release calibration fitted on eight Ausgrid substations with reviewed real errors, and a

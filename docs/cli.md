@@ -5,25 +5,27 @@ pynrpf run readings.csv --out results/
 ```
 
 Reads a CSV with the four columns (`substation_id`, `timestamp`, `net_load_MW`, `solar_MW`
-by default) and writes three files to the output folder:
+by default) and writes four files to the output folder:
 
 | file | content |
 |---|---|
 | `site_days.csv` | the [site-day table](quickstart.md#the-site-day-table) |
 | `intervals.csv` | the [interval table](quickstart.md#the-interval-table) |
 | `summary.json` | days per outcome, MWh flipped, the control and calibration used |
+| `provenance.json` | the package version and the settings that produced the tables: calibration, evidence floor, control |
 
 ## Options
 
 | option | meaning | default |
 |---|---|---|
 | `--c` | the control | 0.7 |
-| `--calibration a,b` | intercept and slope replacing the release calibration | release pair |
+| `--calibration a b` | intercept and slope replacing the release calibration, two numbers | release pair |
 | `--phi` | the evidence floor, MW | release value |
 | `--site`, `--timestamp`, `--net-load`, `--solar` | column names | `substation_id`, `timestamp`, `net_load_MW`, `solar_MW` |
 
 ```powershell
 pynrpf run readings.csv --out results/ --c 0.9 --site site_id --net-load mw --solar pv
+pynrpf run readings.csv --out results/ --calibration -4.2 2.16      # a refitted intercept
 pynrpf --version
 ```
 

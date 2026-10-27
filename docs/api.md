@@ -5,7 +5,9 @@ Everything public is importable from `pynrpf`.
 | name | what it is |
 |---|---|
 | `run(frame, *, columns=None, c=0.7, calibration=RELEASE_CALIBRATION, phi=RELEASE_PHI) -> Result` | the whole method on a pandas frame; see [Quick start](quickstart.md) |
-| `Result` | `site_days` and `intervals` frames, and `summary()` |
+| `Result` | `site_days` and `intervals` frames, `provenance`, and `summary()` |
+| `Provenance` | `version`, `method`, `calibration_intercept`, `calibration_slope`, `calibration_note`, `phi`, `c`; `as_dict()` for JSON or a table row |
+| `provenance(c=0.7, calibration=RELEASE_CALIBRATION, phi=RELEASE_PHI) -> Provenance` | the record `run` attaches to its result; a Spark job builds it with the arguments it gave `run_per_site` |
 | `score_siteday(y, s, phi=RELEASE_PHI) -> Score` | steps 1 to 7 on one day: 96-slot arrays of net load and solar (MW) |
 | `Score` | `input_ok`, `n_admissible`, `winner`, `runner_up` (each a `Candidate` with `start`, `end`, `evidence`), `evidence` (r*) |
 | `Calibration(intercept, slope, provenance="")` | step 8; `probability(evidence)`, `evidence_at(p)` |

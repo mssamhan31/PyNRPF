@@ -94,3 +94,20 @@ def test_spark_adapter_matches_pandas():
     assert np.allclose(got["evidence"].fillna(0), want["evidence"].fillna(0))
     assert intervals.count() == len(frame)
     spark.stop()
+
+
+def test_provenance_records_the_version_and_the_settings(tmp_path):
+    y, s, _ = clean_flip()
+    frame = frame_for({("A", "2024-01-01"): (y, s)})
+    record = pynrpf.run(frame, c=0.75).provenance
+    assert record.version == pynrpf.__version__ and record.method == "M9" and record.c == 0.75
+    assert record.calibration_slope == pynrpf.RELEASE_CALIBRATION.slope
+    assert record.calibration_intercept == pynrpf.RELEASE_CALIBRATION.intercept
+    assert record.phi == pynrpf.RELEASE_PHI
+    csv = tmp_path / "readings.csv"
+    frame.to_csv(csv, index=False)
+    assert main(["run", str(csv), "--out", str(tmp_path / "out"), "--c", "0.8", "--phi", "1e-6",
+                 "--calibration", "-4", "2"]) == 0
+    written = json.loads((tmp_path / "out" / "provenance.json").read_text())
+    assert written == dict(version=pynrpf.__version__, method="M9", calibration_intercept=-4.0,
+                           calibration_slope=2.0, calibration_note="command line", phi=1e-6, c=0.8)

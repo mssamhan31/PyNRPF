@@ -25,11 +25,18 @@ The nine steps are one file each under `src/pynrpf/m9/` and are explained in
 
 ## Install
 
-Python 3.10 or later. The package depends on numpy and pandas only.
+Python 3.10 or later. The package depends on numpy and pandas only. Pin the version in anything
+that has to be reproducible:
 
 ```powershell
-python -m pip install pynrpf
+python -m pip install pynrpf==0.4.0
 ```
+
+On Databricks, install the same pin on the cluster or job, or copy the release wheel into a
+Unity Catalog Volume; [docs/install.md](docs/install.md) gives both routes.
+[examples/databricks_smoke.py](examples/databricks_smoke.py) is a notebook that installs the
+pin and runs the method on synthetic data, in pandas and through Spark, before any real
+readings are touched.
 
 ## Quick start
 
@@ -62,6 +69,14 @@ publication/2_journal_article/
     sandbox/                development history and dated studies; not maintained, not cited
 publication/1_conference_paper/   the conference paper's archive, self-contained
 ```
+
+## Branches
+
+| branch | holds | rule |
+|---|---|---|
+| `main` | the released, Zenodo-archived version | changes arrive by pull request; a GitHub Release `vX.Y.Z` publishes it |
+| `dev` | the 0.3 package that Ausgrid's current pipeline depends on | do not modify it, merge into it, or branch new work from it |
+| feature branches | work in progress | branched from `main`, merged back by pull request |
 
 ## Data
 
@@ -125,4 +140,7 @@ If you use this software, please cite it using the metadata in [CITATION.cff](CI
 or the archived release:
 
 > Samhan, M. S., Bruce, A., & Yildiz, B. (2026). *PyNRPF: Detecting and rectifying wrong
-> reverse power flow readings* [Software]. Zenodo. https://doi.org/10.5281/zenodo.19211355
+> reverse power flow readings* [Software]. Zenodo. https://doi.org/10.5281/zenodo.18764943
+
+The DOI above is the concept DOI and resolves to the latest archived release; each release
+also has its own version DOI on Zenodo.

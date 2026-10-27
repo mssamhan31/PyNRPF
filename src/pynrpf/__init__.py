@@ -8,10 +8,9 @@ The method (M9) lives in ``pynrpf.m9``, one file per step; ``pynrpf.spark.run_pe
 runs it on a Spark frame; ``pynrpf run`` is the command line.
 """
 
+from ._version import __version__
 from .m9 import RELEASE_CALIBRATION, RELEASE_PHI, Calibration, Score, fit_calibration, score_siteday
-from .run import Result, run
+from .run import Provenance, Result, provenance, run
 
-__version__ = "0.4.0"
-
-__all__ = ["Calibration", "RELEASE_CALIBRATION", "RELEASE_PHI", "Result", "Score", "__version__",
-           "fit_calibration", "run", "score_siteday"]
+__all__ = ["Calibration", "Provenance", "RELEASE_CALIBRATION", "RELEASE_PHI", "Result", "Score", "__version__",
+           "fit_calibration", "provenance", "run", "score_siteday"]

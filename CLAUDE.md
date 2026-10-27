@@ -89,8 +89,11 @@ function documents arguments, returns and units (MW, MWh, slots of fifteen minut
 
 ## Branches and releases
 
-`main` is the released, Zenodo-archived version; a `v*` tag triggers `release.yml`, which
-publishes to PyPI. Work happens on `dev` and feature branches. Do not merge working
-branches into `main`; that is a release decision. Do not commit or push unless asked.
+`main` is the released, Zenodo-archived version. A GitHub Release `vX.Y.Z` created on `main`
+pushes the tag that runs `release.yml`: tests, build, PyPI, and the wheel with its SHA-256 sums
+attached to the release. `dev` holds the 0.3 package that Ausgrid's current pipeline depends
+on: never modify it, merge into it, or branch work from it. New work goes on feature branches
+from `main` and reaches `main` by pull request. Do not open a pull request, merge into `main`
+or create a release unless asked; do not commit or push unless asked.
 
 `.ai/` and `planning/` are gitignored working directories.

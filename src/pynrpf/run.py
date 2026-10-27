@@ -5,29 +5,69 @@
 
 Inputs:  a pandas frame of fifteen-minute readings (see ``validate``), the control ``c``,
          the calibration and the evidence floor.
-Outputs: ``Result.site_days`` and ``Result.intervals`` (see ``schemas``). Raw readings are
-         never altered: the corrected series is a separate column.
+Outputs: ``Result.site_days`` and ``Result.intervals`` (see ``schemas``), and
+         ``Result.provenance``, the record of what produced them. Raw readings are never
+         altered: the corrected series is a separate column.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 import numpy as np
 import pandas as pd
 
 from . import impact, schemas, validate
+from ._version import __version__
 from .m9 import RELEASE_CALIBRATION, RELEASE_PHI, Calibration, Score, score_siteday
 from .m9.decision import AUTO_CORRECT, DEFAULT_C, UNCERTAIN, decide
 from .m9.winner import NO_CORRECTION
 
 
+@dataclass(frozen=True)
+class Provenance:
+    """What produced a run: the package version, the method, and the settings that change its output.
+
+    Stored with the output tables, it lets anyone re-run the same version with the same
+    settings and obtain the same tables; the method itself has no randomness.
+    """
+
+    version: str
+    method: str
+    calibration_intercept: float
+    calibration_slope: float
+    calibration_note: str
+    phi: float
+    c: float
+
+    def as_dict(self) -> dict:
+        """The record as plain values, ready for JSON or a table row."""
+        return asdict(self)
+
+
+def provenance(c: float = DEFAULT_C, calibration: Calibration = RELEASE_CALIBRATION,
+               phi: float = RELEASE_PHI) -> Provenance:
+    """The provenance record of a run with these settings; ``run`` attaches it to its ``Result``.
+
+    Spark callers receive two frames rather than a ``Result``, so they call this with the
+    arguments they gave ``run_per_site`` and store the record alongside the tables.
+
+    Args:
+        c: the control.
+        calibration: the two numbers of step 8 and their note.
+        phi: the evidence floor of step 6, MW.
+    """
+    return Provenance(__version__, "M9", float(calibration.intercept), float(calibration.slope),
+                      calibration.provenance, float(phi), float(c))
+
+
 @dataclass
 class Result:
-    """The two output tables of a run."""
+    """The two output tables of a run and the record of what produced them."""
 
     site_days: pd.DataFrame
     intervals: pd.DataFrame
+    provenance: Provenance | None = None
 
     def summary(self) -> dict:
         """Counts and energies a caller can log: days per outcome and MWh flipped."""
@@ -54,8 +94,9 @@ def run(frame: pd.DataFrame, *, columns: dict | None = None, c: float = DEFAULT_
         phi: the evidence floor of step 6, MW.
 
     Returns:
-        A ``Result`` with the site-day table and the interval table.
+        A ``Result`` with the site-day table, the interval table and the provenance record.
     """
+    record = provenance(c, calibration, phi)
     prepared = validate.prepare(frame, columns)
     day_rows, interval_parts = [], []
     for site, date, rows in validate.site_days(prepared):
@@ -71,10 +112,10 @@ def run(frame: pd.DataFrame, *, columns: dict | None = None, c: float = DEFAULT_
         day_rows.append(_site_day_row(site, date, len(rows), score, p, outcome, y))
         interval_parts.append(_interval_rows(rows, score, outcome))
     if not day_rows:
-        return Result(schemas.empty(schemas.SITE_DAYS), schemas.empty(schemas.INTERVALS))
+        return Result(schemas.empty(schemas.SITE_DAYS), schemas.empty(schemas.INTERVALS), record)
     site_days = schemas.cast(pd.DataFrame(day_rows), schemas.SITE_DAYS)
     intervals = schemas.cast(pd.concat(interval_parts, ignore_index=True), schemas.INTERVALS)
-    return Result(site_days, intervals)
+    return Result(site_days, intervals, record)
 
 
 def _site_day_row(site: str, date: str, n_slots: int, score: Score, p: float, outcome: str, y: np.ndarray) -> dict:

@@ -43,16 +43,47 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      # The paper tests import publication/2_journal_article/paper, which needs the paper extra.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .[dev]
+          python -m pip install -e .[dev,paper]
 
       - name: Lint
-        run: ruff check src/pynrpf tests
+        run: ruff check src/pynrpf tests publication/2_journal_article/paper
 
       - name: Unit tests
         run: pytest -q
 
       - name: Build package
         run: python -m build --sdist --wheel
+
+  # The Spark adapter runs through applyInPandas; this job is the only place it is exercised
+  # before a cluster sees it. Spark 3.5 needs Java 8, 11 or 17.
+  spark-adapter:
+    runs-on: ubuntu-latest
+    env:
+      PYSPARK_PYTHON: python
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev,spark]
+
+      - name: Run, command line and Spark adapter tests
+        run: pytest -q tests/test_run_cli_spark.py

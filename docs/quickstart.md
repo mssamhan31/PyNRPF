@@ -12,6 +12,7 @@ result = pynrpf.run(frame)
 result.site_days.head()      # one row per site and day
 result.intervals.head()      # one row per reading
 result.summary()             # days per outcome, MWh flipped
+result.provenance            # the version and settings that produced the tables; store it with them
 ```
 
 The frame needs four columns: a site identifier, a timestamp on the fifteen-minute grid, the
