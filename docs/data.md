@@ -16,6 +16,11 @@ evaluation checks before it runs.
 | Beta | 8 | Oct 2023 to Sep 2024 | 280,800 | 630 | real meters with real wrong-sign errors, labelled by two reviewers who marked the span to flip and a confidence, `sure` or `unsure`, for every site-day (2,310 sure, 618 unsure) |
 | Gamma | 1 | Oct 2023 to Sep 2024 | 35,136 | 152 | one Beta station used for the forecasting case study |
 
+/// details | Show details
+    type: more
+
+## Columns
+
 | column | type | meaning |
 |---|---|---|
 | `substation_id` | string | anonymised label, `alpha_A` to `alpha_J`, `beta_A` to `beta_H` |
@@ -36,11 +41,12 @@ sure. Unsure days are cloudy days with a jagged solar estimate, meters that clip
 and shallow midday dips that could be either story. The paper judges every method on the
 sure days; unsure days are reported separately and never used to fit or tune anything. The
 publication-ready export of that review, with its summary and review status, is
-`publication/2_journal_article/dataset/oracle_data_creation/`; the review tooling and the
-per-reviewer files are kept under `publication/2_journal_article/sandbox/oracle_review/`.
+`publication/2_journal_article/dataset/oracle_data_creation/`.
 
 ## The conference dataset
 
 `publication/1_conference_paper/dataset/raw/rpf_dataset.parquet`: the same ten Alpha
 stations with a manually reviewed correct net load in `net_load_ground_truth`, as used by
 the conference paper. It is not read by the journal work.
+
+///

@@ -103,6 +103,9 @@ ruff check src/pynrpf tests publication/2_journal_article/paper
 
 ## Documentation
 
+The documentation is published at <https://mssamhan31.github.io/PyNRPF/>, with a landing
+page for a general reader. The same pages are in `docs/`; `mkdocs serve` shows them locally.
+
 | page | what it covers |
 |---|---|
 | [docs/quickstart.md](docs/quickstart.md) | one call, the output tables column by column |

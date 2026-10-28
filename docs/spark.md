@@ -14,7 +14,7 @@ intervals.write.mode("overwrite").saveAsTable("rpf.intervals")
 
 `sdf` is a Spark DataFrame with the same four columns as the pandas call, mapped with
 `columns` if they are named differently. Both outputs carry the schemas of the
-[site-day and interval tables](quickstart.md).
+[site-day and interval tables](quickstart.md#the-site-day-table).
 
 The adapter returns the two frames only. Build the matching provenance record with the same
 arguments and store it with them, so every table can be traced to the release and settings
@@ -26,6 +26,9 @@ import pynrpf
 record = pynrpf.provenance(c=0.7)          # the same c, calibration and phi as run_per_site
 record.as_dict()                           # version, calibration numbers, phi, c: write it next to the tables
 ```
+
+/// details | Show details
+    type: more
 
 ## Group size
 
@@ -51,3 +54,5 @@ rows, so a `MERGE` keyed on site and date is safe.
 Reading the source tables, choosing the population, materialising the two tables, the
 review workflow (see [Overrides](overrides.md)) and any audit trail. The package returns
 proposals and never alters raw readings.
+
+///

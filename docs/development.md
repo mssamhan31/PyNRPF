@@ -18,6 +18,11 @@ pytest -q
 ruff check src/pynrpf tests publication/2_journal_article/paper
 ```
 
+/// details | Show details
+    type: more
+
+## What the tests protect
+
 | tests | what they protect |
 |---|---|
 | `test_m9_steps.py` | each step of the method on planted days: admissibility, the edge rule with a gap, the bridge, the misfit, the evidence sign and floor, the tie order |
@@ -36,7 +41,14 @@ mkdocs serve          # local preview at http://127.0.0.1:8000
 mkdocs build --strict
 ```
 
-The site is built locally only; it is not published.
+`docs-pages.yml` builds the site on every pull request to `main` and publishes it to GitHub
+Pages at <https://mssamhan31.github.io/PyNRPF/> when `main` changes. The landing page
+(`docs/index.md`) is written for a general reader; its figures live in `docs/assets/`,
+copied from `publication/2_journal_article/results/paper/figures/`.
+
+Every documentation page shows what an analyst running PyNRPF needs first and puts the rest in
+one `/// details | Show details` block (type `more`) at its foot. Pages left out of the menu are
+listed under `not_in_nav` in `mkdocs.yml` and reached from the Overview's full page list.
 
 ## Continuous integration
 
@@ -58,3 +70,5 @@ the conference paper archive.
 4. Check in a fresh environment: `pip install pynrpf==X.Y.Z`, `pynrpf --version`, the release
    assets, and the new version on Zenodo. PyPI never accepts a re-upload of the same version,
    so a failed publish means the next patch number.
+
+///

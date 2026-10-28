@@ -6,6 +6,23 @@ in order is reading the method.
 
     readings (y, s) → two stories → candidate windows → bridge misfits → r(W) → W*, r* → z → p → decision
 
+## In brief
+
+PyNRPF compares two stories for every day: the sign is right, or it is wrong inside some daytime
+window. For each candidate window it asks which story makes the underlying demand join up
+smoothly with the hours either side, and keeps the window with the strongest evidence. Two
+calibrated numbers turn that evidence into a probability, and the control `c` decides: correct
+automatically, keep, or send the day to a person.
+
+## Moving parts
+
+One physical test (the bridge), no fitted scoring parameters, four fixed settings (the
+06:00 to 18:00 scan, the floor `φ`, the edge rule, the tie order), two calibration numbers,
+one control.
+
+/// details | Show details
+    type: more
+
 ## Notation
 
 | symbol | meaning |
@@ -129,8 +146,4 @@ Beta station B, 20 September 2024, from the reference run:
 | `p` with the release calibration | logistic(−4.59 + 2.16 × 4.04) = 0.984 |
 | outcome at `c = 0.7` | AUTO_CORRECT, 86 MWh flipped, 86 MWh in the reference |
 
-## Moving parts
-
-One physical test (the bridge), no fitted scoring parameters, four fixed settings (the
-06:00 to 18:00 scan, the floor `φ`, the edge rule, the tie order), two calibration numbers,
-one control.
+///

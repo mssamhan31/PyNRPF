@@ -9,9 +9,15 @@ At the day level the outcomes are the usual four (true and false positive, true 
 negative), summarised as site-day precision, recall and F1. A false positive plants a new
 error in clean data, so precision is the safety number and recall is what review effort buys.
 
-At the interval level the score is energy. Flipping a fifteen-minute reading of `y` MW
-changes the recorded energy by `2·y·0.25` MWh. With `P` the slots a method flips and `R`
-the slots the reference flips:
+At the interval level the score is energy.
+
+/// details | Show details
+    type: more
+
+## The energy score
+
+Flipping a fifteen-minute reading of `y` MW changes the recorded energy by `2·y·0.25` MWh.
+With `P` the slots a method flips and `R` the slots the reference flips:
 
     Energy IoU        = Σ_{P∩R} E_t / Σ_{P∪R} E_t         the main metric
     energy precision  = Σ_{P∩R} E_t / Σ_{P} E_t           the safety gate, at least 0.90 on Beta sure days
@@ -46,3 +52,5 @@ the other stations, and reports the review days and recall each target costs.
 Gamma asks what the correction is worth downstream: seven-day-ahead net-load forecasts
 trained on raw, M9-corrected and manually corrected history for one station, compared on
 the September 2024 test month.
+
+///

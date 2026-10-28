@@ -14,6 +14,9 @@ by default) and writes four files to the output folder:
 | `summary.json` | days per outcome, MWh flipped, the control and calibration used |
 | `provenance.json` | the package version and the settings that produced the tables: calibration, evidence floor, control |
 
+/// details | Show details
+    type: more
+
 ## Options
 
 | option | meaning | default |
@@ -29,6 +32,10 @@ pynrpf run readings.csv --out results/ --calibration -4.2 2.16      # a refitted
 pynrpf --version
 ```
 
+## Reproducing the paper's rows
+
 The same command reproduces the package's part of the paper: run it on
 `publication/2_journal_article/dataset/final/dataset_beta.parquet` exported to CSV, and the
 site-day rows equal the reference run's M9 rows for the release calibration.
+
+///
