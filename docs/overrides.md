@@ -19,6 +19,11 @@ One row per site-day a reviewer touched; untouched days stay automatic.
 | `reason` | string | free text |
 | `recorded_at` | string | ISO 8601 timestamp of the decision |
 
+/// details | Show details
+    type: more
+
+## Filling it in
+
 A reviewer typically fills it in Excel or Power BI from the site-day table (which carries the
 window, the probability, the runner-up and the MWh at stake) and the day's picture.
 
@@ -29,3 +34,5 @@ small, mechanical step (validate one row per site-day, a manual window inside th
 range, then flip the chosen slots) that the calling pipeline can implement today. A
 packaged `apply_overrides` is planned for a later release once the workflow settles; the
 schema above is fixed so that tables written now stay valid.
+
+///

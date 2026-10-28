@@ -7,27 +7,6 @@ anything that has to be reproducible:
 python -m pip install pynrpf==0.4.0
 ```
 
-From a clone of the repository:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -e .
-```
-
-## Extras
-
-| extra | adds | when you need it |
-|---|---|---|
-| `fit` | scikit-learn | fitting both calibration numbers; the intercept-only refit needs nothing extra |
-| `spark` | pyspark | the Spark adapter, outside Databricks |
-| `paper` | scikit-learn, xgboost, holidays, pyyaml, pyarrow, matplotlib, jupyterlab, tabulate | reproducing the journal paper |
-| `dev` | pytest, ruff, build, mkdocs | working on the repository |
-
-```powershell
-python -m pip install -e .[dev,paper]
-```
-
 ## Databricks
 
 Pin the version. Two routes give the same files, built from the same tagged commit by the
@@ -50,6 +29,30 @@ needs nothing beyond the package.
 is a notebook that installs the pin and runs the method on synthetic data, in pandas and
 through Spark; run it once on a new cluster before any real readings.
 
+/// details | Show details
+    type: more
+
+## From a clone of the repository
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+```
+
+## Extras
+
+| extra | adds | when you need it |
+|---|---|---|
+| `fit` | scikit-learn | fitting both calibration numbers; the intercept-only refit needs nothing extra |
+| `spark` | pyspark | the Spark adapter, outside Databricks |
+| `paper` | scikit-learn, xgboost, holidays, pyyaml, pyarrow, matplotlib, jupyterlab, tabulate | reproducing the journal paper |
+| `dev` | pytest, ruff, build, mkdocs | working on the repository |
+
+```powershell
+python -m pip install -e .[dev,paper]
+```
+
 ## Reproducibility
 
 The method has no randomness: the same readings, the same version and the same settings give
@@ -57,3 +60,5 @@ the same tables. Pin the version, and keep the provenance record with every outp
 `result.provenance` in Python, `provenance.json` from the command line, and
 `pynrpf.provenance(c, calibration, phi)` for a Spark job. The record holds the package
 version, the two calibration numbers and their note, the evidence floor and the control.
+
+///

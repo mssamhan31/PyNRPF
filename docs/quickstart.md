@@ -17,15 +17,6 @@ result.provenance            # the version and settings that produced the tables
 
 The frame needs four columns: a site identifier, a timestamp on the fifteen-minute grid, the
 recorded net load in MW (positive = import as stored) and a solar generation estimate in MW.
-Other column names are mapped with `columns`:
-
-```python
-result = pynrpf.run(frame, columns=dict(site="site_id", timestamp="ts", net_load="mw", solar="pv"))
-```
-
-A day is scored when all 96 readings are present; missing values inside a complete day are
-allowed and only disqualify the windows that touch them. Timestamps with a time zone are
-converted to UTC before the calendar day is taken; naive timestamps are taken as they are.
 
 ## The control
 
@@ -37,6 +28,21 @@ result = pynrpf.run(frame, c=0.9)
 kept automatically when the probability is at most `1 - c`, and sent to review in between.
 The release default is 0.7. Raw readings are never altered: the corrected series is a
 separate column.
+
+/// details | Show details
+    type: more
+
+## Column names and incomplete days
+
+Other column names are mapped with `columns`:
+
+```python
+result = pynrpf.run(frame, columns=dict(site="site_id", timestamp="ts", net_load="mw", solar="pv"))
+```
+
+A day is scored when all 96 readings are present; missing values inside a complete day are
+allowed and only disqualify the windows that touch them. Timestamps with a time zone are
+converted to UTC before the calendar day is taken; naive timestamps are taken as they are.
 
 ## The site-day table
 
@@ -87,3 +93,7 @@ from pynrpf import RELEASE_CALIBRATION, fit_calibration
 pair = fit_calibration(reviewed["evidence"], reviewed["label"], slope=RELEASE_CALIBRATION.slope)
 result = pynrpf.run(frame, calibration=pair)
 ```
+
+Every public name is listed in the [API](api.md).
+
+///

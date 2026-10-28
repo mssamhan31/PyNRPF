@@ -45,7 +45,7 @@ pytest -q                                                   # package and paper 
 pytest tests/test_m9_reference.py -q                        # one file
 ruff check src/pynrpf tests publication/2_journal_article/paper
 python -m build --sdist --wheel
-mkdocs build --strict                                       # docs, built locally only
+mkdocs build --strict                                       # docs; docs-pages.yml publishes them from main
 ```
 
 `ci.yml` installs `.[dev,paper]`; the paper tests import `publication/2_journal_article/paper`
@@ -83,6 +83,10 @@ RPF included.
 
 Manifests must not carry absolute paths: every path written under `results/` is relative
 to `publication/2_journal_article/`.
+
+Documentation pages show what an analyst running PyNRPF needs first and put the rest in one
+`/// details | Show details` block (type `more`) at the foot. Pages off the menu are listed
+under `not_in_nav` in `mkdocs.yml`. The home page (`docs/index.md`) carries no code.
 
 Docstrings: every module opens with purpose, inputs, outputs and key steps; every public
 function documents arguments, returns and units (MW, MWh, slots of fifteen minutes).

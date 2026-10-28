@@ -1,33 +1,48 @@
 site_name: PyNRPF
-site_description: Detect and correct a wrong reverse-power-flow sign in fifteen-minute net-load data
+site_description: Find and correct substation readings that record solar export as import
+site_url: https://mssamhan31.github.io/PyNRPF/
 repo_url: https://github.com/mssamhan31/PyNRPF
+repo_name: mssamhan31/PyNRPF
 docs_dir: docs
 theme:
   name: material
+  # The PhD deck palette (navy, orange) is set in docs/assets/css/site.css; Arial everywhere.
   palette:
-    primary: blue grey
-    accent: orange
+    primary: custom
+    accent: custom
+  font: false
   features:
+    - navigation.tabs        # two tabs: Home for a general reader, Documentation for everything technical
     - navigation.sections
+    - navigation.top
     - content.code.copy
+extra_css:
+  - assets/css/site.css
 markdown_extensions:
   - tables
+  - attr_list
+  - md_in_html
   - toc:
       permalink: true
+  - pymdownx.superfences
+  - pymdownx.blocks.details   # the one collapsed "Show details" block at the foot of each page
+# The menu holds what an analyst running PyNRPF needs; every other page is built and searchable,
+# reached from the Overview's full page list and from links in the text.
 nav:
   - Home: index.md
-  - Use it:
+  - Documentation:
+      - Overview: overview.md
       - Install: install.md
       - Quick start: quickstart.md
       - Spark: spark.md
-      - Command line: cli.md
-      - API: api.md
-  - Understand it:
       - Method: method.md
-      - Calibration: calibration.md
-      - Overrides: overrides.md
-  - The paper:
-      - Data: data.md
-      - Evaluation: evaluation.md
-      - Reproduce: reproduce.md
-  - Development: development.md
+      - Papers: papers.md
+not_in_nav: |
+  /api.md
+  /cli.md
+  /calibration.md
+  /overrides.md
+  /data.md
+  /evaluation.md
+  /reproduce.md
+  /development.md
