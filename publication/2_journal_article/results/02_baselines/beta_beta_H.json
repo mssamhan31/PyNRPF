@@ -1,0 +1,46 @@
+{
+  "bundle": "results/02_baselines/bundles/beta_beta_H/bundle.pkl",
+  "elapsed_s": 16.9,
+  "fold_id": "beta_beta_H",
+  "held_out": "beta_H",
+  "n_training_rows": 189120,
+  "n_training_rpf_days": 466,
+  "shared_with": null,
+  "skipped": false,
+  "training_signature": "2485a444b77202ec9205d0d5fd5826634bdc54efc8cd30db101d6c5f81895ba3",
+  "training_stations": [
+    "beta_A",
+    "beta_B",
+    "beta_C",
+    "beta_D",
+    "beta_E",
+    "beta_F",
+    "beta_G"
+  ],
+  "validation_metrics": {
+    "xgb1_day": {
+      "f1": 0.9249999999999999,
+      "fn": 16,
+      "fp": 8,
+      "positives": 164,
+      "precision": 0.9487179487179487,
+      "recall": 0.9024390243902439,
+      "rows": 341,
+      "threshold": 0.585985,
+      "tn": 169,
+      "tp": 148
+    },
+    "xgb2_timestamp": {
+      "f1": 0.939773057899331,
+      "fn": 325,
+      "fp": 89,
+      "positives": 3555,
+      "precision": 0.9731846941849955,
+      "recall": 0.9085794655414908,
+      "rows": 8528,
+      "threshold": 0.892234,
+      "tn": 4884,
+      "tp": 3230
+    }
+  }
+}

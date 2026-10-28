@@ -1,0 +1,20 @@
+| fold_id | cohort | held_out | n_train | n_train_rpf | cal_intercept | cal_slope | raw_threshold_correct | raw_threshold_keep |
+|---|---|---|---|---|---|---|---|---|
+| alpha_alpha_A | alpha | alpha_A | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_B | alpha | alpha_B | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_C | alpha | alpha_C | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_D | alpha | alpha_D | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_E | alpha | alpha_E | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_F | alpha | alpha_F | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_G | alpha | alpha_G | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_H | alpha | alpha_H | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_I | alpha | alpha_I | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| alpha_alpha_J | alpha | alpha_J | 2288 | 470 | -4.5901 | 2.1621 | 11.3652 | 4.6469 |
+| beta_beta_A | beta | beta_A | 1954 | 444 | -4.2742 | 2.0584 | 11.0377 | 4.2846 |
+| beta_beta_B | beta | beta_B | 2058 | 345 | -5.1932 | 2.2857 | 13.0524 | 5.6952 |
+| beta_beta_C | beta | beta_C | 1951 | 470 | -4.5502 | 2.1468 | 11.3568 | 4.6117 |
+| beta_beta_D | beta | beta_D | 2105 | 425 | -4.4503 | 2.1230 | 11.1250 | 4.4580 |
+| beta_beta_E | beta | beta_E | 1983 | 449 | -4.3508 | 2.0926 | 10.9902 | 4.3349 |
+| beta_beta_F | beta | beta_F | 2004 | 306 | -4.3700 | 2.0757 | 11.3489 | 4.4584 |
+| beta_beta_G | beta | beta_G | 2006 | 385 | -4.9167 | 2.3527 | 10.5883 | 4.6390 |
+| beta_beta_H | beta | beta_H | 1955 | 466 | -4.7386 | 2.2131 | 11.4784 | 4.8026 |

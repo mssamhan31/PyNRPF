@@ -2,56 +2,59 @@
 
 ## Environment
 
-Requires Python 3.10 or later. Continuous integration tests 3.10, 3.11 and 3.12.
+Python 3.10 or later; continuous integration tests 3.10, 3.11 and 3.12.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -e .[dev,paper]
 ```
-
-`requirements.txt` installs the package in editable mode with the `dev` and
-`journal` extras. The `dev` extra carries the test and lint toolchain, plus
-`matplotlib` and `pyarrow`, which the journal article tests need. The `journal`
-extra adds the heavier notebook and Streamlit dependencies.
 
 ## Tests
 
 ```powershell
 pytest -q
+ruff check src/pynrpf tests publication/2_journal_article/paper
 ```
 
-89 tests, covering:
-
-| Area | Files |
+| tests | what they protect |
 |---|---|
-| Package API, config and training validation | `test_api.py`, `test_config.py`, `test_training_config.py` |
-| Artefact bundle round-trips | `test_artifacts.py`, `test_training_m8_xgb.py` |
-| Model behaviour | `test_m7_dtr_behavior.py`, `test_m8_xgb_behavior.py` |
-| Scaffold generation | `test_scaffold.py` |
-| Journal article helpers and figure rendering | `test_journal_article_experiment_helpers.py`, `test_m9_pbm_helpers.py`, `test_journal_figure_rendering.py` |
-| Oracle review workflow | `test_oracle_review_core.py` |
+| `test_m9_steps.py` | each step of the method on planted days: admissibility, the edge rule with a gap, the bridge, the misfit, the evidence sign and floor, the tie order |
+| `test_m9_reference.py` | the whole chain reproduces the reference run to the last digit on committed slices of two stations (`tests/fixtures/`) |
+| `test_calibration_decision_impact.py` | the release numbers, the intercept refit, the decision bands, the energy and minimum-demand numbers |
+| `test_run_cli_spark.py` | the pandas entry point, the column mapping, incomplete days, refused inputs, the command line, the provenance record, the Spark adapter (skipped without pyspark; run in CI) |
+| `test_paper_*.py` | the paper code: folds and leakage guards, reference terms, metrics, operating points, and that `results/` matches its manifests |
 
-The journal and oracle tests import helper modules from `publication/` by path,
-so they need the `dev` extra installed rather than the runtime package alone.
+`tests/fixtures/make_fixtures.py` rebuilds the reference slices from the datasets and
+`results/`; run it only when the reference run changes.
 
-## Lint
+## Documentation
 
 ```powershell
-ruff check src/pynrpf tests
+mkdocs serve          # local preview at http://127.0.0.1:8000
+mkdocs build --strict
 ```
 
-Configured in `pyproject.toml`: line length 100, rules `E`, `F`, `I`, `B`, with
-`src/pynrpf/_legacy` excluded. Code under `publication/` is outside the linted
-scope — it is experiment and archive material held to a looser standard.
+The site is built locally only; it is not published.
 
-## Continuous integration and release
+## Continuous integration
 
-Three workflows under `.github/workflows/`:
+`ci.yml` runs on every push and pull request: lint, tests and a build on Python 3.10, 3.11
+and 3.12 with the `dev` and `paper` extras; a build under setuptools 69; and a Spark job
+(Java 17, the `spark` extra) that runs `test_run_cli_spark.py`, so the adapter is exercised
+before a cluster sees it. `release.yml` runs on a `v*` tag. A nightly workflow smoke-tests
+the conference paper archive.
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | every push and pull request | Builds under setuptools 69 for compatibility, then lints, tests and builds across Python 3.10, 3.11 and 3.12. |
-| `release.yml` | version tags matching `v*` | Lints, tests, builds, and publishes to PyPI via OpenID Connect. |
-| `publication_archive_smoke.yml` | nightly | Executes conference notebooks 01 to 03 with nbconvert and uploads the outputs as a workflow artefact. Non-blocking. |
+## Releasing
+
+1. Bump the version in `pyproject.toml`, `src/pynrpf/_version.py` and `CITATION.cff` (with
+   `date-released`), and date the entry in `CHANGELOG.md`.
+2. Open a pull request to `main` and merge it once `ci.yml` is green.
+3. Create a GitHub Release `vX.Y.Z` from `main`, titled `vX.Y.Z`, with notes from the
+   changelog. The tag starts `release.yml`: lint, tests, build, publish to PyPI, then attach
+   the wheel, the sdist and `SHA256SUMS` to the release. Zenodo archives the release under
+   the concept DOI `10.5281/zenodo.18764943`.
+4. Check in a fresh environment: `pip install pynrpf==X.Y.Z`, `pynrpf --version`, the release
+   assets, and the new version on Zenodo. PyPI never accepts a re-upload of the same version,
+   so a failed publish means the next patch number.

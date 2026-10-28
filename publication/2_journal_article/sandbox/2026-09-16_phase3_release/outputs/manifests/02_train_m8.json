@@ -1,0 +1,115 @@
+{
+  "code_sha256": "a623e8ed6feaadbbeccd6971f32995f3d13a59e2b46639888abe8c71f1f7e5ea",
+  "config": {
+    "bytes": 4645,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "71d13a8504d9f6e34d56de5ddb5fd8436c18ff86baac4bbc0698410a5608973f"
+  },
+  "created_utc": "2026-09-16T05:55:00+00:00",
+  "elapsed_s": 2124.7,
+  "inputs": [
+    {
+      "bytes": 5917,
+      "path": "outputs/01_final_evaluation/01_folds/fold_manifest.csv",
+      "sha256": "13e955168a0366b4504fe10acb256dbcfa88b58a0427a35851e6db4c33cec763"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 4812,
+      "path": "outputs/01_final_evaluation/02_bundles/training_summary.csv",
+      "sha256": "65a37afc7259b54bfb04d1704b210944f7bdfee2422f1759a62f8561d2c96153"
+    },
+    {
+      "bytes": 1176,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_A.json",
+      "sha256": "59e676da61af4623d37017c3073e4cc29e204a58990160885a8a36775fcfb72b"
+    },
+    {
+      "bytes": 1177,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_B.json",
+      "sha256": "96a2485deb178bb56d8916d49108fbf4777477f485582d79396ce16ab0873978"
+    },
+    {
+      "bytes": 1177,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_C.json",
+      "sha256": "45bab67ed43f4cb9de555220a307e200c25fdcab253b254f603b6bc611d22694"
+    },
+    {
+      "bytes": 1178,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_D.json",
+      "sha256": "fc179c71939c507fbd6042f60a5b24bf27c88c3c935f50cadd014d8c4fafde9a"
+    },
+    {
+      "bytes": 1177,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_E.json",
+      "sha256": "31c556020d95e74f26438c33a2ef2571cbafe677c0bc0088e16a7fdea2a69ae2"
+    },
+    {
+      "bytes": 1175,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_F.json",
+      "sha256": "fba298853485655442d09cedae5e4b3036c1741751b068c32168763efdba36a6"
+    },
+    {
+      "bytes": 1176,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_G.json",
+      "sha256": "7d3ade59dede6bb4a11bfc40ff2e5873ec7afd52843fad78677fdd887aea61e7"
+    },
+    {
+      "bytes": 1178,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_H.json",
+      "sha256": "2352705c6ee7844805a48da4bd4d1f641437b53b34d1090cd644467c8d0dc7cf"
+    },
+    {
+      "bytes": 1175,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_I.json",
+      "sha256": "3bd0d25a6477503753a27b8c41a5d2d5b02ebce3e68ae70e5e257956eb2958bc"
+    },
+    {
+      "bytes": 1164,
+      "path": "outputs/01_final_evaluation/02_bundles/alpha_alpha_J.json",
+      "sha256": "dffd850c511f15e99a6cc46abc86ea481ef35775b49cdd69d41cc7be2b31ed52"
+    },
+    {
+      "bytes": 1172,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_A.json",
+      "sha256": "c2ff4ee394320192ff302e3ea538db8946fab1fe2d937fa1b6009ff05d64683c"
+    },
+    {
+      "bytes": 1173,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_B.json",
+      "sha256": "bda029e13a380fa05f592e456e69ce30eb716668ff1c33b6760576c5747e1660"
+    },
+    {
+      "bytes": 1173,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_C.json",
+      "sha256": "33670f5192df3d62dda956a6c67de9f2ee62e9ec155745f131984ce1d3e98509"
+    },
+    {
+      "bytes": 1171,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_D.json",
+      "sha256": "1f97ab80d77515f2d3c0fe1523d8c5aed97f9d93fbbf337e0f5f2c038f6d83f3"
+    },
+    {
+      "bytes": 1173,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_E.json",
+      "sha256": "f38ed0c4a7744b1bf3bec303255c6c8b4b8d8e66d59fc413f47449f860fde1d3"
+    },
+    {
+      "bytes": 1172,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_F.json",
+      "sha256": "a3dee0fb1bbca54125bbb0a546bc28e66ee2e2f66651bb377b2aca24dd9faab5"
+    },
+    {
+      "bytes": 1172,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_G.json",
+      "sha256": "e553ce2775a8b243a75192cb6526b5e8615171c8d965eebe9bc68819138d2a62"
+    },
+    {
+      "bytes": 1172,
+      "path": "outputs/01_final_evaluation/02_bundles/beta_beta_H.json",
+      "sha256": "ce9459194b224960a57a8b15256a62a69441e1309b317b051e7cfc61c4df59ff"
+    }
+  ],
+  "stage": "02_train_m8"
+}

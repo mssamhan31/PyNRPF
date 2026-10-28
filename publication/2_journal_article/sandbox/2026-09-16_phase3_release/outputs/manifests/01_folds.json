@@ -1,0 +1,64 @@
+{
+  "code_sha256": "a623e8ed6feaadbbeccd6971f32995f3d13a59e2b46639888abe8c71f1f7e5ea",
+  "config": {
+    "bytes": 4645,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "71d13a8504d9f6e34d56de5ddb5fd8436c18ff86baac4bbc0698410a5608973f"
+  },
+  "created_utc": "2026-09-16T05:10:08+00:00",
+  "elapsed_s": 19.5,
+  "inputs": [
+    {
+      "bytes": 18291524,
+      "path": "dataset/final/dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    },
+    {
+      "bytes": 5699083,
+      "path": "dataset/final/dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    }
+  ],
+  "n_folds": 18,
+  "outputs": [
+    {
+      "bytes": 5917,
+      "path": "outputs/01_final_evaluation/01_folds/fold_manifest.csv",
+      "sha256": "13e955168a0366b4504fe10acb256dbcfa88b58a0427a35851e6db4c33cec763"
+    },
+    {
+      "bytes": 39884,
+      "path": "outputs/01_final_evaluation/01_folds/site_days_alpha.parquet",
+      "sha256": "15dd49ecce8f1c07fcf6e4efb9f8400e5ce7c1fedcd753a3f23379bdd3e3260b"
+    },
+    {
+      "bytes": 15428,
+      "path": "outputs/01_final_evaluation/01_folds/site_days_beta.parquet",
+      "sha256": "577123997ee375cbe34f14a088a14747155e88302adc451b82146e1930efd8c9"
+    },
+    {
+      "bytes": 147,
+      "path": "outputs/01_final_evaluation/01_folds/population.csv",
+      "sha256": "9ab08ca448deee467aa4458dcd8cf6d8e20805b1e262a2680b2e1f5ad02a4553"
+    }
+  ],
+  "population": [
+    {
+      "cohort": "alpha",
+      "complete": 10425,
+      "dropped_incomplete": 218,
+      "headline_complete": 10425,
+      "rpf_headline_complete": 3381,
+      "site_days": 10643
+    },
+    {
+      "cohort": "beta",
+      "complete": 2922,
+      "dropped_incomplete": 6,
+      "headline_complete": 2305,
+      "rpf_headline_complete": 470,
+      "site_days": 2928
+    }
+  ],
+  "stage": "01_folds"
+}

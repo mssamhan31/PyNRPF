@@ -1,0 +1,40 @@
+### Days whose outcome or window changed against `nearest` (headline days)
+
+| anchors | cohort | station | n_days | outcome_changed | tp_gained | tp_lost | fp_gained | fp_lost | window_changed | correct_mwh_delta | proposed_mwh_delta |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| edge | alpha | alpha_A | 1039 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| edge | alpha | alpha_B | 1055 | 318 | 0 | 18 | 11 | 1 | 962 | -27.9 | 2508.0 |
+| edge | alpha | alpha_C | 1055 | 539 | 0 | 381 | 4 | 20 | 912 | -1027.4 | -1276.9 |
+| edge | alpha | alpha_D | 1035 | 524 | 0 | 0 | 49 | 0 | 1021 | 0.0 | 6744.6 |
+| edge | alpha | alpha_E | 1035 | 501 | 0 | 410 | 0 | 7 | 901 | -1626.0 | -2156.9 |
+| edge | alpha | alpha_F | 1033 | 608 | 0 | 498 | 0 | 6 | 851 | -3743.7 | -4960.7 |
+| edge | alpha | alpha_G | 1037 | 584 | 0 | 399 | 3 | 21 | 901 | -1874.3 | -2345.9 |
+| edge | alpha | alpha_H | 1039 | 496 | 0 | 0 | 91 | 0 | 999 | 0.0 | 31470.5 |
+| edge | alpha | alpha_I | 1042 | 594 | 0 | 75 | 58 | 4 | 999 | -265.9 | 9087.5 |
+| edge | alpha | alpha_J | 1055 | 389 | 0 | 215 | 3 | 12 | 892 | -390.4 | -467.8 |
+| edge | beta | beta_A | 337 | 24 | 0 | 6 | 1 | 0 | 294 | -129.4 | 431.7 |
+| edge | beta | beta_B | 231 | 45 | 3 | 24 | 0 | 0 | 223 | -593.8 | -811.0 |
+| edge | beta | beta_C | 339 | 32 | 0 | 0 | 3 | 0 | 322 | 0.0 | 325.7 |
+| edge | beta | beta_D | 188 | 51 | 0 | 18 | 3 | 1 | 168 | -180.6 | 81.7 |
+| edge | beta | beta_E | 306 | 37 | 0 | 17 | 1 | 1 | 294 | -59.8 | 260.6 |
+| edge | beta | beta_F | 286 | 69 | 0 | 38 | 3 | 9 | 208 | -154.1 | -119.4 |
+| edge | beta | beta_G | 283 | 47 | 0 | 16 | 2 | 9 | 266 | -412.8 | -564.3 |
+| edge | beta | beta_H | 335 | 42 | 0 | 1 | 9 | 0 | 321 | -5.4 | 1752.4 |
+| gap_edge | alpha | alpha_A | 1039 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_B | 1055 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_C | 1055 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_D | 1035 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_E | 1035 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_F | 1033 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_G | 1037 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_H | 1039 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_I | 1042 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | alpha | alpha_J | 1055 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | beta | beta_A | 337 | 0 | 0 | 0 | 0 | 0 | 5 | 0.0 | 0.0 |
+| gap_edge | beta | beta_B | 231 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | beta | beta_C | 339 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | beta | beta_D | 188 | 12 | 0 | 5 | 0 | 0 | 18 | -52.4 | -50.7 |
+| gap_edge | beta | beta_E | 306 | 1 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | beta | beta_F | 286 | 4 | 0 | 0 | 1 | 0 | 1 | 0.0 | 2.2 |
+| gap_edge | beta | beta_G | 283 | 2 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |
+| gap_edge | beta | beta_H | 335 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 |

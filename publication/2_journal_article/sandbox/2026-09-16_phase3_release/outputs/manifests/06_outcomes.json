@@ -1,0 +1,46 @@
+{
+  "code_sha256": "ce44b44c7f498ac0b5a29b356a9b65e3f57d4d8b12371cf0220aa757b2aedd98",
+  "config": {
+    "bytes": 5722,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "9ee28b3a0a538bbcb182748f79572ba44b232db8cd8bddb28af3d6e7fc810430"
+  },
+  "created_utc": "2026-09-16T06:03:53+00:00",
+  "elapsed_s": 30.2,
+  "inputs": [
+    {
+      "bytes": 3860228,
+      "path": "outputs/01_final_evaluation/03_m7/intervals_m7.parquet",
+      "sha256": "28ebe318004b9d5431dba5e8a9dde71cc0dc5fdcaa546723c5d14ad0200d56a0"
+    },
+    {
+      "bytes": 5635581,
+      "path": "outputs/01_final_evaluation/04_m8/intervals_m8.parquet",
+      "sha256": "f987f7ec9d18511df59a7b524d54121de394abec5e8114de6b6a0d4d050e600b"
+    },
+    {
+      "bytes": 3981738,
+      "path": "outputs/01_final_evaluation/05_m9/intervals_m9.parquet",
+      "sha256": "7cb0c47b1c5787bd07538610f1ab0754972483da8277c5e976952efa9c36ceab"
+    }
+  ],
+  "methods": [
+    "m7",
+    "m8",
+    "m9"
+  ],
+  "n_site_days_per_method": 13347,
+  "outputs": [
+    {
+      "bytes": 1826779,
+      "path": "outputs/01_final_evaluation/06_site_days/site_days.parquet",
+      "sha256": "bcdc7e83144317937aa535d33ce9cb030a1a1a049dc8181ea499fe599cde3fa2"
+    },
+    {
+      "bytes": 5508606,
+      "path": "outputs/01_final_evaluation/06_site_days/site_day_decisions.csv",
+      "sha256": "9ca05d32fe9f9e13090a11bc735f2ec5dac3ba64688de1773208454d5670fbe3"
+    }
+  ],
+  "stage": "06_outcomes"
+}

@@ -1,0 +1,57 @@
+{
+  "code_sha256": "548107a2db79b4d10929ddfb0957e5e75606703f2ab96674bb4576601eb86961",
+  "config": {
+    "bytes": 4645,
+    "path": "config/final_evaluation.yaml",
+    "sha256": "71d13a8504d9f6e34d56de5ddb5fd8436c18ff86baac4bbc0698410a5608973f"
+  },
+  "created_utc": "2026-09-16T05:00:26+00:00",
+  "elapsed_s": 88.4,
+  "inputs": [
+    {
+      "bytes": 18291524,
+      "path": "dataset/final/dataset_alpha.parquet",
+      "sha256": "c2d0982d138a1faebd30df60b7fd861c73007b5709187ac33d88ec4fbe9765b6"
+    },
+    {
+      "bytes": 5699083,
+      "path": "dataset/final/dataset_beta.parquet",
+      "sha256": "e1971eff266de145c4aca79ce5272541afee5861d188743f408b12aa665ddfbf"
+    },
+    {
+      "bytes": 5917,
+      "path": "outputs/01_final_evaluation/01_folds/fold_manifest.csv",
+      "sha256": "13e955168a0366b4504fe10acb256dbcfa88b58a0427a35851e6db4c33cec763"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 435269,
+      "path": "outputs/01_final_evaluation/05_m9/scores_alpha.parquet",
+      "sha256": "f1948fbf7500bff01b213f671a77cde56b630d196e2348667d38e5a44f7c66fb"
+    },
+    {
+      "bytes": 134287,
+      "path": "outputs/01_final_evaluation/05_m9/scores_beta.parquet",
+      "sha256": "c4d543b3589c161afb5c944bf8ee35c8ac5af219bfda0bf40726eac38886252f"
+    },
+    {
+      "bytes": 3981738,
+      "path": "outputs/01_final_evaluation/05_m9/intervals_m9.parquet",
+      "sha256": "7cb0c47b1c5787bd07538610f1ab0754972483da8277c5e976952efa9c36ceab"
+    },
+    {
+      "bytes": 692455,
+      "path": "outputs/01_final_evaluation/05_m9/site_days_m9.parquet",
+      "sha256": "6114bec6ca8160470c37f607a06eef7380829cdb4fc49792540d1516a1bad728"
+    },
+    {
+      "bytes": 2160,
+      "path": "outputs/01_final_evaluation/05_m9/calibration_fits.csv",
+      "sha256": "52721f86d573fb6337a465257a29d04dea5d6d8156e2024a030536ea8654865d"
+    }
+  ],
+  "sigma_floor_alpha": 1.400908788973254e-07,
+  "sigma_floor_beta": 8.03130184579004e-09,
+  "stage": "05_m9_predict"
+}

@@ -1,0 +1,35 @@
+{
+  "energy_precision_min": 0.9,
+  "gated_cohort": "beta",
+  "alpha_energy_precision_ceiling": 0.904,
+  "methods": {
+    "m7": {
+      "beta_energy_precision": 0.31976469872847296,
+      "beta_gate_pass": false,
+      "alpha_energy_precision": 0.3175164851414568,
+      "alpha_gate_pass": false,
+      "alpha_vs_ceiling": -0.5864835148585432,
+      "combined_energy_iou": 0.29858852627578164
+    },
+    "m8": {
+      "beta_energy_precision": 0.9318681472673687,
+      "beta_gate_pass": true,
+      "alpha_energy_precision": 0.9589239926161742,
+      "alpha_gate_pass": true,
+      "alpha_vs_ceiling": 0.0549239926161742,
+      "combined_energy_iou": 0.7322498593682089
+    },
+    "m9": {
+      "beta_energy_precision": 0.940667717682573,
+      "beta_gate_pass": true,
+      "alpha_energy_precision": 0.8885742368962344,
+      "alpha_gate_pass": false,
+      "alpha_vs_ceiling": -0.015425763103765644,
+      "combined_energy_iou": 0.8749280329595823
+    }
+  },
+  "strongest_combined_energy_iou": "m9",
+  "complete": true,
+  "m9_default": true,
+  "decision": "M9 is the default method"
+}

@@ -1,0 +1,7 @@
+| population | n_days_with_window | n_exact | n_too long (start) | n_too long (end) | n_too long (both) | n_too short | n_shifted earlier | n_shifted later | n_disjoint | share_exact | share_too long (start) | share_too long (end) | share_too long (both) | share_too short | share_shifted earlier | share_shifted later | share_disjoint | mean_start_offset_slots | mean_end_offset_slots | share_start_within_1_slot | share_end_within_1_slot | share_both_edges_within_1_slot | mean_extra_slots_too_long |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Alpha | 3381 | 813 | 408 | 371 | 321 | 879 | 231 | 186 | 172 | 0.240 | 0.121 | 0.110 | 0.095 | 0.260 | 0.068 | 0.055 | 0.051 | 0.061 | -0.303 | 0.748 | 0.739 | 0.586 | 3.119 |
+| Beta sure | 470 | 157 | 51 | 55 | 75 | 97 | 23 | 10 | 2 | 0.334 | 0.109 | 0.117 | 0.160 | 0.206 | 0.049 | 0.021 | 0.004 | -1.090 | 0.868 | 0.755 | 0.789 | 0.630 | 4.392 |
+| Beta unsure | 159 | 17 | 24 | 18 | 33 | 40 | 9 | 7 | 11 | 0.107 | 0.151 | 0.113 | 0.208 | 0.252 | 0.057 | 0.044 | 0.069 | -0.924 | 0.198 | 0.509 | 0.509 | 0.289 | 5.480 |
+| Alpha (contiguous) | 1951 | 694 | 267 | 245 | 177 | 304 | 64 | 60 | 140 | 0.356 | 0.137 | 0.126 | 0.091 | 0.156 | 0.033 | 0.031 | 0.072 | -0.721 | 0.677 | 0.845 | 0.844 | 0.758 | 2.823 |
+| Alpha (non-contiguous) | 1430 | 119 | 141 | 126 | 144 | 575 | 167 | 126 | 32 | 0.083 | 0.099 | 0.088 | 0.101 | 0.402 | 0.117 | 0.088 | 0.022 | 0.744 | -1.158 | 0.615 | 0.596 | 0.352 | 3.616 |
