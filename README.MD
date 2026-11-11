@@ -33,7 +33,8 @@ python -m pip install pynrpf==0.4.0
 ```
 
 On Databricks, install the same pin on the cluster or job, or copy the release wheel into a
-Unity Catalog Volume; [docs/install.md](docs/install.md) gives both routes.
+Unity Catalog Volume; [docs/install.md](docs/install.md) gives both routes and the steps for a
+pipeline that pins the wheel.
 [examples/databricks_smoke.py](examples/databricks_smoke.py) is a notebook that installs the
 pin and runs the method on synthetic data, in pandas and through Spark, before any real
 readings are touched.

@@ -32,7 +32,7 @@
 # COMMAND ----------
 
 # MAGIC %pip install pynrpf==0.4.0
-# MAGIC # %pip install /Volumes/<catalog>/<schema>/<volume>/pynrpf-0.4.0-py3-none-any.whl
+# MAGIC # %pip install /Volumes/<catalog>/<schema>/<volume>/pynrpf/0.4.0/pynrpf-0.4.0-py3-none-any.whl
 
 # COMMAND ----------
 
